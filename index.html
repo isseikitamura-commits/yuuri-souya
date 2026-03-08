@@ -483,23 +483,7 @@ function App(){
     else if(action==='spell'&&spellId){const sp=getMemberSpells(member).find(s=>s.id===spellId);if(sp){const r=await executeSpell(sp,pIdx,nP,nE);if(!r){setBusy(false);return;}nP=r.party;nE=r.enemies;}}
     else if(action==='atk'){const ti=nE.findIndex(e=>e.hp>0);if(ti<0){setBusy(false);return;}const en=nE[ti];const effAtk=Math.floor(member.atk*(member.atkBuffMult||1));let dmg=calcDamage(effAtk,en.def);if(Math.random()<.11){dmg=Math.floor(dmg*1.7);addLog('💥 会心の一撃！');}dmg=Math.max(1,dmg);const xp=60+ti*(-12);setPAnim(pIdx,'atk');SFX.atk();await sleep(250);setPAnim(pIdx,'idle');setMAnim(ti,'hurt');SFX.hit();addSpark(xp+'%','28%');addDmg(dmg,'e',xp+'%','16%');addLog('⚔️ '+mn(member)+'の攻撃！'+dmg+'ダメージ！');nE[ti]={...en,hp:Math.max(0,en.hp-dmg)};await sleep(300);setMAnim(ti,'idle');}
     else if(action==='defend'){nP[pIdx]={...member,defending:true,defBuffMult:2.2,defBuffTurns:1};addLog('🛡️ '+mn(member)+'は防御！');SFX.buff();}
-    else if(action==='heal'){
-      const ai=inv.findIndex(i=>i.eff&&i.eff.allHeal);
-      const ci=inv.findIndex(i=>i.eff&&i.eff.cure);
-      const hi=inv.findIndex(i=>i.eff&&i.eff.hp&&!i.eff.cure&&!i.eff.allHeal);
-      const mi=inv.findIndex(i=>i.eff&&i.eff.mp&&!i.eff.hp&&!i.eff.allHeal);
-      let usedIdx=-1,invType=null;
-      if(ai>=0){usedIdx=ai;invType='allHeal';}
-      else if(member.status&&ci>=0){usedIdx=ci;invType='cure';}
-      else if(member.hp<member.maxHp&&hi>=0){usedIdx=hi;invType='hp';}
-      else if(member.mp<member.maxMp&&mi>=0){usedIdx=mi;invType='mp';}
-      if(usedIdx<0){addLog('使えるアイテムがない！');setBusy(false);return;}
-      const it=inv[usedIdx];const ni=[...inv];ni.splice(usedIdx,1);setInv(ni);
-      if(invType==='allHeal'){nP=nP.map(m=>m.hp<=0?m:{...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0});addLog(it.emoji+' '+it.name+'！全員HP・MP完全回復！');SFX.heal();}
-      else if(invType==='cure'){nP[pIdx]={...member,status:null,statusTurns:0};addLog(it.emoji+' '+it.name+'！状態異常回復！');SFX.heal();}
-      else if(invType==='hp'){const add=Math.min(it.eff.hp,member.maxHp-member.hp);nP[pIdx]={...member,hp:Math.min(member.maxHp,member.hp+it.eff.hp)};addDmg(add,'h','12%','22%');addLog(it.emoji+' '+it.name+'！HP+'+add);SFX.heal();}
-      else if(invType==='mp'){const addMp=Math.min(it.eff.mp,member.maxMp-member.mp);nP[pIdx]={...member,mp:Math.min(member.maxMp,member.mp+it.eff.mp)};addLog(it.emoji+' '+it.name+'！MP+'+addMp);}
-    }
+    else if(action==='heal'){const ahIdx=inv.findIndex(it2=>it2.eff&&it2.eff.allHeal),cuIdx=inv.findIndex(it2=>it2.eff&&it2.eff.cure),hpIdx=inv.findIndex(it2=>it2.eff&&it2.eff.hp&&!it2.eff.cure&&!it2.eff.allHeal),mpIdx=inv.findIndex(it2=>it2.eff&&it2.eff.mp&&!it2.eff.hp&&!it2.eff.allHeal);let useIdx=-1,itype=null;if(ahIdx>=0){useIdx=ahIdx;itype='ah';}else if(member.status&&cuIdx>=0){useIdx=cuIdx;itype='cu';}else if(member.hp<member.maxHp&&hpIdx>=0){useIdx=hpIdx;itype='hp';}else if(member.mp<member.maxMp&&mpIdx>=0){useIdx=mpIdx;itype='mp';}if(useIdx<0){addLog('使えるアイテムがない！');setBusy(false);return;}const itu=inv[useIdx];const niu=[...inv];niu.splice(useIdx,1);setInv(niu);if(itype==='ah'){nP=nP.map(m=>m.hp<=0?m:{...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0});addLog(itu.emoji+' '+itu.name+'！全員HP・MP完全回復！');SFX.heal();}else if(itype==='cu'){nP[pIdx]={...member,status:null,statusTurns:0};addLog(itu.emoji+' '+itu.name+'！状態異常回復！');SFX.heal();}else if(itype==='hp'){const hadd=Math.min(itu.eff.hp,member.maxHp-member.hp);nP[pIdx]={...member,hp:Math.min(member.maxHp,member.hp+itu.eff.hp)};addDmg(hadd,'h','12%','22%');addLog(itu.emoji+' '+itu.name+'！HP+'+hadd);SFX.heal();}else if(itype==='mp'){const madd=Math.min(itu.eff.mp,member.maxMp-member.mp);nP[pIdx]={...member,mp:Math.min(member.maxMp,member.mp+itu.eff.mp)};addLog(itu.emoji+' '+itu.name+'！MP+'+madd);}}
     else if(action==='flee'){if(Math.random()>.42){SFX.flee();addLog('🏃 逃げ出した！');setParty(nP);setScr('map');bgm('field');setBusy(false);return;}const fen=nE.find(e=>e.hp>0);if(fen){const dmg=Math.max(1,fen.atk-member.def+Math.floor(Math.random()*5)-2);nP[pIdx]={...member,hp:Math.max(0,member.hp-dmg)};setPAnim(pIdx,'hurt');SFX.phit();addDmg(dmg,'p','12%','24%');addLog('❌ 逃げられなかった！'+dmg+'ダメージ！');await sleep(380);setPAnim(pIdx,'idle');}}
     setParty(nP);setEnemies(nE);
     if(nP.every(m=>m.hp<=0)){stopBgm();SFX.dead();setScr('gameover');setBusy(false);return;}
