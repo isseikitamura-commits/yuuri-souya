@@ -5,159 +5,291 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="大冒険"/>
-<meta name="theme-color" content="#c0a000"/>
+<meta name="theme-color" content="#b8900a"/>
 <link rel="manifest" href="manifest.json"/>
 <link rel="apple-touch-icon" href="icons/icon-192.png"/>
 <title>ゆうりとそうやの大冒険</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:#04040c;font-family:'Hiragino Maru Gothic Pro','BIZ UDPGothic',sans-serif;color:#dde4f0;overflow-x:hidden}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
-@keyframes floatSlow{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-13px)}40%{transform:translateX(13px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+@keyframes floatA{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes floatB{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-7px)}80%{transform:translateX(7px)}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @keyframes popIn{from{opacity:0;transform:scale(0.3)}to{opacity:1;transform:scale(1)}}
 @keyframes dmgUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-65px) scale(1.5)}}
-@keyframes skillBurst{0%{opacity:0;transform:scale(0.2)}55%{opacity:1;transform:scale(1.7)}100%{opacity:0;transform:scale(1)}}
-@keyframes starPulse{0%,100%{opacity:.12}50%{opacity:.38}}
-@keyframes gPulse{0%,100%{opacity:.4}50%{opacity:.9}}
+@keyframes skillFlash{0%{opacity:0;transform:scale(0.2)}55%{opacity:1;transform:scale(1.8)}100%{opacity:0;transform:scale(1)}}
+@keyframes starPulse{0%,100%{opacity:.1}50%{opacity:.35}}
+@keyframes gndPulse{0%,100%{opacity:.4}50%{opacity:.85}}
 @keyframes winSpin{0%,100%{transform:rotate(-9deg) scale(1)}50%{transform:rotate(9deg) scale(1.14)}}
-@keyframes sparkFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
-@keyframes charAtk{0%{transform:translateX(0)}45%{transform:translateX(22px)}100%{transform:translateX(0)}}
-@keyframes monAtk{0%{transform:translateX(0)}45%{transform:translateX(-22px)}100%{transform:translateX(0)}}
-@keyframes statusPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.4)}}
+@keyframes sparkFly{0%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(var(--tx),var(--ty))}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.18}}
+@keyframes charAtk{0%{transform:translateX(0)}45%{transform:translateX(20px)}100%{transform:translateX(0)}}
+@keyframes monAtk{0%{transform:translateX(0)}45%{transform:translateX(-20px)}100%{transform:translateX(0)}}
+@keyframes rageFlash{0%,100%{filter:brightness(1) saturate(1)}50%{filter:brightness(2) saturate(3) hue-rotate(30deg)}}
 button{touch-action:manipulation;cursor:pointer;font-family:inherit}
-button:active:not(:disabled){transform:scale(0.89)!important;filter:brightness(1.5)!important}
+button:active:not(:disabled){transform:scale(0.88)!important;filter:brightness(1.55)!important}
 ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1e1e3a}
-.card{background:rgba(255,255,255,0.038);border-radius:14px;padding:12px;margin-bottom:9px;width:100%;max-width:460px;backdrop-filter:blur(10px)}
-.hpt{height:11px;background:rgba(0,0,0,0.55);border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);margin-bottom:4px}
-.hpf{height:100%;border-radius:6px;transition:width 0.4s ease}
-.expt{height:6px;background:rgba(0,0,0,0.4);border-radius:4px;overflow:hidden;border:1px solid rgba(120,120,255,0.2)}
-.expf{height:100%;border-radius:4px;background:linear-gradient(90deg,#5a5af0,#8080f8);transition:width 0.4s ease;box-shadow:0 0 6px #5a5af088}
-.mpt{height:6px;background:rgba(0,0,0,0.4);border-radius:4px;overflow:hidden;border:1px solid rgba(50,180,255,0.2);margin-top:2px}
-.mpf{height:100%;border-radius:4px;background:linear-gradient(90deg,#0ea5e9,#38bdf8);transition:width 0.4s ease}
+.card{background:rgba(255,255,255,0.037);border-radius:14px;padding:12px;margin-bottom:9px;width:100%;max-width:460px;backdrop-filter:blur(10px)}
+.hpt{height:11px;background:rgba(0,0,0,0.55);border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.07)}
+.hpf{height:100%;border-radius:6px;transition:width .4s ease}
+.mpt{height:6px;background:rgba(0,0,0,0.45);border-radius:4px;overflow:hidden;border:1px solid rgba(50,170,255,.2);margin-top:2px}
+.mpf{height:100%;border-radius:4px;background:linear-gradient(90deg,#0ea5e9,#38bdf8);transition:width .4s ease}
+.expt{height:6px;background:rgba(0,0,0,0.4);border-radius:4px;overflow:hidden;border:1px solid rgba(100,100,255,.2);margin-top:2px}
+.expf{height:100%;border-radius:4px;background:linear-gradient(90deg,#5555e8,#8080f8);transition:width .4s ease}
 </style>
 </head>
 <body><div id="root"></div>
 <script>
-// ===== AUDIO =====
-let _ac=null;
+// =================== AUDIO ENGINE ===================
+let _ac=null,_muted=false,_btid=null,_bcur=null;
 function gac(){if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume();return _ac;}
-let _muted=false,_btid=null,_bcur=null;
-function tn(f,t,dur,vol=0.18,wave='square'){if(!f||_muted)return;try{const c=gac(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type=wave;o.frequency.value=f;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur*0.88);o.start(t);o.stop(t+dur);}catch(e){}}
-const N={R:0,C4:262,D4:294,Eb4:311,E4:330,F4:349,Gb4:370,G4:392,Ab4:415,A4:440,Bb4:466,B4:494,C5:523,Db5:554,D5:587,Eb5:622,E5:659,F5:698,Gb5:740,G5:784,Ab5:831,A5:880,Bb5:932,B5:988,C6:1047,D6:1175,E6:1319,G6:1568};
+function tn(f,t,dur,vol,wave){
+  if(!f||_muted)return;
+  vol=vol||0.18;wave=wave||'square';
+  try{const c=gac(),o=c.createOscillator(),g=c.createGain();
+  o.connect(g);g.connect(c.destination);o.type=wave;o.frequency.value=f;
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur*0.9);
+  o.start(t);o.stop(t+dur);}catch(e){}
+}
+const N={R:0,D3:147,G3:196,A3:220,Bb3:233,B3:247,C4:262,D4:294,Eb4:311,E4:330,F4:349,Gb4:370,G4:392,Ab4:415,A4:440,Bb4:466,B4:494,C5:523,Db5:554,D5:587,Eb5:622,E5:659,F5:698,Gb5:740,G5:784,Ab5:831,A5:880,Bb5:932,B5:988,C6:1047,D6:1175,Eb6:1245,E6:1319,G6:1568};
+// BGM tracks - DQ/FF inspired
 const BGMS={
-  field:{bpm:110,s:[[N.C5,.5],[N.E5,.5],[N.G5,.5],[N.E5,.5],[N.F5,.5],[N.A5,.5],[N.C6,1],[N.R,.5],[N.C6,.25],[N.B5,.25],[N.A5,.5],[N.G5,.5],[N.F5,.5],[N.E5,.5],[N.D5,1.5],[N.R,.5],[N.E5,.5],[N.G5,.5],[N.B5,.5],[N.G5,.5],[N.A5,.5],[N.C6,.5],[N.E6,1],[N.R,.5],[N.D6,.5],[N.C6,.5],[N.B5,.5],[N.A5,.5],[N.G5,.5],[N.C5,2],[N.R,1]]},
-  battle:{bpm:170,s:[[N.G4,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.Eb5,.5],[N.R,.25],[N.D5,.25],[N.G4,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.D5,.5],[N.R,.25],[N.C5,.25],[N.G4,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.Eb5,.5],[N.F5,.25],[N.Eb5,.25],[N.D5,.5],[N.Bb4,.5],[N.C5,.5],[N.R,.5],[N.Bb4,.25],[N.Bb4,.25],[N.B4,.25],[N.Bb4,.25],[N.F5,.5],[N.R,.25],[N.Eb5,.25],[N.Bb4,.25],[N.Bb4,.25],[N.B4,.25],[N.Bb4,.25],[N.Eb5,.5],[N.R,.25],[N.D5,.25],[N.C5,.5],[N.D5,.5],[N.Eb5,.5],[N.F5,.5],[N.G5,1.5],[N.R,.5]]},
-  boss:{bpm:185,s:[[N.D5,.25],[N.R,.125],[N.D5,.25],[N.R,.125],[N.D5,.5],[N.Eb5,.25],[N.D5,.25],[N.Bb4,.5],[N.R,.25],[N.Bb4,.25],[N.C5,.5],[N.D5,.5],[N.E5,.25],[N.R,.125],[N.E5,.25],[N.R,.125],[N.E5,.5],[N.F5,.25],[N.E5,.25],[N.C5,.5],[N.R,.25],[N.C5,.25],[N.D5,.5],[N.E5,.5],[N.F5,1],[N.G5,.5],[N.F5,.5],[N.E5,.5],[N.D5,.5],[N.C5,.5],[N.B4,.5],[N.Bb4,1.5],[N.R,.5]]},
+  // DQ風フィールドテーマ: 行進曲調、希望的
+  field:{bpm:106,s:[
+    [N.G5,.5],[N.R,.25],[N.G5,.25],[N.A5,.5],[N.G5,.5],[N.E5,.5],[N.D5,.5],
+    [N.C5,1],[N.R,.25],[N.C5,.25],[N.D5,.5],[N.E5,.5],
+    [N.F5,.5],[N.G5,.5],[N.A5,.5],[N.G5,.5],[N.F5,.5],[N.E5,.5],[N.D5,1.5],[N.R,.5],
+    [N.A5,.5],[N.R,.25],[N.A5,.25],[N.B5,.5],[N.A5,.5],[N.G5,.5],[N.F5,.5],
+    [N.E5,1],[N.R,.25],[N.E5,.25],[N.F5,.5],[N.G5,.5],
+    [N.A5,.5],[N.G5,.5],[N.F5,.5],[N.E5,.5],[N.D5,.5],[N.C5,.5],[N.G5,1.5],[N.R,.5],
+    [N.E5,.25],[N.F5,.25],[N.G5,.5],[N.A5,.5],[N.G5,.5],[N.F5,.5],
+    [N.E5,.5],[N.D5,.5],[N.C5,.5],[N.E5,.5],[N.C5,2],[N.R,1]
+  ]},
+  // DQ風バトルテーマ: 緊張感、ドラム調リズム
+  battle:{bpm:172,s:[
+    [N.G4,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.Eb5,.5],[N.R,.25],[N.D5,.25],
+    [N.G4,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.D5,.5],[N.R,.25],[N.C5,.25],
+    [N.G4,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.Eb5,.5],[N.F5,.25],[N.Eb5,.25],
+    [N.D5,.5],[N.Bb4,.5],[N.C5,.5],[N.R,.5],
+    [N.Bb4,.25],[N.Bb4,.25],[N.B4,.25],[N.Bb4,.25],[N.F5,.5],[N.R,.25],[N.Eb5,.25],
+    [N.Bb4,.25],[N.Bb4,.25],[N.B4,.25],[N.Bb4,.25],[N.Eb5,.5],[N.R,.25],[N.D5,.25],
+    [N.Eb5,.5],[N.D5,.5],[N.C5,.5],[N.D5,.5],[N.Eb5,.5],[N.F5,.5],[N.G5,1],[N.R,1],
+    [N.C5,.25],[N.C5,.25],[N.Db5,.25],[N.C5,.25],[N.G5,.5],[N.R,.25],[N.F5,.25],
+    [N.C5,.25],[N.C5,.25],[N.Db5,.25],[N.C5,.25],[N.F5,.5],[N.R,.25],[N.Eb5,.25],
+    [N.D5,.5],[N.Eb5,.5],[N.F5,.5],[N.G5,.5],[N.Ab5,1.5],[N.R,.5]
+  ]},
+  // FF風ボステーマ: 不気味、緊迫感
+  boss:{bpm:148,s:[
+    [N.D5,.25],[N.R,.125],[N.D5,.25],[N.R,.125],[N.D5,.5],[N.Eb5,.25],[N.D5,.25],
+    [N.Bb4,.75],[N.R,.25],[N.C5,.5],[N.D5,.75],
+    [N.E5,.25],[N.R,.125],[N.E5,.25],[N.R,.125],[N.E5,.5],[N.F5,.25],[N.E5,.25],
+    [N.C5,.75],[N.R,.25],[N.D5,.5],[N.E5,.75],
+    [N.F5,.5],[N.G5,.5],[N.Ab5,.5],[N.G5,.5],[N.F5,.5],[N.Eb5,.5],
+    [N.D5,.5],[N.R,.25],[N.Bb4,.25],[N.C5,.5],[N.D5,.5],
+    [N.Eb5,.5],[N.F5,.25],[N.Eb5,.25],[N.D5,.5],[N.C5,.5],
+    [N.Bb4,.5],[N.Ab4,.5],[N.G4,1.5],[N.R,.5],
+    [N.G5,.25],[N.R,.125],[N.G5,.25],[N.Ab5,.25],[N.G5,.25],[N.F5,.5],[N.Eb5,.5],
+    [N.D5,.5],[N.Eb5,.5],[N.D5,.5],[N.C5,.5],[N.Bb4,1.5],[N.R,.5]
+  ]},
+  // 魔天王テーマ: 最終決戦、壮絶
+  final:{bpm:200,s:[
+    [N.D5,.25],[N.D5,.125],[N.R,.125],[N.D5,.25],[N.Eb5,.25],[N.D5,.5],[N.R,.25],
+    [N.Bb4,.25],[N.C5,.25],[N.D5,.5],[N.Eb5,.25],[N.F5,.25],[N.G5,.5],[N.R,.5],
+    [N.Ab5,.5],[N.G5,.5],[N.F5,.5],[N.Eb5,.5],[N.D5,.25],[N.C5,.25],[N.Bb4,.5],[N.R,.5],
+    [N.C5,.25],[N.C5,.125],[N.R,.125],[N.C5,.25],[N.Db5,.25],[N.C5,.5],[N.R,.25],
+    [N.Ab4,.25],[N.Bb4,.25],[N.C5,.5],[N.Db5,.25],[N.Eb5,.25],[N.F5,.5],[N.R,.5],
+    [N.G5,.5],[N.Ab5,.5],[N.Bb5,.5],[N.Ab5,.5],[N.G5,.25],[N.F5,.25],[N.Eb5,.5],[N.R,.5],
+    [N.D5,.25],[N.Eb5,.125],[N.D5,.125],[N.C5,.25],[N.Bb4,.25],[N.Ab4,.5],[N.G4,.5],
+    [N.D5,1.5],[N.R,.5]
+  ]},
+  // DQ風勝利ファンファーレ (1回のみ)
+  victory:{bpm:180,loop:false,s:[
+    [N.C5,.25],[N.R,.125],[N.C5,.25],[N.R,.125],[N.C5,.25],[N.R,.125],[N.G5,.75],
+    [N.G5,.25],[N.F5,.25],[N.E5,.25],[N.D5,.25],[N.C5,1.5]
+  ]},
+  // ショップ/タウン
+  town:{bpm:90,s:[
+    [N.C5,.5],[N.E5,.5],[N.G5,.5],[N.C6,.5],[N.G5,.5],[N.E5,.5],[N.C5,1],
+    [N.F5,.5],[N.A5,.5],[N.C6,.5],[N.A5,.5],[N.G5,.5],[N.F5,.5],[N.E5,1],
+    [N.G5,.5],[N.B5,.5],[N.D6,.5],[N.B5,.5],[N.A5,.5],[N.G5,.5],[N.F5,1],
+    [N.E5,.5],[N.G5,.5],[N.C6,.5],[N.E6,.5],[N.D6,.5],[N.C6,.5],[N.C5,2]
+  ]},
 };
 function bgm(name){if(_bcur===name)return;stopBgm();_bcur=name;_bgmLoop(name);}
-function _bgmLoop(name){if(_bcur!==name||_muted)return;const b=BGMS[name];if(!b)return;try{const c=gac();let t=c.currentTime+0.05;const bd=60/b.bpm;b.s.forEach(([f,beats])=>{tn(f,t,beats*bd*0.86);t+=beats*bd;});_btid=setTimeout(()=>_bgmLoop(name),(t-c.currentTime)*1000-100);}catch(e){}}
+function _bgmLoop(name){
+  if(_bcur!==name||_muted)return;
+  const b=BGMS[name];if(!b)return;
+  try{
+    const c=gac();let t=c.currentTime+0.06;const bd=60/b.bpm;
+    b.s.forEach(([f,beats])=>{tn(f,t,beats*bd*0.88,0.18,'square');t+=beats*bd;});
+    if(b.loop===false){_btid=null;return;}
+    _btid=setTimeout(()=>_bgmLoop(name),(t-c.currentTime)*1000-100);
+  }catch(e){}
+}
 function stopBgm(){_bcur=null;if(_btid)clearTimeout(_btid);_btid=null;}
 function toggleMute(){_muted=!_muted;if(_muted)stopBgm();return _muted;}
 const SFX={
-  atk(){const c=gac(),t=c.currentTime;tn(220,t,.1,.45,'sawtooth');tn(180,t+.05,.15,.22,'square');},
-  skill(){const c=gac(),t=c.currentTime;[440,554,659].forEach((f,i)=>tn(f,t+i*.05,.3,.28,'sawtooth'));tn(880,t+.2,.45,.18,'sine');},
-  magic(){const c=gac(),t=c.currentTime;[523,659,784,1047].forEach((f,i)=>tn(f,t+i*.06,.22,.24,'sine'));tn(1319,t+.3,.3,.16,'triangle');},
-  hit(){const c=gac(),t=c.currentTime;tn(150,t,.09,.55,'sawtooth');tn(100,t+.04,.13,.32,'square');},
-  phit(){const c=gac(),t=c.currentTime;tn(200,t,.12,.5,'sawtooth');tn(130,t+.06,.16,.3,'square');},
-  heal(){const c=gac(),t=c.currentTime;[523,659,784].forEach((f,i)=>tn(f,t+i*.09,.28,.22,'sine'));},
-  healAll(){const c=gac(),t=c.currentTime;[523,659,784,1047,1319].forEach((f,i)=>tn(f,t+i*.07,.35,.22,'sine'));},
-  lvup(){const c=gac(),t=c.currentTime;[523,659,784,1047].forEach((f,i)=>tn(f,t+i*.11,.35,.28,'triangle'));},
-  win(){const c=gac(),t=c.currentTime;[523,659,784,1047,1319,1568].forEach((f,i)=>tn(f,t+i*.11,.4,.28,'triangle'));},
-  dead(){const c=gac(),t=c.currentTime;[440,330,220,110].forEach((f,i)=>tn(f,t+i*.16,.45,.24,'sawtooth'));},
-  cursor(){tn(660,gac().currentTime,.08,.22,'sine');},
-  flee(){const c=gac(),t=c.currentTime;[300,200,150].forEach((f,i)=>tn(f,t+i*.07,.22,.22,'sawtooth'));},
-  buy(){const c=gac(),t=c.currentTime;tn(880,t,.15,.3,'sine');tn(1100,t+.11,.15,.22,'sine');},
-  save(){const c=gac(),t=c.currentTime;[440,550,660].forEach((f,i)=>tn(f,t+i*.07,.2,.22,'sine'));},
-  poison(){const c=gac(),t=c.currentTime;tn(300,t,.2,.15,'sawtooth');tn(250,t+.1,.2,.12,'sawtooth');},
-  stun(){const c=gac(),t=c.currentTime;tn(200,t,.25,.18,'square');},
+  atk(){if(_muted)return;const c=gac(),t=c.currentTime;tn(220,t,.1,.45,'sawtooth');tn(180,t+.05,.15,.22,'square');},
+  skill(){if(_muted)return;const c=gac(),t=c.currentTime;[440,554,659].forEach((f,i)=>tn(f,t+i*.05,.3,.28,'sawtooth'));tn(880,t+.2,.45,.18,'sine');},
+  magic(){if(_muted)return;const c=gac(),t=c.currentTime;[523,659,784,1047].forEach((f,i)=>tn(f,t+i*.06,.22,.24,'sine'));tn(1319,t+.3,.3,.16,'triangle');},
+  ice(){if(_muted)return;const c=gac(),t=c.currentTime;[659,523,440,349].forEach((f,i)=>tn(f,t+i*.05,.25,.22,'triangle'));},
+  wind(){if(_muted)return;const c=gac(),t=c.currentTime;[392,494,587,740].forEach((f,i)=>tn(f,t+i*.04,.2,.2,'sawtooth'));},
+  holy(){if(_muted)return;const c=gac(),t=c.currentTime;[523,659,784,1047,1319].forEach((f,i)=>tn(f,t+i*.07,.38,.24,'sine'));},
+  buff(){if(_muted)return;const c=gac(),t=c.currentTime;[523,659,784].forEach((f,i)=>tn(f,t+i*.08,.3,.18,'triangle'));},
+  hit(){if(_muted)return;const c=gac(),t=c.currentTime;tn(150,t,.09,.55,'sawtooth');tn(100,t+.04,.12,.3,'square');},
+  phit(){if(_muted)return;const c=gac(),t=c.currentTime;tn(200,t,.12,.5,'sawtooth');tn(130,t+.06,.16,.28,'square');},
+  heal(){if(_muted)return;const c=gac(),t=c.currentTime;[523,659,784].forEach((f,i)=>tn(f,t+i*.09,.28,.22,'sine'));},
+  revive(){if(_muted)return;const c=gac(),t=c.currentTime;[392,494,587,740,880,1047].forEach((f,i)=>tn(f,t+i*.1,.4,.24,'sine'));},
+  lvup(){if(_muted)return;const c=gac(),t=c.currentTime;[523,659,784,1047].forEach((f,i)=>tn(f,t+i*.11,.35,.28,'triangle'));},
+  victory(){if(_muted)return;bgm('victory');},
+  dead(){if(_muted)return;const c=gac(),t=c.currentTime;[440,330,220,110].forEach((f,i)=>tn(f,t+i*.16,.45,.24,'sawtooth'));},
+  cursor(){if(_muted)return;tn(660,gac().currentTime,.08,.22,'sine');},
+  flee(){if(_muted)return;const c=gac(),t=c.currentTime;[300,200,150].forEach((f,i)=>tn(f,t+i*.07,.22,.22,'sawtooth'));},
+  buy(){if(_muted)return;const c=gac(),t=c.currentTime;tn(880,t,.15,.3,'sine');tn(1100,t+.11,.15,.22,'sine');},
+  save(){if(_muted)return;const c=gac(),t=c.currentTime;[440,550,660].forEach((f,i)=>tn(f,t+i*.07,.2,.22,'sine'));},
+  rage(){if(_muted)return;const c=gac(),t=c.currentTime;[110,87,69].forEach((f,i)=>tn(f,t+i*.12,.55,.35,'sawtooth'));},
+  poison(){if(_muted)return;tn(300,gac().currentTime,.18,.14,'sawtooth');},
+  stun(){if(_muted)return;tn(200,gac().currentTime,.22,.16,'square');},
+  recruit(){if(_muted)return;const c=gac(),t=c.currentTime;[659,784,880,1047].forEach((f,i)=>tn(f,t+i*.09,.35,.22,'triangle'));},
 };
 
-// ===== GAME DATA =====
+// =================== GAME DATA ===================
+const CHAR_VISUALS={
+  hero:   {face:'🫅',body:'🏅',shield:null,  weapon:'⚔️', legs:'👖'},
+  warrior:{face:'💂',body:'🦺',shield:'🛡️', weapon:'🗡️', legs:'🦵'},
+  priest: {face:'😇',body:'👘',shield:null,  weapon:'🪄', legs:'🩱'},
+  mage:   {face:'🧙',body:'🧥',shield:null,  weapon:'🔮', legs:'🌂'},
+};
+
 const CLASSES={
-  hero:{id:'hero',name:'勇者',cEmoji:'🦸',wEmoji:'⚔️',bEmoji:'👑',hp:145,mp:28,atk:22,def:12,mat:16,
-    skill:{name:'会心の一撃',e:'💥',desc:'必ずクリティカル！ATK×3.2',mp:8,type:'atk_single',fn:p=>Math.floor(p.atk*3.2),inflict:null},
-    color:'#d4a017',bg:'rgba(212,160,23,0.1)'},
-  warrior:{id:'warrior',name:'戦士',cEmoji:'🧔‍♂️',wEmoji:'🗡️',bEmoji:'⛑️',hp:200,mp:10,atk:32,def:22,mat:5,
-    skill:{name:'大剣ぶんまわし',e:'⚔️',desc:'全敵を攻撃！ATK×2.0 + スタン',mp:5,type:'atk_all',fn:p=>Math.floor(p.atk*2.0+12),inflict:'stun'},
-    color:'#ef4444',bg:'rgba(239,68,68,0.1)'},
-  priest:{id:'priest',name:'僧侶',cEmoji:'👼',wEmoji:'🪄',bEmoji:'✝️',hp:125,mp:55,atk:14,def:15,mat:24,
-    skill:{name:'ベホマラー',e:'✨',desc:'味方全員のHPを全回復！',mp:20,type:'heal_all',fn:null,inflict:null},
-    color:'#22c55e',bg:'rgba(34,197,94,0.1)'},
-  mage:{id:'mage',name:'魔法使い',cEmoji:'🧙‍♂️',wEmoji:'🔮',bEmoji:'🎩',hp:105,mp:65,atk:10,def:7,mat:44,
-    skill:{name:'メラゾーマ',e:'🔥',desc:'全敵に灼熱魔法！MAT×4.2 + 燃焼',mp:18,type:'atk_all',fn:p=>Math.floor(p.mat*4.2+35),inflict:'burn'},
-    color:'#a855f7',bg:'rgba(168,85,247,0.1)'},
+  hero:{id:'hero',name:'勇者',color:'#d4a017',bg:'rgba(212,160,23,.1)',
+    hp:155,mp:30,atk:24,def:13,mat:18,
+    baseSkill:{id:'bs_hero',name:'会心の一撃',e:'💥',desc:'必ずクリティカル！ATK×3.2',mp:8,
+      type:'atk_one',fn:(c)=>Math.floor(c.atk*3.2)}},
+  warrior:{id:'warrior',name:'戦士',color:'#ef4444',bg:'rgba(239,68,68,.1)',
+    hp:210,mp:12,atk:34,def:24,mat:6,
+    baseSkill:{id:'bs_warrior',name:'大剣ぶんまわし',e:'⚔️',desc:'全敵ATK×2.0+スタン',mp:5,
+      type:'atk_all',fn:(c)=>Math.floor(c.atk*2.0+12),inflict:'stun'}},
+  priest:{id:'priest',name:'僧侶',color:'#22c55e',bg:'rgba(34,197,94,.1)',
+    hp:130,mp:60,atk:14,def:16,mat:26,
+    baseSkill:{id:'bs_priest',name:'ベホマラー',e:'✨',desc:'全員HP全回復',mp:22,
+      type:'heal_all',fn:null}},
+  mage:{id:'mage',name:'魔法使い',color:'#a855f7',bg:'rgba(168,85,247,.1)',
+    hp:110,mp:70,atk:11,def:7,mat:48,
+    baseSkill:{id:'bs_mage',name:'メラゾーマ',e:'🔥',desc:'全敵灼熱魔法！MAT×4.2+燃焼',mp:18,
+      type:'atk_all',fn:(c)=>Math.floor(c.mat*4.2+35),inflict:'burn'}},
 };
 
-// Each stage: 3 normal encounters (each 1-2 monsters) + 1 boss
+// Spells learned on level up — each: {level, id, name, e, mp, type, fn, desc, inflict?, color}
+const CLASS_SPELL_LEARN={
+  hero:[
+    {level:5, id:'gira',    name:'ギラ',     e:'🔥',mp:6,  type:'atk_one', fn:(c)=>Math.floor(c.mat*2.0+15),          desc:'炎で1体攻撃',       color:'#f97316'},
+    {level:10,id:'bikiru',  name:'バイキルト',e:'⬆️',mp:8,  type:'buff_atk',fn:null,                                   desc:'自分ATK3ターン2倍', color:'#fbbf24'},
+    {level:15,id:'dragcut', name:'竜殺し',   e:'🐲',mp:12, type:'atk_one', fn:(c)=>Math.floor(c.atk*3.8),              desc:'竜族特効2倍！',     color:'#dc2626'},
+    {level:20,id:'holyblade',name:'聖剣光波',e:'✨',mp:18, type:'atk_all', fn:(c)=>Math.floor(c.mat*2.5+c.atk*1.8),   desc:'全敵に聖属性攻撃',  color:'#fde68a'},
+    {level:25,id:'swordstorm',name:'剣嵐',   e:'⚡',mp:25, type:'atk_all', fn:(c)=>Math.floor(c.atk*3.5+c.mat*1.5),   desc:'全敵に物理+魔法複合',color:'#818cf8'},
+  ],
+  warrior:[
+    {level:5, id:'tackle',  name:'タックル',  e:'💥',mp:5,  type:'atk_one_stun',fn:(c)=>Math.floor(c.atk*1.8),desc:'スタン45%付与',       color:'#f87171',inflict:'stun'},
+    {level:10,id:'teppeki', name:'鉄壁',      e:'🛡️',mp:6, type:'buff_def',fn:null,                           desc:'全員DEF3ターン1.8倍', color:'#38bdf8'},
+    {level:15,id:'renzan',  name:'連続斬り',  e:'⚔️',mp:10, type:'atk_double',fn:(c)=>Math.floor(c.atk*1.7),  desc:'同じ敵を2回攻撃',    color:'#fca5a5'},
+    {level:20,id:'earthcrush',name:'大地砕き',e:'💢',mp:15, type:'atk_all', fn:(c)=>Math.floor(c.atk*3.0+20),  desc:'地震で全敵攻撃',     color:'#a16207'},
+    {level:25,id:'berserk', name:'超戦士化',  e:'😤',mp:20, type:'buff_both',fn:null,                          desc:'ATK&DEF4ターン2倍！', color:'#dc2626'},
+  ],
+  priest:[
+    {level:5, id:'sukuru',  name:'スクルト',  e:'🔵',mp:7,  type:'buff_def_all',fn:null,                            desc:'全員DEF3ターンUP',  color:'#38bdf8'},
+    {level:10,id:'bagikuro',name:'バギクロス',e:'🌪️',mp:12, type:'atk_all',   fn:(c)=>Math.floor(c.mat*2.4+20),    desc:'竜巻で全敵攻撃',   color:'#67e8f9'},
+    {level:15,id:'zao',     name:'ザオラル',  e:'💫',mp:16, type:'revive',    fn:null,                               desc:'1人をHP50%で復活', color:'#4ade80'},
+    {level:20,id:'sacred',  name:'聖なる光',  e:'🌟',mp:22, type:'atk_all',   fn:(c)=>Math.floor(c.mat*3.8+30),    desc:'全敵に強力な聖光',  color:'#fef08a'},
+    {level:25,id:'megaheal',name:'メガヒール',e:'💖',mp:28, type:'heal_all_mp',fn:null,                             desc:'全員HP・MP全回復',  color:'#86efac'},
+  ],
+  mage:[
+    {level:5, id:'hyado',   name:'ヒャダルコ',e:'❄️',mp:10, type:'atk_one',  fn:(c)=>Math.floor(c.mat*2.6+20),       desc:'氷属性大ダメージ',  color:'#7dd3fc'},
+    {level:10,id:'mahoka',  name:'マホカンタ',e:'🔮',mp:9,  type:'reflect',  fn:null,                                 desc:'魔法を反射！',      color:'#818cf8'},
+    {level:15,id:'ionazun', name:'イオナズン', e:'💥',mp:24, type:'atk_all',  fn:(c)=>Math.floor(c.mat*5.0+50),       desc:'爆発魔法！最強威力',color:'#fca5a5'},
+    {level:20,id:'force',   name:'フォース',   e:'⚡',mp:18, type:'atk_all',  fn:(c)=>Math.floor(c.mat*3.0+c.atk*1.2),desc:'電撃で全敵攻撃',   color:'#fde68a'},
+    {level:25,id:'darkstar',name:'暗黒星',    e:'🌑',mp:30, type:'atk_one',  fn:(c)=>Math.floor(c.mat*7.0+80),        desc:'1体に超巨大魔法！', color:'#a855f7'},
+  ],
+};
+
+// Enemy templates
+// recruitable: chance to join, allySkill for when they're in party
 const ENC=[
-  // Stage 0: 荒廃の大地
+  // Stage 0: 荒廃の大地 (target Lv5-8 to clear)
   [
-    [{id:'skw1',name:'骸骨狼',base:'🐺',ov:'💀',flt:'grayscale(0.75) contrast(2) brightness(0.55)',gc:'#6b7280',hp:48,maxHp:48,atk:16,def:5,exp:18,gold:14,si:'poison',desc:'腐った骨だけになったオオカミ。眼窩に赤い怨念の光が宿る'},
-     {id:'skw2',name:'骸骨狼',base:'🐺',ov:'💀',flt:'grayscale(0.75) contrast(2) brightness(0.55)',gc:'#6b7280',hp:48,maxHp:48,atk:16,def:5,exp:18,gold:14,si:'poison',desc:'腐った骨だけになったオオカミ'}],
-    [{id:'rotkn',name:'腐乱騎士',base:'🧟',ov:'🗡️',flt:'hue-rotate(95deg) saturate(0.5) brightness(0.65)',gc:'#84cc16',hp:80,maxHp:80,atk:22,def:11,exp:32,gold:26,si:'poison',desc:'死して尚剣を握り続ける腐敗した元騎士。甲冑に残る紋章は王国の残影'},
-     {id:'vsp',name:'怨念兵士',base:'👻',ov:'🗡️',flt:'hue-rotate(240deg) brightness(0.75) saturate(1.8)',gc:'#a78bfa',hp:55,maxHp:55,atk:18,def:8,exp:24,gold:20,si:'stun',desc:'戦場で無念の死を遂げた兵士の亡霊。触れた者の力を奪う'}],
-    [{id:'chng',name:'鉄鎖巨人',base:'💀',ov:'⛓️',flt:'brightness(0.45) contrast(2.2) saturate(0.2)',gc:'#374151',hp:145,maxHp:145,atk:30,def:18,exp:60,gold:50,si:'stun',big:true,desc:'無数の鉄鎖を全身に巻きつけた腐骨の巨人。一撃で地割れを起こす'}],
-    [{id:'helldr',name:'業火龍バルドゥール',base:'🐉',ov:'🔥',flt:'hue-rotate(18deg) saturate(3.5) brightness(1.15)',gc:'#f97316',hp:320,maxHp:320,atk:40,def:20,exp:130,gold:110,si:'burn',big:true,boss:true,desc:'地上を業火で焼き尽くす龍王。咆哮だけで地が割れ、息吹で海が蒸発する'}],
+    [{id:'sw1',name:'骸骨狼',     base:'🐺',ov:'💀',flt:'grayscale(.8) contrast(2) brightness(.55)',gc:'#6b7280',hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:'poison',recruitable:true,allySkill:{name:'骨砕き',e:'💀',mp:4,type:'atk_one',fn:(c)=>Math.floor(c.atk*2.2),desc:'骨を砕く一撃'}},
+     {id:'sw2',name:'骸骨狼β',    base:'🐺',ov:'💀',flt:'grayscale(.8) contrast(2) brightness(.55)',gc:'#6b7280',hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:'poison'}],
+    [{id:'rkn',name:'腐乱騎士',   base:'🧟',ov:'🗡️',flt:'hue-rotate(95deg) saturate(.5) brightness(.65)',gc:'#84cc16',hp:90,maxHp:90,atk:25,def:13,mat:10,exp:36,gold:30,si:'poison',recruitable:true,allySkill:{name:'暗黒剣',e:'🗡️',mp:6,type:'atk_one',fn:(c)=>Math.floor(c.atk*2.5+8),desc:'暗黒のエネルギーで攻撃'}},
+     {id:'vsp',name:'怨念兵士',   base:'👻',ov:'⚔️',flt:'hue-rotate(240deg) brightness(.75) saturate(1.8)',gc:'#a78bfa',hp:64,maxHp:64,atk:20,def:9,mat:12,exp:28,gold:22,si:'stun'}],
+    [{id:'cng',name:'鉄鎖巨人',   base:'💀',ov:'⛓️',flt:'brightness(.45) contrast(2.2) saturate(.2)',gc:'#374151',hp:160,maxHp:160,atk:34,def:20,mat:10,exp:68,gold:55,si:'stun',big:true}],
+    [{id:'hdr',name:'業火龍バルドゥール',base:'🐉',ov:'🔥',flt:'hue-rotate(18deg) saturate(3.5) brightness(1.15)',gc:'#f97316',hp:400,maxHp:400,atk:46,def:24,mat:35,exp:160,gold:130,si:'burn',big:true,boss:true,
+      phases:[{hp:0.6,msg:'バルドゥールの怒りが増した！',atkBonus:12},{hp:0.3,msg:'バルドゥールが咆哮した！全員ダメージ！',atkBonus:20,aoe:true}]}],
   ],
-  // Stage 1: 魔骨の迷宮
+  // Stage 1: 魔骨の迷宮 (target Lv10-14)
   [
-    [{id:'vsp1',name:'猛毒蜘蛛',base:'🕷️',ov:'☠️',flt:'hue-rotate(255deg) saturate(2.5) brightness(0.65)',gc:'#a855f7',hp:65,maxHp:65,atk:22,def:10,exp:36,gold:30,si:'poison',desc:'体長1mを超える変異体。一咬みで全身を毒で蝕む'},
-     {id:'vsp2',name:'猛毒蜘蛛',base:'🕷️',ov:'☠️',flt:'hue-rotate(255deg) saturate(2.5) brightness(0.65)',gc:'#a855f7',hp:65,maxHp:65,atk:22,def:10,exp:36,gold:30,si:'poison',desc:'猛毒蜘蛛の一体'}],
-    [{id:'ghar',name:'幽霊甲冑',base:'👻',ov:'⚔️',flt:'hue-rotate(195deg) brightness(1.05) saturate(1.5)',gc:'#60a5fa',hp:95,maxHp:95,atk:28,def:22,exp:50,gold:42,si:'stun',desc:'呪いによって自我を持った鎧。中身は空洞で、衝撃が通らない'},
-     {id:'hell',name:'地獄犬ケルベロ',base:'🐕',ov:'🔥',flt:'grayscale(0.6) brightness(0.45) saturate(2.5) hue-rotate(345deg)',gc:'#dc2626',hp:80,maxHp:80,atk:32,def:12,exp:45,gold:38,si:'burn',desc:'冥界の番犬。三つの頭それぞれが別々の炎を吐き、逃げ場をなくす'}],
-    [{id:'abser',name:'深淵大蛇ヴォルム',base:'🐍',ov:'💀',flt:'brightness(0.38) contrast(2.8) hue-rotate(275deg)',gc:'#7c3aed',hp:185,maxHp:185,atk:38,def:22,exp:78,gold:65,si:'poison',big:true,desc:'地底深くに棲む原始の魔蛇。毒は魂まで蝕み、巻き付かれれば骨まで砕ける'}],
-    [{id:'nduke',name:'冥界公爵ルシファス',base:'💀',ov:'👑',flt:'brightness(0.3) contrast(3.2) hue-rotate(235deg)',gc:'#4f46e5',hp:420,maxHp:420,atk:50,def:25,exp:180,gold:145,si:'poison',big:true,boss:true,desc:'百年の修行を経て死霊王に転生した公爵。不死の軍団を率い、迷宮に君臨する'}],
+    [{id:'vsp1',name:'猛毒蜘蛛',   base:'🕷️',ov:'☠️',flt:'hue-rotate(255deg) saturate(2.5) brightness(.65)',gc:'#a855f7',hp:80,maxHp:80,atk:28,def:12,mat:18,exp:44,gold:36,si:'poison'},
+     {id:'vsp2',name:'猛毒蜘蛛β',  base:'🕷️',ov:'☠️',flt:'hue-rotate(270deg) saturate(2.2) brightness(.68)',gc:'#9333ea',hp:80,maxHp:80,atk:28,def:12,mat:18,exp:44,gold:36,si:'poison'}],
+    [{id:'ghr',name:'幽霊甲冑',    base:'👻',ov:'⚔️',flt:'hue-rotate(195deg) brightness(1.05) saturate(1.5)',gc:'#60a5fa',hp:110,maxHp:110,atk:35,def:28,mat:14,exp:58,gold:48,si:'stun'},
+     {id:'hel',name:'地獄犬',      base:'🐕',ov:'🔥',flt:'grayscale(.6) brightness(.45) saturate(2.5) hue-rotate(345deg)',gc:'#dc2626',hp:95,maxHp:95,atk:38,def:14,mat:15,exp:52,gold:44,si:'burn',recruitable:true,allySkill:{name:'炎の咆哮',e:'🔥',mp:8,type:'atk_all',fn:(c)=>Math.floor(c.atk*2.2+12),desc:'炎を吐いて全体攻撃'}}],
+    [{id:'ser',name:'深淵大蛇',    base:'🐍',ov:'💀',flt:'brightness(.38) contrast(2.8) hue-rotate(275deg)',gc:'#7c3aed',hp:210,maxHp:210,atk:44,def:26,mat:22,exp:90,gold:75,si:'poison',big:true}],
+    [{id:'luc',name:'冥界公爵ルシファス',base:'💀',ov:'👑',flt:'brightness(.3) contrast(3.2) hue-rotate(235deg)',gc:'#4f46e5',hp:650,maxHp:650,atk:58,def:30,mat:45,exp:220,gold:175,si:'poison',big:true,boss:true,
+      phases:[{hp:0.55,msg:'ルシファスの冥界魔法が解放された！',atkBonus:15},{hp:0.25,msg:'ルシファスの最終形態！',atkBonus:25,aoe:true}]}],
   ],
-  // Stage 2: 暴嵐の天域
+  // Stage 2: 暴嵐の天域 (target Lv18-22)
   [
-    [{id:'blbt1',name:'血翼蝙蝠',base:'🦇',ov:'🩸',flt:'hue-rotate(335deg) saturate(3.2) brightness(0.65)',gc:'#dc2626',hp:72,maxHp:72,atk:26,def:11,exp:42,gold:35,si:'poison',desc:'血を求めて変異した巨大蝙蝠。超音波が脳を揺さぶり、平衡感覚を奪う'},
-     {id:'blbt2',name:'血翼蝙蝠',base:'🦇',ov:'🩸',flt:'hue-rotate(335deg) saturate(3.2) brightness(0.65)',gc:'#dc2626',hp:72,maxHp:72,atk:26,def:11,exp:42,gold:35,si:'poison',desc:'血翼蝙蝠の一体'}],
-    [{id:'thhk',name:'雷鷹ライガード',base:'🦅',ov:'⚡',flt:'hue-rotate(45deg) saturate(2.2) brightness(1.2)',gc:'#fbbf24',hp:105,maxHp:105,atk:35,def:16,exp:58,gold:48,si:'stun',desc:'嵐を呼ぶ巨大な鷹。翼ばたきで雷が落ちる。空高くから急降下すると地が割れる'},
-     {id:'wkn',name:'風霊騎士',base:'👹',ov:'💨',flt:'hue-rotate(175deg) brightness(0.78) saturate(1.8)',gc:'#38bdf8',hp:92,maxHp:92,atk:30,def:20,exp:52,gold:44,si:'stun',desc:'嵐に宿った悪霊が騎士の形をとった存在。風を剣として操る'}],
-    [{id:'twyn',name:'双頭ワイバーン',base:'🐲',ov:'⛈️',flt:'hue-rotate(195deg) saturate(2.2) brightness(0.78)',gc:'#818cf8',hp:230,maxHp:230,atk:46,def:25,exp:92,gold:78,si:'burn',big:true,desc:'炎と雷の二つの頭を持つ暴風竜。左右どちらも独自の意思を持ち、同時に攻撃してくる'}],
-    [{id:'sgarm',name:'天魔将軍ガルム',base:'😈',ov:'⛈️',flt:'hue-rotate(215deg) saturate(2.8) brightness(0.88)',gc:'#6366f1',hp:500,maxHp:500,atk:58,def:30,exp:220,gold:175,si:'stun',big:true,boss:true,desc:'嵐そのものが具現化した天魔の将軍。その怒りが雷となり、意志が暴風となる'}],
+    [{id:'bb1',name:'血翼蝙蝠',    base:'🦇',ov:'🩸',flt:'hue-rotate(335deg) saturate(3.2) brightness(.65)',gc:'#dc2626',hp:92,maxHp:92,atk:35,def:15,mat:22,exp:55,gold:46,si:'poison'},
+     {id:'bb2',name:'血翼蝙蝠β',   base:'🦇',ov:'🩸',flt:'hue-rotate(320deg) saturate(3) brightness(.68)',gc:'#b91c1c',hp:92,maxHp:92,atk:35,def:15,mat:22,exp:55,gold:46,si:'poison'}],
+    [{id:'thh',name:'雷鷹ライガード',base:'🦅',ov:'⚡',flt:'hue-rotate(45deg) saturate(2.2) brightness(1.2)',gc:'#fbbf24',hp:128,maxHp:128,atk:44,def:20,mat:35,exp:72,gold:60,si:'stun',recruitable:true,allySkill:{name:'雷撃',e:'⚡',mp:10,type:'atk_all',fn:(c)=>Math.floor(c.mat*3.0+c.atk*0.8),desc:'雷で全体攻撃'}},
+     {id:'wkn',name:'風霊騎士',    base:'👹',ov:'💨',flt:'hue-rotate(175deg) brightness(.78) saturate(1.8)',gc:'#38bdf8',hp:115,maxHp:115,atk:40,def:25,mat:28,exp:65,gold:55,si:'stun'}],
+    [{id:'twy',name:'双頭ワイバーン',base:'🐲',ov:'⛈️',flt:'hue-rotate(195deg) saturate(2.2) brightness(.78)',gc:'#818cf8',hp:270,maxHp:270,atk:55,def:32,mat:38,exp:110,gold:92,si:'burn',big:true}],
+    [{id:'gar',name:'天魔将軍ガルム',base:'😈',ov:'⛈️',flt:'hue-rotate(215deg) saturate(2.8) brightness(.88)',gc:'#6366f1',hp:900,maxHp:900,atk:72,def:38,mat:58,exp:280,gold:220,si:'stun',big:true,boss:true,
+      phases:[{hp:0.6,msg:'ガルムの嵐の怒りが解放された！',atkBonus:18},{hp:0.3,msg:'ガルムがベルセルク状態に！',atkBonus:30,aoe:true}]}],
   ],
-  // Stage 3: 虚無の玉座
+  // Stage 3: 虚無の玉座 (target Lv25-30)
   [
-    [{id:'fla1',name:'堕天使ルシエル',base:'😇',ov:'💀',flt:'hue-rotate(295deg) saturate(1.8) brightness(0.58)',gc:'#e879f9',hp:88,maxHp:88,atk:32,def:18,exp:58,gold:48,si:'stun',desc:'かつて神の使いだったが、憎悪に堕ちた。美しい顔の裏に深淵の闇が宿る'},
-     {id:'fla2',name:'堕天使ガブリエ',base:'😇',ov:'💀',flt:'hue-rotate(275deg) saturate(1.8) brightness(0.58)',gc:'#d946ef',hp:88,maxHp:88,atk:32,def:18,exp:58,gold:48,si:'stun',desc:'堕天使の一体'}],
-    [{id:'akn',name:'魔導騎士バフォメ',base:'⚔️',ov:'💀',flt:'brightness(0.38) contrast(2.2) hue-rotate(315deg)',gc:'#dc2626',hp:125,maxHp:125,atk:44,def:28,exp:80,gold:68,si:'burn',desc:'禁断の魔法で強化された死霊騎士。魔力を帯びた剣は防御を無視して魂を貫く'},
-     {id:'sorc',name:'深淵術師マレス',base:'🧙',ov:'🌑',flt:'brightness(0.3) contrast(2.8) hue-rotate(255deg)',gc:'#7c3aed',hp:105,maxHp:105,atk:22,def:14,mat:55,exp:72,gold:62,si:'poison',desc:'虚無から呪文を紡ぐ暗黒術師。目が合うだけで正気が失われる'}],
-    [{id:'phdr',name:'幻惑竜王ファントム',base:'🐉',ov:'🌟',flt:'hue-rotate(275deg) saturate(1.8) brightness(1.18)',gc:'#c084fc',hp:295,maxHp:295,atk:56,def:32,exp:118,gold:98,si:'stun',big:true,desc:'幻を操る神龍。本体と幻影を見分けることは不可能に近く、どこからでも攻撃してくる'}],
-    [{id:'zeros',name:'魔天王ゼロス',base:'👹',ov:'👑',flt:'hue-rotate(295deg) saturate(3.2) brightness(0.82)',gc:'#dc2626',hp:700,maxHp:700,atk:72,def:38,exp:500,gold:400,si:'burn',big:true,boss:true,final:true,desc:'天空を支配する魔の王。神を殺し、宇宙を歪め、永劫の虚無を統べる究極の存在'}],
+    [{id:'fa1',name:'堕天使ルシエル',base:'😇',ov:'💀',flt:'hue-rotate(295deg) saturate(1.8) brightness(.58)',gc:'#e879f9',hp:110,maxHp:110,atk:45,def:24,mat:40,exp:75,gold:62,si:'stun',recruitable:true,allySkill:{name:'堕天の呪い',e:'😇',mp:12,type:'atk_one',fn:(c)=>Math.floor(c.mat*3.5+c.atk*1.5),desc:'暗黒の力で強力攻撃'}},
+     {id:'fa2',name:'堕天使ガブリエ',base:'😇',ov:'💀',flt:'hue-rotate(275deg) saturate(1.8) brightness(.58)',gc:'#d946ef',hp:110,maxHp:110,atk:45,def:24,mat:40,exp:75,gold:62,si:'stun'}],
+    [{id:'akn',name:'魔導騎士',     base:'⚔️',ov:'💀',flt:'brightness(.38) contrast(2.2) hue-rotate(315deg)',gc:'#dc2626',hp:150,maxHp:150,atk:58,def:36,mat:30,exp:95,gold:80,si:'burn'},
+     {id:'sor',name:'深淵術師',     base:'🧙',ov:'🌑',flt:'brightness(.3) contrast(2.8) hue-rotate(255deg)',gc:'#7c3aed',hp:130,maxHp:130,atk:28,def:18,mat:65,exp:85,gold:72,si:'poison'}],
+    [{id:'phd',name:'幻惑竜王',     base:'🐉',ov:'🌟',flt:'hue-rotate(275deg) saturate(1.8) brightness(1.18)',gc:'#c084fc',hp:350,maxHp:350,atk:68,def:42,mat:55,exp:135,gold:115,si:'stun',big:true}],
+    // ★最終ボス: Lv30必要設計
+    [{id:'zeros',name:'魔天王ゼロス',base:'👹',ov:'👑',flt:'hue-rotate(295deg) saturate(3.2) brightness(.82)',gc:'#dc2626',
+      hp:2500,maxHp:2500,atk:130,def:65,mat:95,exp:800,gold:500,si:'burn',big:true,boss:true,final:true,
+      doubleAttack:true,
+      desc:'天空を支配する魔の王。神を殺し宇宙を歪める究極の存在',
+      phases:[
+        {hp:0.7,msg:'ゼロスが邪眼を開いた！魔力が爆発する！',atkBonus:20,matBonus:20},
+        {hp:0.4,msg:'ゼロスが真の姿を現した！',atkBonus:40,matBonus:30,aoe:true},
+        {hp:0.15,msg:'⚠️ 絶望の最終形態！全てを虚無に帰す！',atkBonus:60,matBonus:50,aoe:true,tripleAttack:true},
+      ]}],
   ],
 ];
 
 const STAGES=[
-  {name:'荒廃の大地',emoji:'🌑',sky:'linear-gradient(180deg,#0c0602,#1a0902,#0c0602)',gnd:'rgba(90,40,8,0.45)',gb:'rgba(160,70,15,0.55)',bgm:'field'},
-  {name:'魔骨の迷宮',emoji:'💀',sky:'linear-gradient(180deg,#04040e,#080518,#04040e)',gnd:'rgba(55,15,95,0.45)',gb:'rgba(100,35,175,0.55)',bgm:'battle'},
-  {name:'暴嵐の天域',emoji:'⛈️',sky:'linear-gradient(180deg,#040816,#081335,#040816)',gnd:'rgba(8,55,150,0.35)',gb:'rgba(25,90,240,0.5)',bgm:'battle'},
-  {name:'虚無の玉座',emoji:'🌌',sky:'linear-gradient(180deg,#020208,#040412,#020208)',gnd:'rgba(70,15,115,0.4)',gb:'rgba(120,35,195,0.55)',bgm:'boss'},
+  {name:'荒廃の大地', emoji:'🌑',sky:'linear-gradient(180deg,#0c0602,#1a0902,#0c0602)',gnd:'rgba(90,40,8,.45)',gb:'rgba(160,70,15,.55)',bgm:'field'},
+  {name:'魔骨の迷宮', emoji:'💀',sky:'linear-gradient(180deg,#03030d,#070416,#03030d)',gnd:'rgba(55,15,95,.45)',gb:'rgba(100,35,175,.55)',bgm:'battle'},
+  {name:'暴嵐の天域', emoji:'⛈️',sky:'linear-gradient(180deg,#030813,#060e2c,#030813)',gnd:'rgba(8,55,150,.35)',gb:'rgba(25,90,240,.5)',bgm:'battle'},
+  {name:'虚無の玉座', emoji:'🌌',sky:'linear-gradient(180deg,#010106,#03030f,#010106)',gnd:'rgba(60,10,100,.4)',gb:'rgba(110,30,180,.55)',bgm:'final'},
 ];
 
 const ITEMS=[
-  {id:'herb',name:'やくそう',emoji:'🌿',cost:35,type:'con',effect:{hp:90},desc:'HP+90（最大まで）',per:'member'},
-  {id:'mpherb',name:'まんねんぐさ',emoji:'🌸',cost:55,type:'con',effect:{mp:28},desc:'MP+28（最大まで）',per:'member'},
-  {id:'antidote',name:'どくけし草',emoji:'🍃',cost:40,type:'con',effect:{cure:'all'},desc:'状態異常を治す',per:'member'},
-  {id:'elixir',name:'エリクサー',emoji:'🧪',cost:120,type:'con',effect:{hp:9999,mp:9999},desc:'HP・MP完全回復（1人分）',per:'member'},
-  {id:'sword',name:'はがねのけん',emoji:'⚔️',cost:220,type:'equip',effect:{atk:14},desc:'全員ATK+14'},
-  {id:'shield',name:'はがねのたて',emoji:'🛡️',cost:190,type:'equip',effect:{def:12},desc:'全員DEF+12'},
-  {id:'staff',name:'まほうのつえ',emoji:'🪄',cost:200,type:'equip',effect:{mat:16},desc:'全員MAT+16'},
-  {id:'armor',name:'はがねのよろい',emoji:'🥋',cost:280,type:'equip',effect:{def:14,maxHpBonus:35},desc:'全員DEF+14, MaxHP+35'},
+  {id:'herb',  name:'やくそう',   emoji:'🌿',cost:40, type:'con',eff:{hp:100},      desc:'HP+100（最大まで）'},
+  {id:'mherb', name:'まんねんぐさ',emoji:'🌸',cost:60, type:'con',eff:{mp:30},       desc:'MP+30（最大まで）'},
+  {id:'anti',  name:'どくけし草', emoji:'🍃',cost:45, type:'con',eff:{cure:true},    desc:'状態異常回復'},
+  {id:'elix',  name:'エリクサー',  emoji:'🧪',cost:140,type:'con',eff:{hp:9999,mp:9999},desc:'HP・MP完全回復（1人）'},
+  {id:'sword', name:'はがねの剣', emoji:'⚔️',cost:250,type:'equip',eff:{atk:16},     desc:'全員ATK+16'},
+  {id:'shield',name:'はがねの盾', emoji:'🛡️',cost:220,type:'equip',eff:{def:14},     desc:'全員DEF+14'},
+  {id:'staff', name:'魔法のつえ', emoji:'🪄',cost:230,type:'equip',eff:{mat:18},     desc:'全員MAT+18'},
+  {id:'armor', name:'はがねの鎧', emoji:'🥋',cost:320,type:'equip',eff:{def:16,hpb:40},desc:'全員DEF+16,HP+40'},
+  {id:'grimoire',name:'魔導書',   emoji:'📖',cost:380,type:'equip',eff:{mat:25,mpb:20},desc:'全員MAT+25,MP+20'},
 ];
 
-const calcNext=lv=>Math.floor(55*lv*1.35);
-
-// ===== SAVE =====
-const SK='ysd_v3';
+const calcNext=lv=>Math.floor(60*lv*1.38);
+const SK='ysd_v4';
 function sv(d){try{localStorage.setItem(SK,JSON.stringify(d));return true;}catch(e){return false;}}
 function ld(){try{const d=localStorage.getItem(SK);return d?JSON.parse(d):null;}catch(e){return null;}}
-function hasSave(){return!!localStorage.getItem(SK);}
-function delSave(){try{localStorage.removeItem(SK);}catch(e){}}
+function hasSave(){return !!localStorage.getItem(SK);}
 </script>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -166,34 +298,35 @@ function delSave(){try{localStorage.removeItem(SK);}catch(e){}}
 const {useState,useEffect,useRef,useCallback}=React;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-// ===== COMPONENTS =====
+// ===== UI COMPONENTS =====
 function HpBar({hp,maxHp,label,color,small}){
   const pct=Math.max(0,(hp/maxHp)*100);
   const col=pct>50?'#22c55e':pct>25?'#facc15':'#ef4444';
+  const fs=small?'0.7rem':'0.8rem';
   return(
     <div style={{marginBottom:small?'3px':'6px'}}>
-      <div style={{display:'flex',justifyContent:'space-between',fontSize:small?'0.72rem':'0.8rem',marginBottom:'2px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:fs,marginBottom:'2px'}}>
         <span style={{color,fontWeight:900}}>{label}</span>
-        <span style={{color:'#64748b'}}>{Math.max(0,Math.round(hp))}/{maxHp}</span>
+        <span style={{color:'#4b5563'}}>{Math.max(0,Math.round(hp))}/{maxHp}</span>
       </div>
-      <div className="hpt"><div className="hpf" style={{width:pct+'%',background:`linear-gradient(90deg,${col},${col}99)`,boxShadow:`0 0 5px ${col}77`}}/></div>
+      <div className="hpt" style={{marginBottom:'1px'}}>
+        <div className="hpf" style={{width:pct+'%',background:'linear-gradient(90deg,'+col+','+col+'99)',boxShadow:'0 0 5px '+col+'77'}}/>
+      </div>
     </div>
   );
 }
-function MpBar({mp,maxMp,small}){
+function MpBar({mp,maxMp}){
   const pct=Math.max(0,(mp/maxMp)*100);
-  return(
-    <div className="mpt"><div className="mpf" style={{width:pct+'%'}}/></div>
-  );
+  return <div className="mpt"><div className="mpf" style={{width:pct+'%'}}/></div>;
 }
 function ExpBar({exp,level}){
   const prev=level<=1?0:calcNext(level-1);
-  const next=calcNext(level);
-  const cur=exp-prev, need=next-prev;
+  const nxt=calcNext(level);
+  const cur=exp-prev,need=nxt-prev;
   const pct=Math.min(100,(cur/need)*100);
   return(
     <div>
-      <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.68rem',color:'#5a5af0',marginBottom:'2px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.68rem',color:'#5555e8',marginBottom:'2px'}}>
         <span>EXP</span><span>{cur}/{need}（次まで{need-cur}）</span>
       </div>
       <div className="expt"><div className="expf" style={{width:pct+'%'}}/></div>
@@ -201,521 +334,796 @@ function ExpBar({exp,level}){
   );
 }
 
-// Character sprite - layered emoji
-function CharSprite({classId,status,hp,maxHp,anim,size=3.4}){
+// Human character sprite with head+body+legs layout
+function CharSprite({classId,hp,maxHp,status,anim}){
+  const v=CHAR_VISUALS[classId];
   const cls=CLASSES[classId];
   const alive=hp>0;
   const crit=hp/maxHp<0.25;
-  const statusColor=status==='poison'?'#a855f7':status==='burn'?'#ef4444':status==='stun'?'#fbbf24':'transparent';
-  const filter=!alive?'grayscale(1) opacity(0.25)':
-    status==='poison'?`drop-shadow(0 0 8px #a855f7) hue-rotate(75deg)`:
-    status==='burn'?`drop-shadow(0 0 10px #ef4444)`:
-    status==='stun'?`drop-shadow(0 0 8px #fbbf24)`:
-    crit?`drop-shadow(0 0 10px #ef444477)`:
-    `drop-shadow(0 0 8px ${cls.color}66)`;
-  const mainAnim=!alive?'none':anim==='atk'?'charAtk 0.4s ease':anim==='hurt'?'shakeX 0.35s ease':anim==='skill'?'winSpin 0.5s ease':crit?'blink 0.7s ease-in-out infinite':'floatSlow 3s ease-in-out infinite';
+  let flt='drop-shadow(0 0 8px '+cls.color+'66)';
+  if(!alive) flt='grayscale(1)';
+  else if(status==='poison') flt='drop-shadow(0 0 10px #a855f7) hue-rotate(70deg)';
+  else if(status==='burn') flt='drop-shadow(0 0 12px #ef4444)';
+  else if(status==='stun') flt='drop-shadow(0 0 10px #fbbf24)';
+  else if(crit) flt='drop-shadow(0 0 12px #ef444488)';
+
+  let mainAnim='floatB 3.2s ease-in-out infinite';
+  if(!alive) mainAnim='none';
+  else if(anim==='atk') mainAnim='charAtk 0.42s ease';
+  else if(anim==='hurt') mainAnim='shakeX 0.38s ease';
+  else if(anim==='skill') mainAnim='winSpin 0.5s ease';
+
+  const stIcon=status==='poison'?'☠️':status==='burn'?'🔥':status==='stun'?'💫':null;
+
   return(
-    <div style={{position:'relative',display:'inline-flex',flexDirection:'column',alignItems:'center',gap:'2px',minWidth:`${size+0.8}rem`}}>
-      {status&&<div style={{position:'absolute',top:'-10px',right:'-6px',fontSize:'0.65rem',zIndex:10}}>{status==='poison'?'☠️':status==='burn'?'🔥':status==='stun'?'💫':''}</div>}
-      <div style={{position:'relative',fontSize:`${size}rem`,lineHeight:1,filter,animation:mainAnim,transformOrigin:'bottom center'}}>
-        {cls.cEmoji}
-        <span style={{position:'absolute',bottom:'-6px',right:'-10px',fontSize:`${size*0.36}rem`}}>{cls.wEmoji}</span>
-        <span style={{position:'absolute',top:'-8px',left:'50%',transform:'translateX(-50%)',fontSize:`${size*0.3}rem`}}>{cls.bEmoji}</span>
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',position:'relative',animation:mainAnim,filter:flt,opacity:alive?1:0.22,transformOrigin:'bottom center',transition:'opacity 0.4s'}}>
+      {stIcon&&<div style={{position:'absolute',top:'-10px',right:'-4px',fontSize:'0.65rem',zIndex:10}}>{stIcon}</div>}
+      {/* Head */}
+      <div style={{fontSize:'2.1rem',lineHeight:1}}>{v.face}</div>
+      {/* Body + weapon */}
+      <div style={{display:'flex',alignItems:'center',lineHeight:1,marginTop:'-2px',gap:'2px'}}>
+        {v.shield&&<span style={{fontSize:'1rem'}}>{v.shield}</span>}
+        <span style={{fontSize:'1.9rem'}}>{v.body}</span>
+        {v.weapon&&<span style={{fontSize:'1.1rem'}}>{v.weapon}</span>}
       </div>
-      <div style={{fontSize:'0.62rem',color:cls.color,fontWeight:900,textAlign:'center',lineHeight:1}}>{cls.name}</div>
+      {/* Legs */}
+      <div style={{fontSize:'1.4rem',lineHeight:1,marginTop:'-2px'}}>{v.legs}</div>
+      {/* Name */}
+      <div style={{fontSize:'0.6rem',color:cls.color,fontWeight:900,marginTop:'1px'}}>{cls.name}</div>
     </div>
   );
 }
 
-// Monster sprite
-function MonSprite({mon,anim,size=5}){
+// Monster sprite (enemies and recruited monsters)
+function MonSprite({mon,anim,size}){
+  size=size||5;
   const alive=mon.hp>0;
-  const filter=!alive?'grayscale(1) opacity(0) transition: opacity 0.5s':(mon.flt||'none');
-  const glowColor=mon.gc||'#888';
-  const baseFilter=!alive?'grayscale(1) opacity(0)':
-    anim==='hurt'?`${mon.flt||''} drop-shadow(0 0 20px rgba(255,50,0,1)) brightness(1.6)`:
-    `${mon.flt||''} drop-shadow(0 0 10px ${glowColor}99)`;
-  const mainAnim=!alive?'none':anim==='hurt'?'shakeX 0.42s ease':anim==='atk'?'monAtk 0.4s ease':'float 2.8s ease-in-out infinite';
+  let flt=(mon.flt||'none');
+  if(!alive) flt='grayscale(1)';
+  else if(anim==='hurt') flt=(mon.flt||'none')+' drop-shadow(0 0 22px rgba(255,50,0,1)) brightness(1.7)';
+  else flt=(mon.flt||'none')+' drop-shadow(0 0 10px '+(mon.gc||'#888')+'99)';
+
+  let mainAnim='floatA 2.8s ease-in-out infinite';
+  if(!alive) mainAnim='none';
+  else if(anim==='hurt') mainAnim='shakeX 0.42s ease';
+  else if(anim==='atk') mainAnim='monAtk 0.42s ease';
+
   return(
-    <div style={{position:'relative',display:'inline-block',transition:'opacity 0.5s',opacity:alive?1:0}}>
-      <span style={{fontSize:`${size}rem`,lineHeight:1,display:'block',filter:baseFilter,animation:mainAnim,transformOrigin:'bottom center'}}>{mon.base}</span>
-      {mon.ov&&<span style={{position:'absolute',top:'-10px',right:'-8px',fontSize:`${size*0.34}rem`,pointerEvents:'none'}}>{mon.ov}</span>}
+    <div style={{position:'relative',display:'inline-block',opacity:alive?1:0,transition:'opacity 0.5s'}}>
+      <span style={{fontSize:size+'rem',lineHeight:1,display:'block',filter:flt,animation:mainAnim,transformOrigin:'bottom center'}}>{mon.base}</span>
+      {mon.ov&&<span style={{position:'absolute',top:'-8px',right:'-7px',fontSize:(size*0.34)+'rem',pointerEvents:'none'}}>{mon.ov}</span>}
+      {mon.status&&<span style={{position:'absolute',top:'-14px',left:'50%',transform:'translateX(-50%)',fontSize:'0.7rem'}}>{mon.status==='poison'?'☠️':mon.status==='burn'?'🔥':'💫'}</span>}
     </div>
   );
 }
 
-function initMember(classId){
-  const c=CLASSES[classId];
-  return{classId,...c,hp:c.hp,maxHp:c.hp,mp:c.mp,maxMp:c.mp,level:1,exp:0,status:null,statusTurns:0,skillUsed:false,atk:c.atk,def:c.def,mat:c.mat};
+// Recruited monster as party member sprite
+function MonPartySprite({mon,anim,hp,maxHp}){
+  const alive=hp>0;
+  let flt=(mon.flt||'none');
+  if(!alive) flt='grayscale(1)';
+  else if(anim==='atk') flt=(mon.flt||'none')+' drop-shadow(0 0 10px #4ade8088)';
+  else if(anim==='hurt') flt=(mon.flt||'none')+' drop-shadow(0 0 18px rgba(255,50,0,1))';
+  let mainAnim='floatB 3s ease-in-out infinite';
+  if(!alive) mainAnim='none';
+  else if(anim==='atk') mainAnim='charAtk 0.42s ease';
+  else if(anim==='hurt') mainAnim='shakeX 0.38s ease';
+  return(
+    <div style={{display:'flex',flexDirection:'column',alignItems:'center',position:'relative',animation:mainAnim,filter:flt,opacity:alive?1:0.22,transformOrigin:'bottom center',transition:'opacity 0.4s'}}>
+      <span style={{fontSize:'2.2rem',lineHeight:1}}>{mon.base}</span>
+      {mon.ov&&<span style={{fontSize:'1rem',marginTop:'-4px'}}>{mon.ov}</span>}
+      <div style={{fontSize:'0.6rem',color:'#4ade80',fontWeight:900,marginTop:'1px'}}>仲間</div>
+    </div>
+  );
 }
-function initEnemy(mon){return{...mon,hp:mon.maxHp,status:null,statusTurns:0};}
 
+// ===== GAME LOGIC HELPERS =====
+function initHuman(classId){
+  const c=CLASSES[classId];
+  return{isMonster:false,classId,...c,hp:c.hp,maxHp:c.hp,mp:c.mp,maxMp:c.mp,
+    atk:c.atk,def:c.def,mat:c.mat,exp:0,level:1,
+    status:null,statusTurns:0,defending:false,reflecting:false,
+    atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0,
+    learnedSpells:[],baseSkillUsed:false};
+}
+function initMonsterAlly(tpl){
+  return{isMonster:true,monsterId:tpl.id,name:tpl.name,base:tpl.base,ov:tpl.ov,flt:tpl.flt,gc:tpl.gc,
+    hp:Math.floor(tpl.maxHp*0.65),maxHp:Math.floor(tpl.maxHp*0.65),
+    mp:25,maxMp:25,atk:Math.floor(tpl.atk*0.88),def:Math.floor(tpl.def*0.85),mat:Math.floor((tpl.mat||10)*0.8),
+    exp:0,level:1,status:null,statusTurns:0,defending:false,reflecting:false,
+    atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0,
+    allySkill:tpl.allySkill,allySkillUsed:false};
+}
+function initEnemy(tpl){
+  return{...tpl,hp:tpl.maxHp,status:null,statusTurns:0,
+    currentPhase:0,atkBonus:0,matBonus:0,rageAoe:false,tripleAtk:false};
+}
+
+function checkLearnSpells(member,newLevel){
+  if(member.isMonster) return{member,newSpells:[]};
+  const spells=CLASS_SPELL_LEARN[member.classId]||[];
+  const newSpells=[];
+  let lsp=[...member.learnedSpells];
+  spells.forEach(sp=>{
+    if(newLevel>=sp.level&&!lsp.includes(sp.id)){
+      lsp.push(sp.id);newSpells.push(sp);
+    }
+  });
+  return{member:{...member,learnedSpells:lsp},newSpells};
+}
+
+function doLevelUp(member,gainExp,addLogFn){
+  let m={...member,exp:(member.exp||0)+gainExp};
+  while(m.exp>=calcNext(m.level)){
+    const newLv=m.level+1;
+    m={...m,level:newLv,
+      maxHp:m.maxHp+28,hp:m.maxHp+28,
+      maxMp:m.maxMp+10,mp:m.maxMp+10,
+      atk:m.atk+(m.isMonster?4:5),def:m.def+(m.isMonster?3:3),mat:m.mat+(m.isMonster?2:5)};
+    const {member:mm,newSpells}=checkLearnSpells(m,newLv);
+    m=mm;
+    SFX.lvup();
+    addLogFn('🌟 '+(m.isMonster?m.name:(CLASSES[m.classId]?.name||m.name))+'がLv.'+newLv+'に！HP・MP全回復！');
+    newSpells.forEach(sp=>{addLogFn('✨ 新しい呪文「'+sp.name+'」を覚えた！');});
+  }
+  return m;
+}
+
+function calcDamage(atk,def,rand){
+  rand=rand===undefined?Math.floor(Math.random()*8)-4:rand;
+  return Math.max(1,atk-def+rand);
+}
+
+function processStatusDot(entity){
+  if(!entity.status||entity.statusTurns<=0)return{...entity,status:null,statusTurns:0};
+  let hp=entity.hp;
+  if(entity.status==='poison') hp=Math.max(1,hp-Math.floor(entity.maxHp*0.09));
+  if(entity.status==='burn') hp=Math.max(1,hp-Math.floor(entity.maxHp*0.07));
+  const turns=entity.statusTurns-1;
+  return{...entity,hp,statusTurns:turns,status:turns<=0?null:entity.status};
+}
+
+function tryInflict(entity,si,rate){
+  if(!si||entity.status||Math.random()>rate)return entity;
+  return{...entity,status:si,statusTurns:3};
+}
+
+function decrementBuffs(member){
+  let m={...member};
+  if(m.atkBuffTurns>0){m.atkBuffTurns--;if(m.atkBuffTurns<=0)m.atkBuffMult=1;}
+  if(m.defBuffTurns>0){m.defBuffTurns--;if(m.defBuffTurns<=0)m.defBuffMult=1;}
+  if(m.reflecting)m.reflecting=false; // reflect only lasts 1 hit
+  m.defending=false;
+  return m;
+}
+
+// ===== MAIN APP =====
 function App(){
   const [scr,setScr]=useState('title');
   const [party,setParty]=useState([]);
   const [enemies,setEnemies]=useState([]);
-  const [selClasses,setSelClasses]=useState([]);
-  const [stageIdx,setStageIdx]=useState(0);
-  const [encKills,setEncKills]=useState(0);
-  const [inventory,setInventory]=useState([]);
-  const [sharedGold,setSharedGold]=useState(250);
+  const [selCls,setSelCls]=useState([]);
+  const [stIdx,setStIdx]=useState(0);
+  const [encK,setEncK]=useState(0);
+  const [inv,setInv]=useState([]);
+  const [gold,setGold]=useState(280);
   const [log,setLog]=useState([]);
   const [busy,setBusy]=useState(false);
-  const [turnPhase,setTurnPhase]=useState('p0'); // p0,p1,enemy
-  const [pAnims,setPAnims]=useState(['idle','idle']);
-  const [mAnims,setMAnims]=useState(['idle','idle','idle']);
-  const [showSkill,setShowSkill]=useState(null); // null or classId
+  const [phase,setPhase]=useState('p0'); // p0,p1,p2,p3,enemy
+  const [pAnims,setPAnims]=useState(['idle','idle','idle','idle']);
+  const [mAnims,setMAnims]=useState(['idle','idle']);
+  const [showSkill,setShowSkill]=useState(null);
   const [dmgs,setDmgs]=useState([]);
   const [sparks,setSparks]=useState([]);
   const [autoMode,setAutoMode]=useState(false);
   const [isMuted,setIsMuted]=useState(false);
   const [saveMsg,setSaveMsg]=useState('');
-  const [shopTarget,setShopTarget]=useState(0); // which party member to buy consumable for
+  const [spellMenu,setSpellMenu]=useState(false); // show spell sub-menu
+  const [recruitOffer,setRecruitOffer]=useState(null); // {tpl} or null
+  const [lvUpMsgs,setLvUpMsgs]=useState([]);
   const uid=useRef(0);
   const autoRef=useRef(autoMode);
   useEffect(()=>{autoRef.current=autoMode;},[autoMode]);
 
-  const addLog=m=>setLog(p=>[m,...p].slice(0,12));
-  const addDmg=(v,type,pos)=>{const id=uid.current++;setDmgs(p=>[...p,{id,v,type,pos}]);setTimeout(()=>setDmgs(p=>p.filter(d=>d.id!==id)),950);};
-  const addSpark=(x,y)=>{const id=uid.current++;setSparks(p=>[...p,{id,x,y}]);setTimeout(()=>setSparks(p=>p.filter(s=>s.id!==id)),700);};
-  const setPAnim=(idx,a)=>setPAnims(prev=>{const n=[...prev];n[idx]=a;return n;});
-  const setMAnim=(idx,a)=>setMAnims(prev=>{const n=[...prev];n[idx]=a;return n;});
+  const addLog=useCallback(m=>setLog(p=>[m,...p].slice(0,14)),[]);
+  const addDmg=useCallback((v,type,x,y)=>{
+    const id=uid.current++;
+    setDmgs(p=>[...p,{id,v,type,x:x||'40%',y:y||'20%'}]);
+    setTimeout(()=>setDmgs(p=>p.filter(d=>d.id!==id)),950);
+  },[]);
+  const addSpark=useCallback((x,y)=>{
+    const id=uid.current++;
+    setSparks(p=>[...p,{id,x,y}]);
+    setTimeout(()=>setSparks(p=>p.filter(s=>s.id!==id)),700);
+  },[]);
+  const setPAnim=useCallback((i,a)=>setPAnims(p=>{const n=[...p];n[i]=a;return n;}),[]);
+  const setMAnim=useCallback((i,a)=>setMAnims(p=>{const n=[...p];n[i]=a;return n;}),[]);
 
-  // Start battle
-  const startBattle=useCallback((partyState,stIdx,ekills)=>{
-    const stg=stIdx??stageIdx;
-    const ek=ekills??encKills;
-    const encGroup=ENC[stg][Math.min(ek,3)];
-    const ens=encGroup.map(m=>initEnemy(m));
+  // Active party member index
+  const activePIdx=phase==='p0'?0:phase==='p1'?1:phase==='p2'?2:phase==='p3'?3:-1;
+  const activeM=activePIdx>=0&&party[activePIdx]?party[activePIdx]:null;
+
+  // Get available spells for a party member
+  const getMemberSpells=useCallback((member)=>{
+    if(!member||member.isMonster) return member?.allySkill?[member.allySkill]:[];
+    const cls=CLASSES[member.classId];
+    const spells=[cls.baseSkill];
+    (member.learnedSpells||[]).forEach(sid=>{
+      const sp=(CLASS_SPELL_LEARN[member.classId]||[]).find(s=>s.id===sid);
+      if(sp) spells.push(sp);
+    });
+    return spells;
+  },[]);
+
+  // Advance phase to next alive party member (or enemy)
+  const nextPhase=useCallback((currentPhase,currentParty,skipToEnemy)=>{
+    if(skipToEnemy) return 'enemy';
+    const order=['p0','p1','p2','p3'];
+    const startIdx=order.indexOf(currentPhase);
+    for(let i=startIdx+1;i<order.length;i++){
+      const pi=i;
+      if(currentParty[pi]&&currentParty[pi].hp>0) return order[pi];
+    }
+    return 'enemy';
+  },[]);
+
+  // Start a battle encounter
+  const startBattle=useCallback((partyOverride,stIdxO,encKO)=>{
+    const st=stIdxO!==undefined?stIdxO:stIdx;
+    const ek=encKO!==undefined?encKO:encK;
+    const encGroup=ENC[st][Math.min(ek,3)];
+    const ens=encGroup.map(e=>initEnemy(e));
     const isBoss=ek>=3;
     setEnemies(ens);
     setMAnims(new Array(ens.length).fill('idle'));
-    setTurnPhase('p0');
+    const firstAlive=party.findIndex(m=>m.hp>0);
+    setPhase(firstAlive>=0?['p0','p1','p2','p3'][firstAlive]:'p0');
+    setSpellMenu(false);
     setBusy(false);
-    setShowSkill(null);
-    setScr('battle');
-    if(partyState)setParty(partyState);
-    addLog(`⚠️ ${ens.map(e=>e.name).join(' & ')}が現れた！${isBoss?'🚨 ボスだ！':''}`);
-    const bgmKey=isBoss&&stg>=3?'boss':isBoss?'boss':stg===0?'battle':'battle';
+    const useParty=partyOverride||party;
+    if(partyOverride) setParty(partyOverride);
+    addLog('⚠️ '+ens.map(e=>e.name).join(' & ')+'が現れた！'+(isBoss?'🚨 ボス！':''));
+    const bgmKey=isBoss&&st===3?'final':isBoss?'boss':'battle';
     bgm(bgmKey);
-  },[stageIdx,encKills]);
+    setScr('battle');
+  },[stIdx,encK,party,addLog]);
 
-  // AI decision (fixed: attack-first)
-  const aiDecide=(member,ens,inv)=>{
-    const hpR=member.hp/member.maxHp;
-    const hasHeal=inv.some(i=>i.effect?.hp&&i.per==='member');
-    const liveEns=ens.filter(e=>e.hp>0);
-    if(liveEns.length===0)return{action:'wait'};
-    // Only heal when critically low AND have item AND high chance
-    if(hpR<0.2&&hasHeal&&Math.random()<0.65)return{action:'heal'};
-    // Use skill if available and enemy is tough
-    const cls=CLASSES[member.classId];
-    if(!member.skillUsed&&member.mp>=cls.skill.mp)return{action:'skill',target:0};
-    // Default: attack
-    return{action:'atk',target:ens.findIndex(e=>e.hp>0)};
-  };
+  // Execute spell
+  const executeSpell=useCallback(async(spell,pIdx,currentParty,currentEnemies)=>{
+    let nParty=[...currentParty];
+    let nEnemies=[...currentEnemies];
+    const member={...nParty[pIdx]};
+    if(member.mp<spell.mp){addLog('MP不足！（必要'+spell.mp+'MP）');return null;}
 
-  // Apply status to enemy
-  const tryInflict=(enemy,statusId,rate=0.32)=>{
-    if(!statusId||enemy.status||Math.random()>rate)return enemy;
-    return{...enemy,status:statusId,statusTurns:3};
-  };
+    setPAnim(pIdx,'skill');
+    setShowSkill(spell.e);
 
-  // Process status effect
-  const processStatus=(entity)=>{
-    if(!entity.status||entity.statusTurns<=0)return{...entity,status:null,statusTurns:0};
-    let hp=entity.hp;
-    if(entity.status==='poison'){hp=Math.max(1,hp-Math.floor(entity.maxHp*0.1));SFX.poison();}
-    if(entity.status==='burn'){hp=Math.max(1,hp-Math.floor(entity.maxHp*0.08));SFX.poison();}
-    return{...entity,hp,statusTurns:entity.statusTurns-1,status:entity.statusTurns<=1?null:entity.status};
-  };
+    // SFX by type
+    if(spell.type==='atk_all'||spell.type==='atk_one'||spell.type==='atk_double'||spell.type==='atk_one_stun'){
+      if(spell.id==='hyado'||spell.id==='ionazun') SFX.ice();
+      else if(spell.id==='bagikuro'||spell.id==='force') SFX.wind();
+      else if(spell.id==='sacred'||spell.id==='holyblade'||spell.id==='swordstorm') SFX.holy();
+      else SFX.magic();
+    } else if(spell.type==='buff_atk'||spell.type==='buff_def'||spell.type==='buff_def_all'||spell.type==='buff_both') SFX.buff();
+    else if(spell.type==='heal_all'||spell.type==='heal_all_mp') SFX.heal();
+    else if(spell.type==='revive') SFX.revive();
+    else SFX.skill();
 
-  // Level up check
-  const doLevelUp=(member)=>{
-    let m={...member};
-    while(m.exp>=calcNext(m.level)){
-      m={...m,level:m.level+1,maxHp:m.maxHp+25,hp:m.maxHp+25,maxMp:m.maxMp+9,mp:m.maxMp+9,atk:m.atk+5,def:m.def+3,mat:m.mat+5,skillUsed:false};
-      SFX.lvup();addLog(`🌟 ${CLASSES[m.classId].name}がLv.${m.level}になった！HP・MP全回復！`);
+    await sleep(320);setShowSkill(null);setPAnim(pIdx,'idle');
+
+    const mp=member.mp-spell.mp;
+    nParty[pIdx]={...member,mp,baseSkillUsed:spell.id===CLASSES[member.classId]?.baseSkill?.id?true:member.baseSkillUsed,allySkillUsed:member.isMonster?true:member.allySkillUsed};
+
+    // Execute by type
+    if(spell.type==='atk_one'||spell.type==='atk_one_stun'){
+      const ti=nEnemies.findIndex(e=>e.hp>0);
+      if(ti<0) return{party:nParty,enemies:nEnemies};
+      const en=nEnemies[ti];
+      let dmg=Math.max(1,spell.fn(nParty[pIdx])-(en.def||0)*0.5);
+      if(en.reflecting){addLog('💠 呪文が反射された！');nParty[pIdx]={...nParty[pIdx],hp:Math.max(0,nParty[pIdx].hp-dmg)};return{party:nParty,enemies:nEnemies};}
+      setMAnim(ti,'hurt');SFX.hit();addSpark('65%','30%');addDmg(Math.round(dmg),'e','65%','18%');
+      addLog(spell.e+' '+spell.name+'！'+Math.round(dmg)+'ダメージ！');
+      let nen={...en,hp:Math.max(0,en.hp-dmg)};
+      if(spell.inflict) nen=tryInflict(nen,spell.inflict,0.42);
+      if(spell.type==='atk_one_stun') nen=tryInflict(nen,'stun',0.45);
+      nEnemies[ti]=nen;
+      await sleep(250);setMAnim(ti,'idle');
     }
-    return m;
-  };
-
-  // Execute one party member action
-  const executeAction=useCallback(async(pIdx,action,targetEnemyIdx,currentParty,currentEnemies,currentInv)=>{
-    const member={...currentParty[pIdx]};
-    const cls=CLASSES[member.classId];
-    let newParty=[...currentParty];
-    let newEnemies=[...currentEnemies];
-    let newInv=[...currentInv];
-
-    if(member.hp<=0){return{party:newParty,enemies:newEnemies,inv:newInv,fled:false,dead:false,won:false};}
-    if(member.status==='stun'){
-      addLog(`💫 ${cls.name}はスタンして動けない！`);SFX.stun();
-      newParty[pIdx]={...member,status:member.statusTurns<=1?null:member.status,statusTurns:Math.max(0,member.statusTurns-1)};
-      return{party:newParty,enemies:newEnemies,inv:newInv,fled:false,dead:false,won:false};
-    }
-
-    if(action==='heal'){
-      const idx=newInv.findIndex(i=>i.effect?.hp&&i.per==='member');
-      if(idx===-1){addLog('アイテムがない！');return{party:newParty,enemies:newEnemies,inv:newInv,fled:false,dead:false,won:false};}
-      const item=newInv[idx];newInv.splice(idx,1);
-      // FIXED: cap at maxHp, never increase maxHp
-      const add=Math.min(item.effect.hp, member.maxHp-member.hp);
-      const newHp=Math.min(member.maxHp, member.hp+item.effect.hp);
-      const newMp=item.effect.mp?Math.min(member.maxMp,member.mp+(item.effect.mp||0)):member.mp;
-      newParty[pIdx]={...member,hp:newHp,mp:newMp};
-      SFX.heal();addDmg(add,'h',`${pIdx*22+5}%`);
-      addLog(`${item.emoji} ${cls.name}が${item.name}を使った！HP+${add}`);
-      return{party:newParty,enemies:newEnemies,inv:newInv,fled:false,dead:false,won:false};
-    }
-
-    if(action==='flee'){
-      if(Math.random()>0.42){SFX.flee();addLog('🏃 パーティは逃げ出した！');return{party:newParty,enemies:newEnemies,inv:newInv,fled:true,dead:false,won:false};}
-      // Failed flee - take damage from first enemy
-      const fen=newEnemies.find(e=>e.hp>0);
-      if(fen){
-        const dmg=Math.max(1,fen.atk-member.def+Math.floor(Math.random()*4)-2);
-        newParty[pIdx]={...member,hp:member.hp-dmg};
-        SFX.phit();addDmg(dmg,'p',`${pIdx*22+5}%`);setPAnim(pIdx,'hurt');
-        addLog(`❌ 逃げられなかった！${cls.name}が${dmg}ダメージ！`);
-        await sleep(380);setPAnim(pIdx,'idle');
-        if(newParty[pIdx].hp<=0){newParty[pIdx]={...newParty[pIdx],hp:0};}
+    else if(spell.type==='atk_all'||spell.type==='atk_double'){
+      const liveIdx=nEnemies.map((_,i)=>i).filter(i=>nEnemies[i].hp>0);
+      const hits=spell.type==='atk_double'?2:1;
+      for(let h=0;h<hits;h++){
+        for(const ti of liveIdx){
+          if(nEnemies[ti].hp<=0) continue;
+          let dmg=Math.max(1,spell.fn(nParty[pIdx])-(nEnemies[ti].def||0)*0.4);
+          if(spell.type==='atk_double'&&h===0) dmg=Math.floor(dmg*0.85);
+          const xp=60+ti*(-12);
+          setMAnim(ti,'hurt');SFX.hit();addSpark(xp+'%','28%');addDmg(Math.round(dmg),'e',xp+'%','16%');
+          let nen={...nEnemies[ti],hp:Math.max(0,nEnemies[ti].hp-dmg)};
+          if(spell.inflict) nen=tryInflict(nen,spell.inflict,0.38);
+          nEnemies[ti]=nen;
+          await sleep(160);setMAnim(ti,'idle');
+        }
       }
-      return{party:newParty,enemies:newEnemies,inv:newInv,fled:false,dead:false,won:false};
+      addLog(spell.e+' '+spell.name+'！全体に'+(spell.type==='atk_double'?'2回攻撃！':'大ダメージ！'));
     }
-
-    // Attack or skill
-    const isSkill=action==='skill';
-    if(isSkill&&member.mp<cls.skill.mp){addLog(`MPが足りない！(必要${cls.skill.mp}MP)`);return{party:newParty,enemies:newEnemies,inv:newInv,fled:false,dead:false,won:false};}
-
-    // Special: priest heal all
-    if(isSkill&&cls.skill.type==='heal_all'){
-      setPAnim(pIdx,'skill');setShowSkill(cls.id);SFX.healAll();
-      await sleep(300);setShowSkill(null);setPAnim(pIdx,'idle');
-      newParty=newParty.map(m=>m.hp>0?{...m,hp:m.maxHp,mp:Math.min(m.maxMp,m.mp+5),status:null,statusTurns:0}:m);
-      newParty[pIdx]={...newParty[pIdx],mp:member.mp-cls.skill.mp,skillUsed:true};
-      newParty.forEach((_,i)=>addDmg('全回復','h',`${i*22+5}%`));
-      addLog(`✨ ${cls.skill.name}！パーティ全員が完全回復した！`);
-      return{party:newParty,enemies:newEnemies,inv:newInv,fled:false,dead:false,won:false};
+    else if(spell.type==='heal_all'){
+      nParty=nParty.map(m=>{
+        if(m.hp<=0) return m;
+        const add=m.maxHp-m.hp;
+        if(add>0) addDmg('全回復','h');
+        return{...m,hp:m.maxHp,status:null,statusTurns:0};
+      });
+      addLog(spell.e+' '+spell.name+'！パーティ全員HP全回復！');
     }
-
-    // Damage action
-    const isAll=isSkill&&(cls.skill.type==='atk_all');
-    const targets=isAll?newEnemies.map((_,i)=>i).filter(i=>newEnemies[i].hp>0):[targetEnemyIdx];
-
-    setPAnim(pIdx,isSkill?'skill':'atk');
-    if(isSkill){setShowSkill(cls.id);SFX[cls.id==='mage'?'magic':'skill']();}else SFX.atk();
-    await sleep(290);setShowSkill(null);setPAnim(pIdx,'idle');
-
-    for(const ti of targets){
-      const en=newEnemies[ti];
-      if(!en||en.hp<=0)continue;
-      let dmg=isSkill?cls.skill.fn(member):Math.max(1,member.atk-en.def+Math.floor(Math.random()*7)-3);
-      // Critical hit 12%
-      const crit=!isSkill&&Math.random()<0.12;
-      if(crit){dmg=Math.floor(dmg*1.65);addLog('💥 会心の一撃！');}
-      dmg=Math.max(1,dmg);
-
-      setMAnim(ti,'hurt');SFX.hit();
-      addSpark(`${62+ti*(-15)}%`,'30%');
-      addDmg(dmg,'e',`${62+ti*(-15)}%`);
-
-      let newEn={...en,hp:Math.max(0,en.hp-dmg)};
-      // Try to inflict status
-      if(isSkill&&cls.skill.inflict){newEn=tryInflict(newEn,cls.skill.inflict,0.42);}
-      if(isSkill&&cls.skill.inflict&&newEn.status===cls.skill.inflict&&!en.status)addLog(`${cls.skill.inflict==='stun'?'💫スタン':'🔥燃焼'}付与！`);
-      newEnemies[ti]=newEn;
-      await sleep(200);setMAnim(ti,'idle');
+    else if(spell.type==='heal_all_mp'){
+      nParty=nParty.map(m=>m.hp<=0?m:{...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0});
+      addLog(spell.e+' '+spell.name+'！全員HP・MP完全回復！');
     }
-
-    const msg=isSkill
-      ?`✨ ${cls.name}が${cls.skill.name}！${targets.reduce((s,i)=>s+Math.max(0,newEnemies[i].maxHp-(newEnemies[i].hp+(newEnemies[i].maxHp-newEnemies[i].maxHp))),0)||'大ダメージ'}！`
-      :`⚔️ ${cls.name}が攻撃！${isAll?'全体攻撃！':''}`;
-    addLog(msg.length>35?msg.slice(0,35)+'…':msg);
-
-    newParty[pIdx]={...member,mp:isSkill?Math.max(0,member.mp-cls.skill.mp):member.mp,skillUsed:isSkill?true:member.skillUsed};
-
-    // Check win
-    const allDead=newEnemies.every(e=>e.hp<=0);
-    if(allDead){
-      SFX.win();
-      const totalExp=newEnemies.reduce((s,e)=>s+e.exp,0);
-      const totalGold=newEnemies.reduce((s,e)=>s+e.gold,0);
-      addLog(`🎉 勝利！EXP+${totalExp} Gold+${totalGold}`);
-      newParty=newParty.map(m=>m.hp>0?doLevelUp({...m,exp:m.exp+totalExp}):m);
-      return{party:newParty,enemies:newEnemies,inv:newInv,fled:false,dead:false,won:true,totalGold};
+    else if(spell.type==='buff_atk'){
+      nParty[pIdx]={...nParty[pIdx],atkBuffMult:2.0,atkBuffTurns:3};
+      addLog(spell.e+' '+spell.name+'！ATKが3ターン2倍になった！');
     }
-    return{party:newParty,enemies:newEnemies,inv:newInv,fled:false,dead:false,won:false};
-  },[doLevelUp]);
-
-  // Enemy turn
-  const runEnemyTurn=useCallback(async(currentParty,currentEnemies)=>{
-    let newParty=[...currentParty];
-    const liveEns=currentEnemies.filter(e=>e.hp>0);
-
-    for(let ei=0;ei<liveEns.length;ei++){
-      const en=liveEns[ei];
-      const enIdx=currentEnemies.indexOf(en);
-      if(en.hp<=0)continue;
-      if(en.status==='stun'){
-        addLog(`💫 ${en.name}はスタンで動けない！`);
-        continue;
+    else if(spell.type==='buff_def'||spell.type==='buff_def_all'){
+      if(spell.type==='buff_def_all'){
+        nParty=nParty.map(m=>m.hp<=0?m:{...m,defBuffMult:1.8,defBuffTurns:3});
+      } else {
+        nParty[pIdx]={...nParty[pIdx],defBuffMult:1.8,defBuffTurns:3};
       }
-      // Pick target (alive party member with lowest HP)
-      const alive=newParty.filter(m=>m.hp>0);
-      if(alive.length===0)break;
-      const target=alive.reduce((a,b)=>a.hp<b.hp?a:b);
-      const ti=newParty.indexOf(target);
-      const dmg=Math.max(1,en.atk-target.def+Math.floor(Math.random()*6)-3);
-
-      setMAnim(enIdx,'atk');SFX.phit();
-      addSpark(`${ti*22+5}%`,'50%');addDmg(dmg,'p',`${ti*22+5}%`);
-      setPAnim(ti,'hurt');
-      addLog(`💢 ${en.name}が${CLASSES[target.classId].name}に${dmg}ダメージ！`);
-      newParty[ti]={...target,hp:Math.max(0,target.hp-dmg)};
-      // Enemy status inflict
-      if(en.si&&!target.status&&Math.random()<0.22){
-        newParty[ti]={...newParty[ti],status:en.si,statusTurns:3};
-        const statusLabel=en.si==='poison'?'☠️毒':en.si==='burn'?'🔥燃焼':'💫スタン';
-        addLog(`${statusLabel}！${CLASSES[target.classId].name}が${en.si}状態に！`);
-      }
-      await sleep(380);setPAnim(ti,'idle');setMAnim(enIdx,'idle');
-      await sleep(100);
+      addLog(spell.e+' '+spell.name+'！防御力が3ターンUP！');
+    }
+    else if(spell.type==='buff_both'){
+      nParty[pIdx]={...nParty[pIdx],atkBuffMult:2.0,atkBuffTurns:4,defBuffMult:2.0,defBuffTurns:4};
+      addLog(spell.e+' '+spell.name+'！ATK・DEF両方4ターン2倍！');
+    }
+    else if(spell.type==='reflect'){
+      nParty[pIdx]={...nParty[pIdx],reflecting:true};
+      addLog(spell.e+' '+spell.name+'！次の魔法攻撃を反射する！');
+    }
+    else if(spell.type==='revive'){
+      const di=nParty.findIndex(m=>m.hp<=0);
+      if(di<0){addLog('戦闘不能の仲間がいない！');nParty[pIdx]={...nParty[pIdx],mp:member.mp}; // refund
+        return{party:nParty,enemies:nEnemies};}
+      nParty[di]={...nParty[di],hp:Math.floor(nParty[di].maxHp*0.5)};
+      addLog(spell.e+' '+spell.name+'！'+(nParty[di].isMonster?nParty[di].name:CLASSES[nParty[di].classId].name)+'が復活！HP50%！');
     }
 
-    // DoT on party
-    newParty=newParty.map((m,i)=>{
-      if(m.hp<=0||!m.status)return m;
-      const pm=processStatus(m);
-      if(pm.hp<m.hp)addDmg(m.hp-pm.hp,'p',`${i*22+5}%`);
-      return pm;
-    });
-
-    // DoT on enemies (burn only from mage skill etc.)
-    const newEnemies=currentEnemies.map((e,i)=>{
-      if(e.hp<=0||!e.status)return e;
-      const pe=processStatus(e);
-      if(pe.hp<e.hp){addDmg(e.hp-pe.hp,'e',`${62+i*(-15)}%`);SFX.poison();}
-      return pe;
-    });
-
-    const allDead=newParty.every(m=>m.hp<=0);
-    return{party:newParty,enemies:newEnemies,allDead};
-  },[processStatus]);
+    return{party:nParty,enemies:nEnemies};
+  },[addLog,addDmg,addSpark,setPAnim,setMAnim,setShowSkill]);
 
   // Main action handler
-  const handleAction=useCallback(async(action,targetIdx=0)=>{
-    if(busy)return;setBusy(true);gac();
+  const handleAction=useCallback(async(action,spellId,targetEnemyIdx)=>{
+    if(busy||activePIdx<0||!activeM||activeM.hp<=0) return;
+    setBusy(true);setSpellMenu(false);gac();
 
-    const curPIdx=turnPhase==='p0'?0:1;
-    const result=await executeAction(curPIdx,action,targetIdx,party,enemies,inventory);
+    let nParty=[...party];
+    let nEnemies=[...enemies];
+    const pIdx=activePIdx;
+    const member={...nParty[pIdx]};
 
-    if(result.fled){
-      setParty(result.party);setEnemies(result.enemies);setInventory(result.inv);
-      setScr('map');bgm('field');setBusy(false);return;
+    // Stun check
+    if(member.status==='stun'){
+      const mname=member.isMonster?member.name:CLASSES[member.classId].name;
+      addLog('💫 '+mname+'はスタン中！動けない！');
+      SFX.stun();
+      nParty[pIdx]={...member,statusTurns:Math.max(0,member.statusTurns-1),status:member.statusTurns<=1?null:member.status};
+      setParty(nParty);
+      setPhase(nextPhase(phase,nParty,false));
+      setBusy(false);return;
     }
-    if(result.won){
-      const newGold=sharedGold+result.totalGold;
-      setSharedGold(newGold);setParty(result.party);setInventory(result.inv);
-      setEnemies(result.enemies);
-      await sleep(700);
-      // Advance encounters
-      const isBoss=encKills>=3;
-      let newEncKills=encKills+1;
-      let newStageIdx=stageIdx;
-      if(isBoss){
-        if(stageIdx>=3){stopBgm();setScr('clear');setBusy(false);return;}
-        newStageIdx=stageIdx+1;newEncKills=0;
-        addLog(`🚪 ${STAGES[newStageIdx].name}へ進んだ！`);
+
+    if(action==='spell'&&spellId){
+      const allSpells=getMemberSpells(member);
+      const sp=allSpells.find(s=>s.id===spellId);
+      if(sp){
+        const result=await executeSpell(sp,pIdx,nParty,nEnemies);
+        if(!result){setBusy(false);return;}
+        nParty=result.party;nEnemies=result.enemies;
       }
-      // Reset party skill usage
-      const resetParty=result.party.map(m=>({...m,skillUsed:false}));
-      setParty(resetParty);setEncKills(newEncKills);setStageIdx(newStageIdx);
+    }
+    else if(action==='atk'){
+      const ti=targetEnemyIdx!==undefined?targetEnemyIdx:nEnemies.findIndex(e=>e.hp>0);
+      if(ti<0){setBusy(false);return;}
+      const en=nEnemies[ti];
+      const effAtk=Math.floor(member.atk*(member.atkBuffMult||1));
+      let dmg=calcDamage(effAtk,en.def);
+      const crit=Math.random()<0.11;
+      if(crit){dmg=Math.floor(dmg*1.7);addLog('💥 会心の一撃！');}
+      dmg=Math.max(1,dmg);
+      const xp=60+ti*(-12);
+      setPAnim(pIdx,'atk');SFX.atk();
+      await sleep(250);setPAnim(pIdx,'idle');
+      setMAnim(ti,'hurt');SFX.hit();addSpark(xp+'%','28%');addDmg(dmg,'e',xp+'%','16%');
+      const mname=member.isMonster?member.name:CLASSES[member.classId].name;
+      addLog('⚔️ '+mname+'の攻撃！'+dmg+'ダメージ！');
+      nEnemies[ti]={...en,hp:Math.max(0,en.hp-dmg)};
+      await sleep(300);setMAnim(ti,'idle');
+    }
+    else if(action==='defend'){
+      nParty[pIdx]={...member,defending:true,defBuffMult:2.2,defBuffTurns:1};
+      const mname=member.isMonster?member.name:CLASSES[member.classId].name;
+      addLog('🛡️ '+mname+'は防御態勢をとった！（このターンダメージ55%減）');
+      SFX.buff();
+    }
+    else if(action==='heal'){
+      const cureIdx=inv.findIndex(i=>i.eff&&i.eff.cure);
+      const healIdx=inv.findIndex(i=>i.eff&&i.eff.hp&&!i.eff.cure);
+      const mpIdx=inv.findIndex(i=>i.eff&&i.eff.mp&&!i.eff.hp);
+      let used=false;
+      if(member.status&&cureIdx>=0){
+        const it=inv[cureIdx];const ni=[...inv];ni.splice(cureIdx,1);
+        setInv(ni);nParty[pIdx]={...member,status:null,statusTurns:0};
+        addLog(it.emoji+' '+it.name+'！状態異常を回復！');SFX.heal();used=true;
+      } else if(member.hp<member.maxHp&&healIdx>=0){
+        const it=inv[healIdx];const ni=[...inv];ni.splice(healIdx,1);
+        setInv(ni);
+        // strictly cap at maxHp
+        const add=Math.min(it.eff.hp, member.maxHp-member.hp);
+        const newHp=Math.min(member.maxHp, member.hp+it.eff.hp);
+        nParty[pIdx]={...member,hp:newHp};
+        addDmg(add,'h','12%','22%');
+        addLog(it.emoji+' '+it.name+'！HP+'+add+'（最大'+member.maxHp+'まで）');SFX.heal();used=true;
+      } else if(member.mp<member.maxMp&&mpIdx>=0){
+        const it=inv[mpIdx];const ni=[...inv];ni.splice(mpIdx,1);
+        setInv(ni);
+        const addMp=Math.min(it.eff.mp,member.maxMp-member.mp);
+        nParty[pIdx]={...member,mp:Math.min(member.maxMp,member.mp+it.eff.mp)};
+        addLog(it.emoji+' '+it.name+'！MP+'+addMp);used=true;
+      }
+      if(!used){addLog('使えるアイテムがない！');setBusy(false);return;}
+    }
+    else if(action==='flee'){
+      if(Math.random()>0.42){SFX.flee();addLog('🏃 逃げ出した！');setParty(nParty);setScr('map');bgm('field');setBusy(false);return;}
+      const fen=nEnemies.find(e=>e.hp>0);
+      if(fen){
+        const dmg=Math.max(1,fen.atk-member.def+Math.floor(Math.random()*5)-2);
+        nParty[pIdx]={...member,hp:Math.max(0,member.hp-dmg)};
+        setPAnim(pIdx,'hurt');SFX.phit();addDmg(dmg,'p','12%','24%');
+        addLog('❌ 逃げられなかった！'+dmg+'ダメージ！');
+        await sleep(380);setPAnim(pIdx,'idle');
+      }
+    }
+
+    setParty(nParty);setEnemies(nEnemies);
+
+    // Check party dead
+    if(nParty.every(m=>m.hp<=0)){stopBgm();SFX.dead();setScr('gameover');setBusy(false);return;}
+
+    // Check all enemies dead → victory
+    if(nEnemies.every(e=>e.hp<=0)){
+      SFX.victory();
+      const totalExp=nEnemies.reduce((s,e)=>s+e.exp,0);
+      const totalGold=nEnemies.reduce((s,e)=>s+e.gold,0);
+      addLog('🎉 勝利！EXP+'+totalExp+' Gold+'+totalGold);
+      let finalParty=nParty.map(m=>m.hp>0?doLevelUp(m,totalExp,addLog):m);
+      // Reset skill used flags
+      finalParty=finalParty.map(m=>({...m,baseSkillUsed:false,allySkillUsed:false}));
+      setParty(finalParty);
+      setGold(g=>g+totalGold);
+      await sleep(800);
+
+      // Recruit check (non-boss only)
+      const isBoss=nEnemies.some(e=>e.boss);
+      if(!isBoss){
+        const recruitable=nEnemies.filter(e=>e.recruitable);
+        const monsterCount=finalParty.filter(m=>m.isMonster).length;
+        if(recruitable.length>0&&monsterCount<2&&finalParty.length<4&&Math.random()<0.3){
+          const tpl=recruitable[Math.floor(Math.random()*recruitable.length)];
+          setRecruitOffer(tpl);
+          setBusy(false);return;
+        }
+      }
+
+      // Advance encounter
+      const newEncK=encK+1;
+      let newStIdx=stIdx;
+      if(encK>=3){
+        if(stIdx>=3){stopBgm();setScr('clear');setBusy(false);return;}
+        newStIdx=stIdx+1;setEncK(0);setStIdx(newStIdx);
+        addLog('🚪 '+STAGES[newStIdx].name+'へ進んだ！');
+      } else {
+        setEncK(newEncK);
+      }
       setScr('map');bgm('field');setBusy(false);return;
     }
 
-    setParty(result.party);setEnemies(result.enemies);setInventory(result.inv);
+    // Next player turn
+    const np=nextPhase(phase,nParty,false);
+    if(np==='enemy'){
+      setPhase('enemy');
+      await sleep(280);
+      // Enemy turn
+      let ep=[...nParty];let ee=[...nEnemies];
+      const liveEns=ee.filter(e=>e.hp>0);
+      for(let ei=0;ei<liveEns.length;ei++){
+        const en=liveEns[ei];
+        const enIdx=ee.indexOf(en);
+        if(en.status==='stun'){addLog('💫 '+en.name+'はスタン中！');continue;}
 
-    // Check if all party dead
-    if(result.party.every(m=>m.hp<=0)){
-      stopBgm();SFX.dead();setScr('gameover');setBusy(false);return;
-    }
+        // Phase check
+        const phaseData=(en.phases||[]).find(ph=>en.hp/en.maxHp<=ph.hp&&enIdx===0);
+        if(phaseData&&(en.currentPhase||0)<(en.phases||[]).indexOf(phaseData)+1){
+          ee[enIdx]={...en,currentPhase:(en.currentPhase||0)+1,atkBonus:(en.atkBonus||0)+(phaseData.atkBonus||0),matBonus:(en.matBonus||0)+(phaseData.matBonus||0),rageAoe:phaseData.aoe||false,tripleAtk:phaseData.tripleAttack||false};
+          addLog('💢 '+en.name+'！'+phaseData.msg);SFX.rage();
+          await sleep(500);
+        }
 
-    // Advance turn phase
-    const nextPhase=turnPhase==='p0'?(result.party[1]?.hp>0?'p1':'enemy'):'enemy';
+        const attacks=ee[enIdx].tripleAtk?3:ee[enIdx].doubleAttack?2:1;
+        for(let ai=0;ai<attacks;ai++){
+          if(ee[enIdx].rageAoe){
+            // AOE attack
+            const aoeBase=Math.floor(ee[enIdx].atk*(0.5+(ai*0.1)))+(ee[enIdx].atkBonus||0);
+            for(let pi=0;pi<ep.length;pi++){
+              if(ep[pi].hp<=0) continue;
+              const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1));
+              const dmg=Math.max(1,aoeBase-effDef+Math.floor(Math.random()*6)-3);
+              ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};
+              setPAnim(pi,'hurt');SFX.phit();addDmg(dmg,'p',(pi*22+5)+'%','48%');
+            }
+            addLog('💥 '+ee[enIdx].name+'の全体攻撃！全員にダメージ！');
+            await sleep(400);
+          } else {
+            // Single target: lowest HP alive
+            const alive=ep.filter(m=>m.hp>0);
+            if(alive.length===0) break;
+            const tgt=alive.reduce((a,b)=>a.hp<b.hp?a:b);
+            const ti=ep.indexOf(tgt);
+            const effDef=Math.floor(tgt.def*(tgt.defBuffMult||1));
+            const eatk=(ee[enIdx].atk||30)+(ee[enIdx].atkBonus||0);
+            let dmg=calcDamage(eatk,effDef);
 
-    if(nextPhase==='enemy'){
-      setTurnPhase('enemy');
-      await sleep(300);
-      const eResult=await runEnemyTurn(result.party,result.enemies);
-      setParty(eResult.party);setEnemies(eResult.enemies);
-      if(eResult.allDead){stopBgm();SFX.dead();setScr('gameover');setBusy(false);return;}
-      setTurnPhase('p0');
+            // Reflect check
+            if(tgt.reflecting){
+              addLog('💠 魔法が反射された！'+ee[enIdx].name+'にダメージ！');
+              ee[enIdx]={...ee[enIdx],hp:Math.max(0,ee[enIdx].hp-dmg)};
+              ep[ti]={...tgt,reflecting:false};
+              continue;
+            }
+
+            setPAnim(ti,'hurt');setMAnim(enIdx,'atk');SFX.phit();
+            addSpark((ti*22+5)+'%','50%');addDmg(dmg,'p',(ti*22+5)+'%','44%');
+            addLog('💢 '+ee[enIdx].name+'が'+((tgt.isMonster?tgt.name:CLASSES[tgt.classId]?.name)||'?')+'に'+dmg+'ダメージ！');
+            ep[ti]={...tgt,hp:Math.max(0,tgt.hp-dmg)};
+
+            // Status inflict
+            if(ee[enIdx].si&&!tgt.status&&Math.random()<0.22){
+              ep[ti]={...ep[ti],status:ee[enIdx].si,statusTurns:3};
+              const siLabel=ee[enIdx].si==='poison'?'☠️毒':ee[enIdx].si==='burn'?'🔥燃焼':'💫スタン';
+              addLog(siLabel+'！');
+            }
+            await sleep(330);setPAnim(ti,'idle');setMAnim(enIdx,'idle');
+            await sleep(80);
+          }
+        }
+
+        // Enemy DoT
+        const enDot=processStatusDot(ee[enIdx]);
+        if(enDot.hp<ee[enIdx].hp){addDmg(ee[enIdx].hp-enDot.hp,'e',(60+enIdx*(-12))+'%','16%');SFX.poison();}
+        ee[enIdx]=enDot;
+      }
+
+      // Party DoT
+      ep=ep.map((m,i)=>{
+        if(m.hp<=0||!m.status) return m;
+        const pm=processStatusDot(m);
+        if(pm.hp<m.hp) addDmg(m.hp-pm.hp,'p',(i*22+5)+'%','46%');
+        return pm;
+      });
+
+      // Decrement buffs
+      ep=ep.map(m=>decrementBuffs(m));
+
+      setParty(ep);setEnemies(ee);
+
+      if(ep.every(m=>m.hp<=0)){stopBgm();SFX.dead();setScr('gameover');setBusy(false);return;}
+      if(ee.every(e=>e.hp<=0)){
+        // Victory (same as above - call nextEnemy handling)
+        setBusy(false);
+        // Trigger win: re-handle
+        handleAction('_wincheck',null,null);
+        return;
+      }
+
+      // Back to first alive party member
+      const fi=ep.findIndex(m=>m.hp>0);
+      setPhase(fi>=0?['p0','p1','p2','p3'][fi]:'p0');
     } else {
-      setTurnPhase(nextPhase);
+      setPhase(np);
     }
     setBusy(false);
-  },[busy,turnPhase,party,enemies,inventory,encKills,stageIdx,sharedGold,executeAction,runEnemyTurn]);
+  },[busy,activePIdx,activeM,party,enemies,inv,encK,stIdx,phase,nextPhase,getMemberSpells,executeSpell,addLog,addDmg,addSpark,setPAnim,setMAnim]);
+
+  // Handle victory check when enemies die mid enemy-turn
+  useEffect(()=>{
+    if(scr!=='battle'||busy) return;
+    if(enemies.length>0&&enemies.every(e=>e.hp<=0)){
+      // This is a delayed win check
+      SFX.victory();
+      const totalExp=enemies.reduce((s,e)=>s+e.exp,0);
+      const totalGold=enemies.reduce((s,e)=>s+e.gold,0);
+      addLog('🎉 勝利！EXP+'+totalExp+' Gold+'+totalGold);
+      let fp=party.map(m=>m.hp>0?doLevelUp(m,totalExp,addLog):m);
+      fp=fp.map(m=>({...m,baseSkillUsed:false,allySkillUsed:false}));
+      setParty(fp);setGold(g=>g+totalGold);
+      const isBoss=enemies.some(e=>e.boss);
+      if(encK>=3){
+        if(stIdx>=3){stopBgm();setTimeout(()=>setScr('clear'),1200);return;}
+        const newSt=stIdx+1;setEncK(0);setStIdx(newSt);
+        addLog('🚪 '+STAGES[newSt].name+'へ進んだ！');
+      } else {
+        setEncK(k=>k+1);
+      }
+      setTimeout(()=>{setScr('map');bgm('field');},1200);
+    }
+  },[enemies]);
 
   // AUTO battle
   useEffect(()=>{
-    if(!autoMode||scr!=='battle'||busy||turnPhase==='enemy')return;
-    const pIdx=turnPhase==='p0'?0:1;
+    if(!autoMode||scr!=='battle'||busy||phase==='enemy'||spellMenu) return;
+    const pIdx=activePIdx;
     const member=party[pIdx];
-    if(!member||member.hp<=0){
-      if(!busy)handleAction('atk',enemies.findIndex(e=>e.hp>0));return;
+    if(!member||member.hp<=0) return;
+    const liveEns=enemies.filter(e=>e.hp>0);
+    if(liveEns.length===0) return;
+
+    const hpR=member.hp/member.maxHp;
+    const hasCure=inv.some(i=>i.eff&&i.eff.cure)&&member.status;
+    const hasHeal=inv.some(i=>i.eff&&i.eff.hp&&!i.eff.cure);
+
+    let act='atk',sid=null;
+    if((hasCure||(hpR<0.22&&hasHeal))&&inv.length>0) act='heal';
+    else {
+      // Use a good offensive spell if available
+      const spells=getMemberSpells(member);
+      const offSpells=spells.filter(sp=>sp&&(sp.type==='atk_all'||sp.type==='atk_one')&&member.mp>=(sp.mp||0));
+      if(offSpells.length>0&&Math.random()<0.65){
+        // Pick most powerful
+        const best=offSpells.reduce((a,b)=>(b.mp||0)>(a.mp||0)?b:a);
+        act='spell';sid=best.id;
+      }
     }
-    const dec=aiDecide(member,enemies,inventory);
     const timer=setTimeout(()=>{
-      if(autoRef.current)handleAction(dec.action,dec.target??enemies.findIndex(e=>e.hp>0));
-    },700);
+      if(autoRef.current) handleAction(act,sid,null);
+    },750);
     return()=>clearTimeout(timer);
-  },[autoMode,scr,busy,turnPhase,party,enemies,inventory,handleAction]);
+  },[autoMode,scr,busy,phase,spellMenu,activePIdx,party,enemies,inv,getMemberSpells,handleAction]);
 
   const doSave=()=>{
-    const ok=sv({party,enemies:[],encKills,stageIdx,inventory,sharedGold,log,selClasses});
-    SFX.save();setSaveMsg(ok?'💾 セーブ完了！':'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);
+    const ok=sv({party,encK,stIdx,inv,gold,log,selCls});
+    SFX.save();setSaveMsg(ok?'💾 セーブ完了！':'❌ 失敗');
+    setTimeout(()=>setSaveMsg(''),2500);
   };
   const doLoad=()=>{
     const d=ld();if(!d){setSaveMsg('セーブデータなし');setTimeout(()=>setSaveMsg(''),2000);return;}
-    setParty(d.party);setEncKills(d.encKills||0);setStageIdx(d.stageIdx||0);
-    setInventory(d.inventory||[]);setSharedGold(d.sharedGold||250);setLog(d.log||[]);
-    setSelClasses(d.selClasses||[]);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);
+    setParty(d.party||[]);setEncK(d.encK||0);setStIdx(d.stIdx||0);
+    setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);
+    setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);
     setScr('map');bgm('field');
   };
 
   const buyItem=(item)=>{
-    if(sharedGold<item.cost){addLog('Gold不足！');return;}
+    if(gold<item.cost){addLog('Gold不足！');return;}
     SFX.buy();
     if(item.type==='equip'){
-      // Equipment: apply to ALL party members permanently
-      setParty(p=>p.map(m=>({...m,
-        atk:item.effect.atk?m.atk+item.effect.atk:m.atk,
-        def:item.effect.def?m.def+item.effect.def:m.def,
-        mat:item.effect.mat?m.mat+item.effect.mat:m.mat,
-        maxHp:item.effect.maxHpBonus?m.maxHp+item.effect.maxHpBonus:m.maxHp,
-        hp:item.effect.maxHpBonus?m.hp+item.effect.maxHpBonus:m.hp,
-      })));
-      addLog(`🛒 ${item.emoji}${item.name}を購入！全員に効果！`);
+      setParty(p=>p.map(m=>{
+        let nm={...m};
+        if(item.eff.atk) nm.atk+=item.eff.atk;
+        if(item.eff.def) nm.def+=item.eff.def;
+        if(item.eff.mat) nm.mat+=item.eff.mat;
+        if(item.eff.hpb){nm.maxHp+=item.eff.hpb;nm.hp=Math.min(nm.hp+item.eff.hpb,nm.maxHp);}
+        if(item.eff.mpb){nm.maxMp+=item.eff.mpb;nm.mp=Math.min(nm.mp+item.eff.mpb,nm.maxMp);}
+        return nm;
+      }));
+      addLog('🛒 '+item.emoji+item.name+'購入！全員に効果！');
     } else {
-      // Consumable: add to shared inventory (capped)
-      const cnt=inventory.filter(i=>i.id===item.id).length;
-      if(cnt>=5){addLog('これ以上は持てない！(最大5個)');return;}
-      setInventory(p=>[...p,{...item}]);
-      addLog(`🛒 ${item.emoji}${item.name}を購入！`);
+      const cnt=inv.filter(i=>i.id===item.id).length;
+      if(cnt>=5){addLog('これ以上持てない（最大5個）');return;}
+      setInv(p=>[...p,{...item}]);
+      addLog('🛒 '+item.emoji+item.name+'購入！');
     }
-    setSharedGold(g=>g-item.cost);
+    setGold(g=>g-item.cost);
   };
 
-  const useConsumable=(pIdx)=>{
-    // Use best available consumable for party member
-    const cureIdx=inventory.findIndex(i=>i.effect?.cure);
-    const healIdx=inventory.findIndex(i=>i.effect?.hp);
-    const mpIdx=inventory.findIndex(i=>i.effect?.mp&&!i.effect?.hp);
-    const m=party[pIdx];
-    if(!m||m.hp<=0)return;
-
-    if(m.status&&cureIdx>=0){
-      const item=inventory[cureIdx];
-      const newInv=[...inventory];newInv.splice(cureIdx,1);
-      setInventory(newInv);
-      setParty(p=>{const n=[...p];n[pIdx]={...m,status:null,statusTurns:0};return n;});
-      SFX.heal();addLog(`${item.emoji} ${CLASSES[m.classId].name}の状態異常を回復！`);
-      return;
-    }
-    if(m.hp<m.maxHp&&healIdx>=0){
-      const item=inventory[healIdx];
-      // FIXED: strict cap at maxHp
-      const add=Math.min(item.effect.hp, m.maxHp-m.hp);
-      const newHp=Math.min(m.maxHp, m.hp+item.effect.hp);
-      const newInv=[...inventory];newInv.splice(healIdx,1);
-      setInventory(newInv);
-      setParty(p=>{const n=[...p];n[pIdx]={...m,hp:newHp};return n;});
-      SFX.heal();addDmg(add,'h',`${pIdx*22+5}%`);
-      addLog(`${item.emoji} ${CLASSES[m.classId].name}のHP+${add}（最大${m.maxHp}まで）`);
-      return;
-    }
-    if(m.mp<m.maxMp&&mpIdx>=0){
-      const item=inventory[mpIdx];
-      const newMp=Math.min(m.maxMp,m.mp+item.effect.mp);
-      const newInv=[...inventory];newInv.splice(mpIdx,1);
-      setInventory(newInv);
-      setParty(p=>{const n=[...p];n[pIdx]={...m,mp:newMp};return n;});
-      addLog(`${item.emoji} ${CLASSES[m.classId].name}のMP+${item.effect.mp}`);
-      return;
-    }
-    addLog('使えるアイテムがない！');
+  const acceptRecruit=()=>{
+    if(!recruitOffer) return;
+    const ally=initMonsterAlly(recruitOffer);
+    setParty(p=>[...p,ally]);
+    SFX.recruit();
+    addLog('🤝 '+recruitOffer.name+'がなかまになった！');
+    setRecruitOffer(null);
+    const newEncK=encK+1;
+    if(encK>=3){
+      if(stIdx>=3){stopBgm();setScr('clear');return;}
+      const newSt=stIdx+1;setEncK(0);setStIdx(newSt);
+      addLog('🚪 '+STAGES[newSt].name+'へ進んだ！');
+    } else {setEncK(newEncK);}
+    setScr('map');bgm('field');
   };
 
-  const restart=()=>{setParty([]);setEnemies([]);setSelClasses([]);setLog([]);setScr('title');setEncKills(0);setStageIdx(0);setInventory([]);setSharedGold(250);stopBgm();};
+  const restart=()=>{setParty([]);setEnemies([]);setSelCls([]);setLog([]);setEncK(0);setStIdx(0);setInv([]);setGold(280);setRecruitOffer(null);stopBgm();setScr('title');};
 
-  const stage=STAGES[stageIdx];
-  const activePIdx=turnPhase==='p0'?0:turnPhase==='p1'?1:-1;
-  const activeMember=activePIdx>=0?party[activePIdx]:null;
+  const stage=STAGES[stIdx];
+  const bs=(col,dis)=>{
+    const d=dis||false;
+    return{background:d?'rgba(50,50,60,.25)':'linear-gradient(135deg,'+col+'bb,'+col+'44)',border:'1px solid '+(d?'#1e1e3a':col),color:d?'#2a2a3a':'#fff',padding:'10px 14px',borderRadius:'10px',fontFamily:'inherit',fontWeight:900,fontSize:'0.86rem',cursor:d?'not-allowed':'pointer',boxShadow:d?'none':'0 0 10px '+col+'33',transition:'all 0.14s',margin:'4px'};
+  };
 
-  // Button style
-  const bs=(col,dis=false,small=false)=>({background:dis?'rgba(60,60,70,0.25)':`linear-gradient(135deg,${col}bb,${col}44)`,border:`1px solid ${dis?'#2a2a3a':col}`,color:dis?'#3a3a4a':'#fff',padding:small?'8px 12px':'11px 15px',borderRadius:'10px',fontFamily:'inherit',fontWeight:900,fontSize:small?'0.82rem':'0.88rem',cursor:dis?'not-allowed':'pointer',boxShadow:dis?'none':`0 0 10px ${col}33`,transition:'all 0.14s',margin:'4px'});
+  // Spell list for active member
+  const activeMemberSpells=activeM?getMemberSpells(activeM):[];
 
   return(
-    <div style={{minHeight:'100vh',background:'linear-gradient(160deg,#03030b,#090520,#030b03)',display:'flex',flexDirection:'column',alignItems:'center',padding:'12px 10px 80px',color:'#dde4f0'}}>
-
+    <div style={{minHeight:'100vh',background:'linear-gradient(160deg,#02020a,#07041a,#02080a)',display:'flex',flexDirection:'column',alignItems:'center',padding:'12px 10px 80px',color:'#dde4f0'}}>
       {/* Header */}
       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
-        <div style={{fontSize:'clamp(0.85rem,3.8vw,1.25rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,0.4))'}}>
+        <div style={{fontSize:'clamp(.82rem,3.6vw,1.2rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>
           ✨ ゆうりとそうやの大冒険 ✨
         </div>
-        <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #2a2a4a',borderRadius:'8px',color:'#64748b',padding:'4px 8px',fontSize:'0.78rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
+        <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'.78rem',cursor:'pointer'}}>
+          {isMuted?'🔇':'🔊'}
+        </button>
       </div>
-      {saveMsg&&<div style={{background:'rgba(80,160,80,0.18)',border:'1px solid #22c55e55',borderRadius:'8px',padding:'5px 14px',fontSize:'0.8rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn 0.3s ease'}}>{saveMsg}</div>}
+      {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.8rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
 
-      {/* ===== TITLE ===== */}
+      {/* TITLE */}
       {scr==='title'&&(
-        <div style={{width:'100%',maxWidth:'460px',textAlign:'center',animation:'fadeIn 0.4s ease',marginTop:'8px'}}>
-          <div style={{fontSize:'4.5rem',animation:'float 3s ease-in-out infinite',marginBottom:'6px'}}>🏰</div>
-          <div style={{color:'#64748b',fontSize:'0.8rem',marginBottom:'6px',lineHeight:1.6}}>
-            4つのステージを制し、魔天王を倒せ<br/>
-            <span style={{fontSize:'0.72rem',color:'#475569'}}>パーティを組んで挑む本格派RPG</span>
+        <div style={{width:'100%',maxWidth:'460px',textAlign:'center',animation:'fadeIn .4s ease',marginTop:'8px'}}>
+          <div style={{fontSize:'4.5rem',animation:'floatA 3s ease-in-out infinite',marginBottom:'6px'}}>🏰</div>
+          <div style={{color:'#4b5563',fontSize:'.78rem',marginBottom:'6px',lineHeight:1.6}}>
+            4ステージを制し、魔天王を倒せ<br/>
+            <span style={{fontSize:'.7rem',color:'#374151'}}>最大4人パーティ・呪文・仲間モンスターのある本格RPG</span>
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:'8px',alignItems:'center',marginTop:'20px'}}>
-            <button onClick={()=>{SFX.cursor();gac();setSelClasses([]);setScr('select');}} style={{...bs('#d4a017'),padding:'14px 40px',fontSize:'1rem',width:'75%'}}>⚔️ はじめから</button>
-            {hasSave()&&<button onClick={doLoad} style={{...bs('#22c55e'),padding:'14px 40px',fontSize:'1rem',width:'75%'}}>📂 つづきから</button>}
+            <button onClick={()=>{SFX.cursor();gac();setSelCls([]);setScr('select');}} style={{...bs('#d4a017'),padding:'14px 40px',fontSize:'1rem',width:'78%'}}>⚔️ はじめから</button>
+            {hasSave()&&<button onClick={doLoad} style={{...bs('#22c55e'),padding:'14px 40px',fontSize:'1rem',width:'78%'}}>📂 つづきから</button>}
           </div>
         </div>
       )}
 
-      {/* ===== PARTY SELECT ===== */}
+      {/* CLASS SELECT */}
       {scr==='select'&&(
-        <div style={{width:'100%',maxWidth:'460px',animation:'fadeIn 0.4s ease'}}>
+        <div style={{width:'100%',maxWidth:'460px',animation:'fadeIn .4s ease'}}>
           <div style={{textAlign:'center',marginBottom:'10px'}}>
             <div style={{color:'#d4a017',fontWeight:900,fontSize:'1rem',marginBottom:'2px'}}>⚔️ パーティを編成せよ！</div>
-            <div style={{color:'#475569',fontSize:'0.74rem'}}>2人を選択（{selClasses.length}/2）</div>
+            <div style={{color:'#374151',fontSize:'.74rem'}}>2人選択（{selCls.length}/2）　※モンスターは冒険中に仲間になる</div>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'9px'}}>
             {Object.values(CLASSES).map(c=>{
-              const sel=selClasses.includes(c.id);
+              const sel=selCls.includes(c.id);
+              const v=CHAR_VISUALS[c.id];
               return(
-                <div key={c.id} onClick={()=>{SFX.cursor();if(sel){setSelClasses(p=>p.filter(x=>x!==c.id));}else if(selClasses.length<2){setSelClasses(p=>[...p,c.id]);}}}
-                  style={{background:sel?c.bg:`rgba(255,255,255,0.02)`,border:`2px solid ${sel?c.color:'#1e1e3a'}`,borderRadius:'14px',padding:'13px 10px',cursor:'pointer',textAlign:'center',transition:'all 0.2s',position:'relative'}}>
-                  {sel&&<div style={{position:'absolute',top:'6px',right:'8px',color:c.color,fontWeight:900,fontSize:'0.8rem'}}>✓</div>}
-                  <CharSprite classId={c.id} status={null} hp={1} maxHp={1} anim={'idle'} size={3}/>
-                  <div style={{color:c.color,fontWeight:900,fontSize:'0.95rem',margin:'4px 0 2px'}}>{c.name}</div>
-                  <div style={{color:'#475569',fontSize:'0.68rem',lineHeight:1.4,marginBottom:'6px'}}>{c.desc||''}</div>
-                  <div style={{fontSize:'0.66rem',color:'#374151',lineHeight:1.5}}>HP:{c.hp} MP:{c.mp}<br/>ATK:{c.atk} DEF:{c.def}</div>
-                  <div style={{marginTop:'7px',padding:'5px 6px',background:`${c.color}18`,borderRadius:'7px',fontSize:'0.66rem',color:c.color}}>
-                    {c.skill.e} {c.skill.name}<br/><span style={{opacity:0.8}}>{c.skill.desc}</span>
+                <div key={c.id} onClick={()=>{SFX.cursor();if(sel){setSelCls(p=>p.filter(x=>x!==c.id));}else if(selCls.length<2){setSelCls(p=>[...p,c.id]);}}}
+                  style={{background:sel?c.bg:'rgba(255,255,255,.02)',border:'2px solid '+(sel?c.color:'#141428'),borderRadius:'14px',padding:'12px 8px',cursor:'pointer',textAlign:'center',transition:'all .2s',position:'relative'}}>
+                  {sel&&<div style={{position:'absolute',top:'6px',right:'8px',color:c.color,fontWeight:900,fontSize:'.8rem'}}>✓</div>}
+                  {/* Mini character preview */}
+                  <div style={{display:'flex',flexDirection:'column',alignItems:'center',marginBottom:'6px',filter:'drop-shadow(0 0 8px '+c.color+'66)'}}>
+                    <div style={{fontSize:'1.8rem',lineHeight:1}}>{v.face}</div>
+                    <div style={{display:'flex',alignItems:'center',lineHeight:1,gap:'2px',marginTop:'-1px'}}>
+                      {v.shield&&<span style={{fontSize:'.85rem'}}>{v.shield}</span>}
+                      <span style={{fontSize:'1.6rem'}}>{v.body}</span>
+                      {v.weapon&&<span style={{fontSize:'.95rem'}}>{v.weapon}</span>}
+                    </div>
+                    <div style={{fontSize:'1.1rem',marginTop:'-1px'}}>{v.legs}</div>
+                  </div>
+                  <div style={{color:c.color,fontWeight:900,fontSize:'.9rem',marginBottom:'2px'}}>{c.name}</div>
+                  <div style={{fontSize:'.66rem',color:'#374151',lineHeight:1.5,marginBottom:'5px'}}>HP:{c.hp} MP:{c.mp}<br/>ATK:{c.atk} DEF:{c.def} MAT:{c.mat}</div>
+                  <div style={{padding:'5px',background:c.color+'18',borderRadius:'7px',fontSize:'.64rem',color:c.color}}>
+                    {c.baseSkill.e} {c.baseSkill.name}<br/><span style={{opacity:.8}}>{c.baseSkill.desc}</span>
+                  </div>
+                  <div style={{marginTop:'4px',fontSize:'.62rem',color:'#374151'}}>
+                    習得: {(CLASS_SPELL_LEARN[c.id]||[]).map(s=>s.name).join('・')}
                   </div>
                 </div>
               );
             })}
           </div>
-          {selClasses.length===2&&(
+          {selCls.length===2&&(
             <div style={{textAlign:'center',marginTop:'12px'}}>
               <button onClick={()=>{
                 SFX.cursor();
-                const p=selClasses.map(c=>initMember(c));
-                setParty(p);setLog([`🌟 ${p.map(m=>CLASSES[m.classId].name).join('・')}の大冒険、開幕！`]);
+                const p=selCls.map(c=>initHuman(c));
+                setParty(p);setLog(['🌟 '+p.map(m=>CLASSES[m.classId].name).join('・')+'の大冒険、開幕！']);
                 setScr('map');bgm('field');
-              }} style={{...bs('#d4a017'),padding:'13px 36px',fontSize:'0.98rem'}}>
+              }} style={{...bs('#d4a017'),padding:'13px 36px',fontSize:'.98rem'}}>
                 🗡️ この２人で冒険へ！
               </button>
             </div>
@@ -723,58 +1131,61 @@ function App(){
         </div>
       )}
 
-      {/* ===== MAP ===== */}
+      {/* MAP */}
       {scr==='map'&&party.length>0&&(
         <>
-          {/* Party status */}
-          <div className="card" style={{borderColor:'rgba(212,160,23,0.2)'}}>
+          <div className="card" style={{borderColor:'rgba(212,160,23,.18)'}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
-              <span style={{color:'#d4a017',fontWeight:900,fontSize:'0.88rem'}}>⚔️ パーティ状態</span>
-              <span style={{color:'#fbbf24',fontSize:'0.82rem'}}>💰 {sharedGold}G</span>
+              <span style={{color:'#d4a017',fontWeight:900,fontSize:'.88rem'}}>⚔️ パーティ状態</span>
+              <span style={{color:'#fbbf24',fontSize:'.82rem'}}>💰 {gold}G</span>
             </div>
             {party.map((m,i)=>{
-              const cls=CLASSES[m.classId];
+              const mname=m.isMonster?m.name:CLASSES[m.classId].name;
+              const mc=m.isMonster?'#4ade80':CLASSES[m.classId].color;
+              const spells=getMemberSpells(m);
               return(
                 <div key={i} style={{marginBottom:i<party.length-1?'10px':'0'}}>
-                  <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#64748b',marginBottom:'2px'}}>
-                    <span style={{color:cls.color,fontWeight:900}}>{cls.cEmoji} {cls.name} Lv.{m.level}</span>
-                    <span>MP:{m.mp}/{m.maxMp} {m.status?`[${m.status==='poison'?'☠️毒':m.status==='burn'?'🔥燃焼':'💫スタン'}]`:''}</span>
+                  <div style={{display:'flex',justifyContent:'space-between',fontSize:'.72rem',color:'#4b5563',marginBottom:'2px'}}>
+                    <span style={{color:mc,fontWeight:900}}>{m.isMonster?'👾':'⚔️'} {mname} Lv.{m.level}</span>
+                    <span>MP:{m.mp}/{m.maxMp} {m.status?'['+m.status+']':''}</span>
                   </div>
-                  <HpBar hp={m.hp} maxHp={m.maxHp} label="" color={cls.color} small/>
+                  <HpBar hp={m.hp} maxHp={m.maxHp} label="" color={mc} small/>
                   <MpBar mp={m.mp} maxMp={m.maxMp}/>
-                  <ExpBar exp={m.exp} level={m.level}/>
+                  <ExpBar exp={m.exp||0} level={m.level}/>
+                  {!m.isMonster&&spells.length>1&&(
+                    <div style={{fontSize:'.62rem',color:'#374151',marginTop:'2px'}}>
+                      呪文: {spells.slice(1).map(s=>s.name).join('・')||'なし'}
+                    </div>
+                  )}
                 </div>
               );
             })}
-            <div style={{fontSize:'0.68rem',color:'#374151',marginTop:'6px'}}>
-              🎒 {inventory.length>0?inventory.map(i=>i.emoji).join(' '):'アイテムなし'}
+            <div style={{fontSize:'.68rem',color:'#374151',marginTop:'5px'}}>
+              🎒 {inv.length>0?inv.map(i=>i.emoji).join(' '):'アイテムなし'}
             </div>
           </div>
 
-          {/* Stage */}
-          <div className="card" style={{textAlign:'center',borderColor:'rgba(255,255,255,0.06)'}}>
-            <div style={{fontSize:'3rem',animation:'float 3s ease-in-out infinite',marginBottom:'4px'}}>{stage.emoji}</div>
+          <div className="card" style={{textAlign:'center',borderColor:'rgba(255,255,255,.05)'}}>
+            <div style={{fontSize:'3rem',animation:'floatA 3s ease-in-out infinite',marginBottom:'4px'}}>{stage.emoji}</div>
             <div style={{color:'#d4a017',fontWeight:900,marginBottom:'3px'}}>{stage.name}</div>
-            <div style={{fontSize:'0.72rem',color:'#475569',marginBottom:'12px'}}>
-              {encKills<3?`あと${3-encKills}体倒すとボス出現`:'🚨 ボスが待ち構えている…'}
+            <div style={{fontSize:'.72rem',color:'#374151',marginBottom:'12px'}}>
+              {encK<3?'あと'+(3-encK)+'体倒すとボス出現':'🚨 ボスが待ち構えている…'}
             </div>
-            {/* Progress */}
-            <div style={{display:'flex',justifyContent:'center',gap:'7px',marginBottom:'14px'}}>
+            <div style={{display:'flex',justifyContent:'center',gap:'7px',marginBottom:'12px'}}>
               {[0,1,2,3].map(i=>(
-                <div key={i} style={{width:'20px',height:'20px',borderRadius:'50%',fontSize:'0.68rem',display:'flex',alignItems:'center',justifyContent:'center',
-                  background:i<encKills?'#22c55e':i===3&&encKills>=3?'#ef4444':'rgba(255,255,255,0.07)',border:`1px solid ${i===3?'#ef4444':'#22c55e'}44`}}>
-                  {i===3?'👑':i<encKills?'✓':''}
+                <div key={i} style={{width:'20px',height:'20px',borderRadius:'50%',fontSize:'.68rem',display:'flex',alignItems:'center',justifyContent:'center',
+                  background:i<encK?'#22c55e':i===3&&encK>=3?'#ef4444':'rgba(255,255,255,.06)',border:'1px solid '+(i===3?'#ef444444':'#22c55e44')}}>
+                  {i===3?'👑':i<encK?'✓':''}
                 </div>
               ))}
             </div>
-            {/* Stage map */}
-            <div style={{display:'flex',justifyContent:'space-between',marginBottom:'14px',gap:'4px'}}>
+            <div style={{display:'flex',justifyContent:'space-between',marginBottom:'12px',gap:'4px'}}>
               {STAGES.map((s,i)=>(
-                <div key={i} style={{flex:1,textAlign:'center',fontSize:'0.66rem',padding:'5px 2px',borderRadius:'8px',
-                  background:i===stageIdx?'rgba(212,160,23,0.15)':i<stageIdx?'rgba(34,197,94,0.08)':'transparent',
-                  border:`1px solid ${i===stageIdx?'#d4a017':i<stageIdx?'#22c55e':'#1a1a2a'}44`}}>
+                <div key={i} style={{flex:1,textAlign:'center',fontSize:'.66rem',padding:'5px 2px',borderRadius:'8px',
+                  background:i===stIdx?'rgba(212,160,23,.14)':i<stIdx?'rgba(34,197,94,.08)':'transparent',
+                  border:'1px solid '+(i===stIdx?'#d4a01744':i<stIdx?'#22c55e33':'#141428')}}>
                   <div style={{fontSize:'1.1rem'}}>{s.emoji}</div>
-                  <div style={{color:i===stageIdx?'#d4a017':i<stageIdx?'#22c55e':'#374151',marginTop:'1px'}}>{i<stageIdx?'✅':i===stageIdx?'📍':'🔒'}</div>
+                  <div style={{color:i===stIdx?'#d4a017':i<stIdx?'#22c55e':'#374151',marginTop:'1px'}}>{i<stIdx?'✅':i===stIdx?'📍':'🔒'}</div>
                 </div>
               ))}
             </div>
@@ -787,76 +1198,94 @@ function App(){
         </>
       )}
 
-      {/* ===== BATTLE ===== */}
+      {/* RECRUIT OFFER */}
+      {recruitOffer&&(
+        <div className="card" style={{animation:'popIn .5s ease',borderColor:'rgba(74,222,128,.35)',textAlign:'center'}}>
+          <div style={{fontSize:'3rem',marginBottom:'6px',animation:'floatA 2s ease-in-out infinite'}}>{recruitOffer.base}{recruitOffer.ov||''}</div>
+          <div style={{color:'#4ade80',fontWeight:900,fontSize:'1rem',marginBottom:'4px'}}>{recruitOffer.name}がなかまになりたそうにしている！</div>
+          <div style={{color:'#4b5563',fontSize:'.78rem',marginBottom:'8px'}}>{recruitOffer.desc||''}</div>
+          {recruitOffer.allySkill&&<div style={{background:'rgba(74,222,128,.1)',borderRadius:'8px',padding:'6px',fontSize:'.72rem',color:'#4ade80',marginBottom:'10px'}}>
+            スキル: {recruitOffer.allySkill.e} {recruitOffer.allySkill.name} — {recruitOffer.allySkill.desc}
+          </div>}
+          <div style={{display:'flex',justifyContent:'center',gap:'8px'}}>
+            <button style={bs('#22c55e')} onClick={acceptRecruit}>🤝 なかまにする</button>
+            <button style={bs('#374151')} onClick={()=>{setRecruitOffer(null);const nek=encK+1;if(encK>=3){if(stIdx>=3){stopBgm();setScr('clear');return;}const nst=stIdx+1;setEncK(0);setStIdx(nst);}else{setEncK(nek);}setScr('map');bgm('field');}}>
+              断る
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* BATTLE */}
       {scr==='battle'&&party.length>0&&enemies.length>0&&(
         <>
-          {/* Battle stage visual */}
-          <div style={{position:'relative',width:'100%',maxWidth:'460px',height:'240px',borderRadius:'14px',overflow:'hidden',marginBottom:'9px',border:`2px solid ${enemies.some(e=>e.boss)?'rgba(220,38,38,0.5)':'rgba(255,100,30,0.18)'}`}}>
+          {/* Stage visual */}
+          <div style={{position:'relative',width:'100%',maxWidth:'460px',height:'250px',borderRadius:'14px',overflow:'hidden',marginBottom:'9px',border:'2px solid '+(enemies.some(e=>e.boss)?'rgba(220,38,38,.5)':'rgba(255,100,30,.15)')}}>
             <div style={{position:'absolute',inset:0,background:stage.sky}}/>
-            <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.65) 1px,transparent 1px)',backgroundSize:'20px 20px',animation:'starPulse 4s ease-in-out infinite'}}/>
-            {enemies.some(e=>e.boss)&&<div style={{position:'absolute',inset:0,background:`radial-gradient(circle at 70% 50%,${enemies.find(e=>e.boss)?.gc||'#888'}18,transparent 65%)`,animation:'starPulse 2s ease-in-out infinite'}}/>}
-            <div style={{position:'absolute',bottom:0,left:0,right:0,height:'60px',background:`linear-gradient(transparent,${stage.gnd})`,borderTop:`1px solid ${stage.gb}`}}/>
-            {/* Party members */}
+            <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,.65) 1px,transparent 1px)',backgroundSize:'20px 20px',animation:'starPulse 4s ease-in-out infinite'}}/>
+            {enemies.some(e=>e.boss)&&<div style={{position:'absolute',inset:0,background:'radial-gradient(circle at 70% 50%,'+(enemies.find(e=>e.boss).gc||'#888')+'18,transparent 65%)',animation:'starPulse 2s ease-in-out infinite'}}/>}
+            {enemies.some(e=>e.final)&&<div style={{position:'absolute',inset:0,animation:'rageFlash 3s ease-in-out infinite',background:'rgba(220,38,38,.06)'}}/>}
+            <div style={{position:'absolute',bottom:0,left:0,right:0,height:'62px',background:'linear-gradient(transparent,'+stage.gnd+')',borderTop:'1px solid '+stage.gb}}/>
+
+            {/* Party members with full body */}
             {party.map((m,i)=>{
-              const alive=m.hp>0;
-              const cls=CLASSES[m.classId];
-              const leftPct=5+i*22;
-              const sz=i===0?4.2:3.5;
+              const xl=4+i*22;
               return(
-                <div key={i} style={{position:'absolute',bottom:'28px',left:`${leftPct}%`,transformOrigin:'bottom center',
-                  animation:pAnims[i]==='hurt'?'shakeX 0.38s ease':pAnims[i]==='atk'?'charAtk 0.4s ease':pAnims[i]==='skill'?'winSpin 0.5s ease':alive?'floatSlow 3s ease-in-out infinite':'none',
-                  filter:`drop-shadow(0 0 9px ${cls.color}88)${pAnims[i]==='hurt'?' drop-shadow(0 0 16px rgba(255,50,50,1))':''}${!alive?' grayscale(1) opacity(0.2)':''}`,
-                  opacity:alive?1:0.2,fontSize:`${sz}rem`,lineHeight:1,transition:'opacity 0.4s'}}>
-                  <span>{cls.cEmoji}</span>
-                  <span style={{position:'absolute',bottom:'-4px',right:'-8px',fontSize:`${sz*0.34}rem`}}>{cls.wEmoji}</span>
-                  {m.status&&<span style={{position:'absolute',top:'-8px',right:'-6px',fontSize:'0.7rem'}}>{m.status==='poison'?'☠️':m.status==='burn'?'🔥':'💫'}</span>}
+                <div key={i} style={{position:'absolute',bottom:'30px',left:xl+'%',transformOrigin:'bottom center'}}>
+                  {m.isMonster
+                    ? <MonPartySprite mon={m} anim={pAnims[i]} hp={m.hp} maxHp={m.maxHp}/>
+                    : <CharSprite classId={m.classId} hp={m.hp} maxHp={m.maxHp} status={m.status} anim={pAnims[i]}/>
+                  }
                 </div>
               );
             })}
+
             {/* Enemies */}
             {enemies.map((en,i)=>{
-              const liveCount=enemies.filter(e=>e.hp>0).length;
-              const rightPct=enemies.length===1?10:5+i*20;
-              const sz=en.big?5.4:enemies.length===1?5.4:4.4;
+              const xr=enemies.length===1?8:5+i*22;
+              const sz=en.big?5.5:enemies.length===1?5.5:4.6;
               return(
-                <div key={i} style={{position:'absolute',bottom:'25px',right:`${rightPct}%`,transformOrigin:'bottom center'}}>
+                <div key={i} style={{position:'absolute',bottom:'26px',right:xr+'%',transformOrigin:'bottom center'}}>
                   <MonSprite mon={en} anim={mAnims[i]} size={sz}/>
                 </div>
               );
             })}
-            {/* VS */}
-            <div style={{position:'absolute',top:'42%',left:'50%',transform:'translate(-50%,-50%)',fontSize:'1rem',fontWeight:900,color:'rgba(212,160,23,0.22)'}}>VS</div>
-            <div style={{position:'absolute',top:'7px',left:'50%',transform:'translateX(-50%)',fontSize:'0.68rem',color:'rgba(255,255,255,0.3)',whiteSpace:'nowrap'}}>{stage.emoji} {stage.name}</div>
-            {enemies.some(e=>e.boss)&&<div style={{position:'absolute',top:'7px',left:'7px',fontSize:'0.68rem',color:'#ef4444',fontWeight:900,animation:'blink 1s ease-in-out infinite'}}>⚠️BOSS</div>}
-            {autoMode&&<div style={{position:'absolute',top:'7px',right:'7px',fontSize:'0.66rem',color:'#22c55e',background:'rgba(34,197,94,0.18)',padding:'2px 6px',borderRadius:'5px'}}>AUTO▶</div>}
-            {/* Skill flash */}
-            {showSkill&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'4.5rem',animation:'skillBurst 0.65s ease forwards',zIndex:50,background:'rgba(212,160,23,0.1)',pointerEvents:'none'}}>
-              {CLASSES[showSkill]?.skill.e}
-            </div>}
+
+            <div style={{position:'absolute',top:'8px',left:'50%',transform:'translateX(-50%)',fontSize:'.68rem',color:'rgba(255,255,255,.28)',whiteSpace:'nowrap'}}>{stage.emoji} {stage.name}</div>
+            {enemies.some(e=>e.boss)&&<div style={{position:'absolute',top:'8px',left:'8px',fontSize:'.68rem',color:'#ef4444',fontWeight:900,animation:'blink 1s ease-in-out infinite'}}>⚠️BOSS</div>}
+            {autoMode&&<div style={{position:'absolute',top:'8px',right:'8px',fontSize:'.66rem',color:'#22c55e',background:'rgba(34,197,94,.18)',padding:'2px 6px',borderRadius:'5px'}}>AUTO▶</div>}
+
+            {showSkill&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'5rem',animation:'skillFlash .65s ease forwards',zIndex:50,pointerEvents:'none'}}>{showSkill}</div>}
+
             {/* Damage numbers */}
             {dmgs.map(d=>(
-              <div key={d.id} style={{position:'absolute',fontWeight:900,fontSize:'1.85rem',pointerEvents:'none',zIndex:100,animation:'dmgUp 0.95s ease forwards',textShadow:'0 2px 8px rgba(0,0,0,0.95)',
-                color:d.type==='e'?'#ff5555':d.type==='h'?'#4ade80':'#ffd700',
-                left:d.pos||'40%',top:'15%'}}>
-                {d.type==='h'?`+${d.v}`:`-${d.v}`}
+              <div key={d.id} style={{position:'absolute',fontWeight:900,fontSize:'1.8rem',pointerEvents:'none',zIndex:100,animation:'dmgUp .95s ease forwards',textShadow:'0 2px 8px rgba(0,0,0,.95)',color:d.type==='e'?'#ff5555':d.type==='h'?'#4ade80':'#ffd700',left:d.x,top:d.y}}>
+                {d.type==='h'?'+'+d.v:'-'+d.v}
               </div>
             ))}
-            {/* Sparks */}
-            {sparks.map(s=>Array.from({length:7},(_,i)=>{const a=(i/7)*Math.PI*2,dist=26+Math.random()*22;return <div key={s.id+i} style={{position:'absolute',width:'6px',height:'6px',borderRadius:'50%',left:s.x,top:s.y,background:`hsl(${14+i*14},100%,62%)`,pointerEvents:'none',zIndex:60,animation:'sparkFly 0.62s ease forwards','--tx':`${Math.cos(a)*dist}px`,'--ty':`${Math.sin(a)*dist}px`}}/>;}))}
+            {sparks.map(s=>Array.from({length:7},(_,i)=>{
+              const a=(i/7)*Math.PI*2,dist=25+Math.random()*20;
+              return <div key={s.id+'_'+i} style={{position:'absolute',width:'6px',height:'6px',borderRadius:'50%',left:s.x,top:s.y,background:'hsl('+(14+i*14)+',100%,62%)',pointerEvents:'none',zIndex:60,animation:'sparkFly .62s ease forwards','--tx':Math.cos(a)*dist+'px','--ty':Math.sin(a)*dist+'px'}}/>;
+            }))}
           </div>
 
-          {/* HP bars - enemies + party */}
-          <div className="card" style={{borderColor:'rgba(220,38,38,0.2)'}}>
+          {/* HP bars */}
+          <div className="card" style={{borderColor:'rgba(220,38,38,.18)'}}>
             {enemies.map((en,i)=>(
-              <HpBar key={i} hp={en.hp} maxHp={en.maxHp} label={`${en.base}${en.ov||''} ${en.name}${en.boss?'👑':''}`} color={en.boss?'#dc2626':'#ef4444'} small/>
+              <HpBar key={i} hp={en.hp} maxHp={en.maxHp} label={en.base+(en.ov||'')+' '+en.name+(en.boss?' 👑':'')} color={en.boss?'#dc2626':'#ef4444'} small/>
             ))}
-            <div style={{borderTop:'1px solid rgba(255,255,255,0.06)',margin:'6px 0'}}/>
+            <div style={{borderTop:'1px solid rgba(255,255,255,.05)',margin:'5px 0'}}/>
             {party.map((m,i)=>{
-              const cls=CLASSES[m.classId];
+              const mname=m.isMonster?m.name:CLASSES[m.classId].name;
+              const mc=m.isMonster?'#4ade80':CLASSES[m.classId].color;
+              const bStr=[];
+              if(m.atkBuffMult>1) bStr.push('ATK↑');
+              if(m.defBuffMult>1) bStr.push('DEF↑');
+              if(m.reflecting) bStr.push('反射');
               return(
                 <div key={i}>
-                  <HpBar hp={m.hp} maxHp={m.maxHp} label={`${cls.cEmoji} ${cls.name} Lv.${m.level}${m.status?` [${m.status==='poison'?'☠️':m.status==='burn'?'🔥':'💫'}]`:''}`} color={cls.color} small/>
-                  <div style={{display:'flex',gap:'6px',marginBottom:'4px',fontSize:'0.68rem',color:'#475569'}}>
+                  <HpBar hp={m.hp} maxHp={m.maxHp} label={mname+' Lv.'+m.level+(m.status?' ['+m.status+']':'')+(bStr.length>0?' ✨'+bStr.join('/'):'')} color={mc} small/>
+                  <div style={{display:'flex',gap:'4px',marginBottom:'3px',alignItems:'center',fontSize:'.68rem',color:'#374151'}}>
                     <span>MP:{m.mp}/{m.maxMp}</span><MpBar mp={m.mp} maxMp={m.maxMp}/>
                   </div>
                 </div>
@@ -865,64 +1294,104 @@ function App(){
           </div>
 
           {/* Actions */}
-          <div className="card" style={{borderColor:'rgba(212,160,23,0.12)'}}>
-            {/* Turn indicator + auto toggle */}
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'9px'}}>
-              <div style={{fontSize:'0.82rem',color:activeMember?CLASSES[activeMember.classId].color:'#64748b',fontWeight:900}}>
-                {turnPhase==='enemy'?'💢 敵のターン…':activeMember?`${CLASSES[activeMember.classId].cEmoji} ${CLASSES[activeMember.classId].name}のターン！`:''}
+          <div className="card" style={{borderColor:'rgba(212,160,23,.1)'}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
+              <div style={{fontSize:'.82rem',fontWeight:900,color:activeM?(activeM.isMonster?'#4ade80':CLASSES[activeM.classId].color):'#374151'}}>
+                {phase==='enemy'?'💢 敵のターン…':activeM?(activeM.isMonster?'👾 '+activeM.name:'⚔️ '+CLASSES[activeM.classId].name)+'のターン！':''}
               </div>
-              <button onClick={()=>setAutoMode(v=>!v)} style={{background:autoMode?'rgba(34,197,94,0.25)':'rgba(80,80,90,0.2)',border:`1px solid ${autoMode?'#22c55e':'#2a2a4a'}`,color:autoMode?'#22c55e':'#475569',padding:'4px 12px',borderRadius:'16px',fontSize:'0.75rem',fontWeight:900,cursor:'pointer',transition:'all 0.2s'}}>
+              <button onClick={()=>setAutoMode(v=>!v)} style={{background:autoMode?'rgba(34,197,94,.22)':'rgba(80,80,90,.18)',border:'1px solid '+(autoMode?'#22c55e':'#1e1e3a'),color:autoMode?'#22c55e':'#374151',padding:'4px 12px',borderRadius:'16px',fontSize:'.75rem',fontWeight:900,cursor:'pointer'}}>
                 {autoMode?'AUTO●':'AUTO○'}
               </button>
             </div>
-            {/* Action buttons */}
-            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'7px'}}>
-              {activeMember&&CLASSES[activeMember.classId]&&[
-                {l:'⚔️ こうげき',s:'通常攻撃',c:'#dc2626',dis:busy||autoMode||turnPhase==='enemy',fn:()=>handleAction('atk',enemies.findIndex(e=>e.hp>0))},
-                {l:`${CLASSES[activeMember.classId].skill.e} 必殺技`,s:activeMember.skillUsed?'使用済み':`MP ${CLASSES[activeMember.classId].skill.mp}`,c:'#7c3aed',dis:busy||autoMode||activeMember.skillUsed||activeMember.mp<CLASSES[activeMember.classId].skill.mp||turnPhase==='enemy',fn:()=>handleAction('skill',enemies.findIndex(e=>e.hp>0))},
-                {l:'🌿 アイテム',s:`${inventory.length}個所持`,c:'#16a34a',dis:busy||autoMode||inventory.length===0||turnPhase==='enemy',fn:()=>handleAction('heal',0)},
-                {l:'🏃 にげる',s:'60%成功',c:'#4b5563',dis:busy||autoMode||turnPhase==='enemy',fn:()=>handleAction('flee',0)},
-              ].map(b=>(
-                <button key={b.l} disabled={b.dis} onClick={b.fn} style={{...bs(b.c,b.dis),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'3px',padding:'12px 6px'}}>
-                  <span style={{fontSize:'0.92rem'}}>{b.l}</span>
-                  <span style={{fontSize:'0.65rem',opacity:0.72,fontWeight:'normal'}}>{b.s}</span>
-                </button>
-              ))}
-              {(!activeMember||turnPhase==='enemy')&&
-                <div style={{gridColumn:'1/-1',textAlign:'center',color:'#374151',fontSize:'0.8rem',padding:'8px'}}>
-                  {turnPhase==='enemy'?'🔄 敵の行動中...':'✅ ターン終了待機'}
+
+            {!spellMenu&&(
+              <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'6px'}}>
+                {[
+                  {l:'⚔️ こうげき',s:'通常攻撃',c:'#dc2626',dis:busy||autoMode||phase==='enemy',fn:()=>handleAction('atk',null,null)},
+                  {l:'✨ 呪文',s:activeM?activeMemberSpells.length+'個使用可':'',c:'#8b5cf6',dis:busy||autoMode||phase==='enemy'||activeMemberSpells.length===0,fn:()=>setSpellMenu(true)},
+                  {l:'🌿 アイテム',s:inv.length+'個所持',c:'#16a34a',dis:busy||autoMode||inv.length===0||phase==='enemy',fn:()=>handleAction('heal',null,null)},
+                  {l:'🛡️ 防御',s:'ダメージ55%減',c:'#0ea5e9',dis:busy||autoMode||phase==='enemy',fn:()=>handleAction('defend',null,null)},
+                  {l:'🏃 にげる',s:'60%成功',c:'#4b5563',dis:busy||autoMode||phase==='enemy',fn:()=>handleAction('flee',null,null)},
+                ].map(b=>(
+                  <button key={b.l} disabled={b.dis} onClick={b.fn}
+                    style={{...bs(b.c,b.dis),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'2px',padding:'11px 6px',gridColumn:b.l==='🏃 にげる'?'1/-1':undefined}}>
+                    <span style={{fontSize:'.9rem'}}>{b.l}</span>
+                    <span style={{fontSize:'.62rem',opacity:.72,fontWeight:'normal'}}>{b.s}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Spell submenu */}
+            {spellMenu&&activeM&&(
+              <div>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'7px'}}>
+                  <span style={{fontSize:'.82rem',fontWeight:900,color:'#a78bfa'}}>✨ 呪文を選べ</span>
+                  <button onClick={()=>setSpellMenu(false)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'3px 8px',borderRadius:'8px',fontSize:'.75rem',cursor:'pointer'}}>← もどる</button>
                 </div>
-              }
-            </div>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'5px',maxHeight:'210px',overflowY:'auto'}}>
+                  {activeMemberSpells.map((sp,i)=>{
+                    const noMp=activeM.mp<sp.mp;
+                    const used=(sp.id===CLASSES[activeM.classId]?.baseSkill?.id&&activeM.baseSkillUsed)||(activeM.isMonster&&activeM.allySkillUsed&&i===0);
+                    const dis=busy||noMp||used;
+                    return(
+                      <button key={sp.id||i} disabled={dis} onClick={()=>{setSpellMenu(false);handleAction('spell',sp.id,null);}}
+                        style={{...bs(sp.color||'#8b5cf6',dis),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'2px',padding:'9px 5px',fontSize:'.78rem'}}>
+                        <span>{sp.e} {sp.name}</span>
+                        <span style={{fontSize:'.62rem',opacity:.7,fontWeight:'normal'}}>MP:{sp.mp} {sp.desc}</span>
+                        {used&&<span style={{fontSize:'.58rem',color:'#374151'}}>使用済み</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
 
-      {/* ===== SHOP ===== */}
+      {/* SHOP */}
       {scr==='shop'&&party.length>0&&(
-        <div className="card" style={{animation:'fadeIn 0.3s ease',borderColor:'rgba(212,160,23,0.18)'}}>
-          <div style={{color:'#d4a017',fontWeight:900,textAlign:'center',marginBottom:'10px'}}>🛒 装備ショップ　Gold: {sharedGold}</div>
-          <div style={{fontSize:'0.7rem',color:'#475569',textAlign:'center',marginBottom:'10px'}}>装備品は全員に適用 / 消耗品は在庫に追加</div>
+        <div className="card" style={{animation:'fadeIn .3s ease',borderColor:'rgba(212,160,23,.16)'}}>
+          <div style={{color:'#d4a017',fontWeight:900,textAlign:'center',marginBottom:'8px'}}>🛒 ショップ　Gold: {gold}</div>
+          <div style={{fontSize:'.68rem',color:'#374151',textAlign:'center',marginBottom:'8px'}}>装備は全員に適用 / 消耗品はスタックに追加（最大5個）</div>
           {ITEMS.map(item=>(
-            <div key={item.id} style={{display:'flex',alignItems:'center',gap:'7px',marginBottom:'7px',padding:'9px',background:'rgba(255,255,255,0.025)',borderRadius:'9px'}}>
+            <div key={item.id} style={{display:'flex',alignItems:'center',gap:'7px',marginBottom:'6px',padding:'8px',background:'rgba(255,255,255,.025)',borderRadius:'9px'}}>
               <span style={{fontSize:'1.3rem'}}>{item.emoji}</span>
               <div style={{flex:1}}>
-                <div style={{fontSize:'0.82rem',fontWeight:'bold'}}>{item.name}</div>
-                <div style={{fontSize:'0.68rem',color:'#64748b'}}>{item.desc}</div>
+                <div style={{fontSize:'.82rem',fontWeight:'bold'}}>{item.name}</div>
+                <div style={{fontSize:'.68rem',color:'#4b5563'}}>{item.desc}</div>
               </div>
-              <button onClick={()=>buyItem(item)} disabled={sharedGold<item.cost} style={{...bs('#d97706',sharedGold<item.cost,true),margin:0}}>{item.cost}G</button>
+              <button onClick={()=>buyItem(item)} disabled={gold<item.cost} style={{...bs('#d97706',gold<item.cost),margin:0,padding:'7px 10px',fontSize:'.78rem'}}>{item.cost}G</button>
             </div>
           ))}
-          {/* Use items in map */}
-          {inventory.length>0&&(
-            <div style={{borderTop:'1px solid rgba(255,255,255,0.06)',paddingTop:'10px',marginTop:'4px'}}>
-              <div style={{color:'#94a3b8',fontSize:'0.72rem',marginBottom:'6px'}}>在庫アイテムを使う：</div>
-              <div style={{display:'flex',gap:'6px',flexWrap:'wrap'}}>
-                {party.map((m,i)=>(
-                  <button key={i} onClick={()=>useConsumable(i)} style={{...bs(CLASSES[m.classId].color,m.hp<=0,true),margin:0}}>
-                    {CLASSES[m.classId].cEmoji} {CLASSES[m.classId].name}に使う
-                  </button>
-                ))}
+          {/* Use consumables from map */}
+          {inv.length>0&&(
+            <div style={{borderTop:'1px solid rgba(255,255,255,.05)',paddingTop:'8px',marginTop:'4px'}}>
+              <div style={{color:'#64748b',fontSize:'.7rem',marginBottom:'5px'}}>在庫アイテムを使う：</div>
+              <div style={{display:'flex',gap:'5px',flexWrap:'wrap'}}>
+                {party.map((m,i)=>{
+                  const mc=m.isMonster?'#4ade80':CLASSES[m.classId].color;
+                  const mname=m.isMonster?m.name:CLASSES[m.classId].name;
+                  return(
+                    <button key={i} disabled={m.hp<=0} onClick={()=>{
+                      const hi=inv.findIndex(it=>it.eff&&it.eff.hp&&!it.eff.cure);
+                      const ci=inv.findIndex(it=>it.eff&&it.eff.cure);
+                      if(m.status&&ci>=0){
+                        const it=inv[ci];const ni=[...inv];ni.splice(ci,1);setInv(ni);
+                        setParty(p=>{const n=[...p];n[i]={...n[i],status:null,statusTurns:0};return n;});
+                        SFX.heal();addLog(it.emoji+' '+mname+'の状態異常回復！');
+                      } else if(m.hp<m.maxHp&&hi>=0){
+                        const it=inv[hi];const ni=[...inv];ni.splice(hi,1);setInv(ni);
+                        const add=Math.min(it.eff.hp,m.maxHp-m.hp);
+                        setParty(p=>{const n=[...p];n[i]={...n[i],hp:Math.min(n[i].maxHp,n[i].hp+it.eff.hp)};return n;});
+                        SFX.heal();addLog(it.emoji+' '+mname+' HP+'+add);
+                      } else {addLog(mname+'に使えるアイテムなし！');}
+                    }} style={{...bs(mc,m.hp<=0),margin:0,padding:'7px 10px',fontSize:'.78rem'}}>
+                      {mname}に使う
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -932,43 +1401,42 @@ function App(){
         </div>
       )}
 
-      {/* ===== GAME OVER ===== */}
+      {/* GAME OVER */}
       {scr==='gameover'&&(
-        <div className="card" style={{textAlign:'center',animation:'popIn 0.5s ease',borderColor:'rgba(220,38,38,0.35)'}}>
+        <div className="card" style={{textAlign:'center',animation:'popIn .5s ease',borderColor:'rgba(220,38,38,.3)'}}>
           <div style={{fontSize:'4rem',marginBottom:'7px'}}>💀</div>
-          <div style={{color:'#dc2626',fontSize:'1.5rem',fontWeight:900,letterSpacing:'0.08em',marginBottom:'4px'}}>GAME OVER</div>
-          <div style={{color:'#64748b',marginBottom:'4px',fontSize:'0.88rem'}}>パーティは全滅した…</div>
-          <div style={{color:'#374151',fontSize:'0.75rem',marginBottom:'14px'}}>{STAGES[stageIdx].name}にて</div>
+          <div style={{color:'#dc2626',fontSize:'1.5rem',fontWeight:900,letterSpacing:'.08em',marginBottom:'4px'}}>GAME OVER</div>
+          <div style={{color:'#4b5563',marginBottom:'12px',fontSize:'.85rem'}}>パーティは全滅した… / {STAGES[stIdx].name}</div>
           <button style={bs('#dc2626')} onClick={restart}>🔄 もういちど</button>
         </div>
       )}
 
-      {/* ===== CLEAR ===== */}
+      {/* CLEAR */}
       {scr==='clear'&&(
-        <div className="card" style={{textAlign:'center',animation:'popIn 0.5s ease',borderColor:'rgba(212,160,23,0.4)'}}>
-          <div style={{fontSize:'4rem',marginBottom:'7px',animation:'winSpin 0.8s ease-in-out infinite'}}>🏆</div>
+        <div className="card" style={{textAlign:'center',animation:'popIn .5s ease',borderColor:'rgba(212,160,23,.4)'}}>
+          <div style={{fontSize:'4rem',marginBottom:'7px',animation:'winSpin .8s ease-in-out infinite'}}>🏆</div>
           <div style={{color:'#d4a017',fontSize:'1.4rem',fontWeight:900,marginBottom:'6px'}}>🎉 全ステージクリア！ 🎉</div>
           <div style={{color:'#a3e635',marginBottom:'4px'}}>魔天王ゼロスを討伐した！</div>
-          <div style={{color:'#64748b',fontSize:'0.78rem',marginBottom:'14px'}}>
-            {party.map(m=>`${CLASSES[m.classId].name} Lv.${m.level}`).join(' / ')}
+          <div style={{color:'#4b5563',fontSize:'.78rem',marginBottom:'14px'}}>
+            {party.map(m=>(m.isMonster?m.name:CLASSES[m.classId].name)+' Lv.'+m.level).join(' / ')}
           </div>
           <button style={bs('#d4a017')} onClick={restart}>🔄 もういちど</button>
         </div>
       )}
 
-      {/* ===== LOG ===== */}
+      {/* LOG */}
       {scr!=='title'&&scr!=='select'&&(
-        <div className="card" style={{maxHeight:'130px',overflowY:'auto',borderColor:'rgba(255,255,255,0.05)'}}>
+        <div className="card" style={{maxHeight:'130px',overflowY:'auto',borderColor:'rgba(255,255,255,.04)'}}>
           {log.map((e,i)=>(
-            <div key={i} style={{padding:'2px 0',fontSize:'0.77rem',lineHeight:1.5,borderBottom:'1px solid rgba(255,255,255,0.04)',opacity:1-i*0.07,color:i===0?'#c8d4e8':'#4b5563'}}>{e}</div>
+            <div key={i} style={{padding:'2px 0',fontSize:'.76rem',lineHeight:1.5,borderBottom:'1px solid rgba(255,255,255,.04)',opacity:1-i*.07,color:i===0?'#c8d4e8':'#374151'}}>{e}</div>
           ))}
         </div>
       )}
 
       {/* iOS hint */}
-      <div id="iosHint" style={{display:'none',position:'fixed',bottom:0,left:0,right:0,background:'linear-gradient(135deg,#0f0e2a,#1e1b4b)',borderTop:'1px solid #d4a01755',padding:'11px',zIndex:9999,alignItems:'center',gap:'10px'}}>
-        <div style={{flex:1,fontSize:'0.78rem',color:'#dde4f0'}}>📱 Safari → 共有(□↑) →「ホーム画面に追加」でアプリになるよ！</div>
-        <button onClick={()=>document.getElementById('iosHint').style.display='none'} style={{background:'transparent',border:'none',color:'#4b5563',fontSize:'1.2rem',cursor:'pointer'}}>✕</button>
+      <div id="iosH" style={{display:'none',position:'fixed',bottom:0,left:0,right:0,background:'linear-gradient(135deg,#0a0920,#14114a)',borderTop:'1px solid #d4a01744',padding:'11px',zIndex:9999,alignItems:'center',gap:'10px'}}>
+        <div style={{flex:1,fontSize:'.78rem',color:'#dde4f0'}}>📱 Safari → 共有(□↑) →「ホーム画面に追加」でアプリになるよ！</div>
+        <button onClick={()=>document.getElementById('iosH').style.display='none'} style={{background:'transparent',border:'none',color:'#374151',fontSize:'1.2rem',cursor:'pointer'}}>✕</button>
       </div>
     </div>
   );
@@ -976,7 +1444,7 @@ function App(){
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
 const isSA=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
-if(isIOS&&!isSA)setTimeout(()=>{const b=document.getElementById('iosHint');if(b)b.style.display='flex';},6000);
+if(isIOS&&!isSA)setTimeout(()=>{const b=document.getElementById('iosH');if(b)b.style.display='flex';},7000);
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
