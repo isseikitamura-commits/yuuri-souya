@@ -11,447 +11,419 @@
   <link rel="apple-touch-icon" href="icons/icon-192.png" />
   <title>ゆうりとそうやの大冒険</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-    body { background: #0f0c29; overflow-x: hidden; }
-    #root { min-height: 100vh; }
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes skillFlash{0%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1.3)}100%{opacity:0;transform:scale(1)}}
-    button:hover:not(:disabled){filter:brightness(1.25);transform:translateY(-2px)}
-    button { touch-action: manipulation; }
-    ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:#333}
-    .install-banner {
-      position: fixed; bottom: 0; left: 0; right: 0;
-      background: linear-gradient(135deg, #1e1b4b, #312e81);
-      border-top: 1px solid #ffd70066;
-      padding: 12px 16px;
-      display: flex; align-items: center; justify-content: space-between;
-      z-index: 9999; font-family: sans-serif;
-    }
-    .install-banner p { color: #e2e8f0; font-size: 0.85rem; flex: 1; margin-right: 12px; }
-    .install-banner button { background: #ffd700; color: #1e1b4b; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
-    .install-banner .close-btn { background: transparent; color: #94a3b8; border: none; padding: 4px 8px; font-size: 1.2rem; cursor: pointer; }
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{background:#0a0a1a;overflow-x:hidden;font-family:'Hiragino Maru Gothic Pro','BIZ UDPGothic',sans-serif}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+    @keyframes floatSlow{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+    @keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-14px)}40%{transform:translateX(14px)}60%{transform:translateX(-10px)}80%{transform:translateX(10px)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes popIn{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
+    @keyframes dmgFloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.5)}}
+    @keyframes skillFlash{0%{opacity:0;transform:scale(0.3) rotate(-10deg)}50%{opacity:1;transform:scale(1.6) rotate(5deg)}100%{opacity:0;transform:scale(1.2)}}
+    @keyframes pulse{0%,100%{opacity:0.7}50%{opacity:1}}
+    @keyframes bgStars{0%{opacity:0.15}50%{opacity:0.35}100%{opacity:0.15}}
+    @keyframes spark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
+    @keyframes monsterEntry{from{opacity:0;transform:translateX(60px) scale(0.7)}to{opacity:1;transform:translateX(0) scale(1)}}
+    @keyframes playerEntry{from{opacity:0;transform:translateX(-60px) scale(0.7)}to{opacity:1;transform:translateX(0) scale(1)}}
+    @keyframes winDance{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.15)}}
+    @keyframes groundGlow{0%,100%{opacity:0.4}50%{opacity:0.8}}
+    button{touch-action:manipulation;cursor:pointer}
+    button:active{transform:scale(0.92)!important;filter:brightness(1.3)!important}
+    ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#333}
   </style>
 </head>
 <body>
-  <div id="root"></div>
+<div id="root"></div>
+<script>
+const AudioCtx=window.AudioContext||window.webkitAudioContext;
+let _ctx=null;
+function ac(){if(!_ctx)_ctx=new AudioCtx();if(_ctx.state==='suspended')_ctx.resume();return _ctx;}
+function tone(f,t,dur,vol=0.3,delay=0){
+  try{const c=ac(),o=c.createOscillator(),g=c.createGain();
+  o.connect(g);g.connect(c.destination);
+  o.type=t;o.frequency.setValueAtTime(f,c.currentTime+delay);
+  g.gain.setValueAtTime(vol,c.currentTime+delay);
+  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+delay+dur);
+  o.start(c.currentTime+delay);o.stop(c.currentTime+delay+dur);}catch(e){}
+}
+const SFX={
+  attack(){tone(220,'sawtooth',0.1,0.4);tone(180,'square',0.15,0.2,0.05);},
+  skill(){[440,554,659].forEach((f,i)=>tone(f,'sawtooth',0.3,0.25,i*0.05));tone(880,'sine',0.4,0.15,0.2);},
+  hit(){tone(150,'sawtooth',0.08,0.5);tone(100,'square',0.12,0.3,0.04);},
+  phit(){tone(200,'sawtooth',0.12,0.4);tone(130,'square',0.15,0.3,0.06);},
+  heal(){[523,659,784].forEach((f,i)=>tone(f,'sine',0.25,0.2,i*0.08));},
+  lvup(){[523,659,784,1047].forEach((f,i)=>tone(f,'sine',0.3,0.25,i*0.1));},
+  win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,'triangle',0.4,0.25,i*0.12));},
+  dead(){[440,330,220,110].forEach((f,i)=>tone(f,'sawtooth',0.4,0.2,i*0.15));},
+  cursor(){tone(660,'sine',0.08,0.2);},
+  flee(){[300,200,150].forEach((f,i)=>tone(f,'sawtooth',0.2,0.2,i*0.06));},
+  buy(){tone(880,'sine',0.15,0.3);tone(1100,'sine',0.15,0.2,0.1);},
+};
+const CHARS={
+  yuuri:{name:'ゆうり',emoji:'🥋',desc:'じゅうどう少年（13さい）',hp:130,maxHp:130,atk:22,def:10,skill:{name:'一本背負い！',emoji:'🥋',mult:2.5},color:'#3b82f6'},
+  souya:{name:'そうや',emoji:'🏊',desc:'プログラマー×スイマー（8さい）',hp:100,maxHp:100,atk:16,def:7,skill:{name:'ハックアタック！',emoji:'💻',mult:3.0},color:'#22c55e'},
+};
+const MONSTERS=[
+  {name:'スライムくん',hp:20,maxHp:20,atk:5,def:2,exp:10,gold:8,emoji:'🟢',weak:'yuuri'},
+  {name:'いたずらゴブリン',hp:35,maxHp:35,atk:10,def:4,exp:20,gold:15,emoji:'👺',weak:'souya'},
+  {name:'おおきなオーク',hp:60,maxHp:60,atk:18,def:8,exp:40,gold:30,emoji:'👹',weak:'yuuri'},
+  {name:'まおうドラゴン',hp:180,maxHp:180,atk:38,def:15,exp:150,gold:120,emoji:'🐉',weak:null},
+];
+const FLOORS=[
+  {name:'ふしぎな森',monster:0,emoji:'🌲',sky:'linear-gradient(180deg,#0a1a0a,#1a2a0a,#0a1a0a)'},
+  {name:'まほうの洞窟',monster:1,emoji:'🕌',sky:'linear-gradient(180deg,#0a0a2a,#1a0a3a,#0a0a2a)'},
+  {name:'くらやみの城',monster:2,emoji:'🏯',sky:'linear-gradient(180deg,#1a0a0a,#2a0a0a,#1a0a0a)'},
+  {name:'まおうの間',monster:3,emoji:'👑',sky:'linear-gradient(180deg,#0a0010,#1a0030,#0a0010)'},
+];
+const ITEMS=[
+  {id:'p',name:'えいようドリンク',emoji:'🥤',cost:40,effect:{hp:50},desc:'HP+50'},
+  {id:'j',name:'強化柔道着',emoji:'🥋',cost:160,effect:{atk:12},desc:'ATK+12'},
+  {id:'s',name:'ハイテク水着',emoji:'🏊',cost:120,effect:{def:9},desc:'DEF+9'},
+  {id:'l',name:'魔法のパソコン',emoji:'💻',cost:200,effect:{atk:8,def:5},desc:'ATK+8 DEF+5'},
+  {id:'e',name:'スペシャルゼリー',emoji:'⭐',cost:300,effect:{hp:999},desc:'HP全回復'},
+];
+const calcNext=lv=>lv*50;
+</script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useRef,useEffect}=React;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-  <!-- Install Banner (iOS guide) -->
-  <div class="install-banner" id="installBanner" style="display:none">
-    <p>📱 ホーム画面に追加してアプリとして使えます！<br>
-    <small style="color:#94a3b8">Safari → 共有ボタン → 「ホーム画面に追加」</small></p>
-    <button class="close-btn" onclick="document.getElementById('installBanner').style.display='none'">✕</button>
-  </div>
+function HpBar({hp,maxHp,label,color}){
+  const pct=Math.max(0,(hp/maxHp)*100);
+  const col=pct>50?'#22c55e':pct>25?'#facc15':'#ef4444';
+  return(
+    <div style={{marginBottom:'8px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.8rem',marginBottom:'3px'}}>
+        <span style={{color,fontWeight:900}}>{label}</span>
+        <span style={{color:'#94a3b8'}}>HP {Math.max(0,hp)}/{maxHp}</span>
+      </div>
+      <div style={{height:'11px',background:'rgba(0,0,0,0.5)',borderRadius:'6px',overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>
+        <div style={{width:pct+'%',height:'100%',borderRadius:'6px',
+          background:`linear-gradient(90deg,${col},${col}99)`,
+          transition:'width 0.4s ease',
+          boxShadow:`0 0 6px ${col}88`}}/>
+      </div>
+    </div>
+  );
+}
 
-  <script>
-    // Show iOS install hint
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if (isIOS && !isStandalone) {
-      setTimeout(() => {
-        document.getElementById('installBanner').style.display = 'flex';
-      }, 3000);
+function App(){
+  const [scr,setScr]=useState('select');
+  const [pl,setPl]=useState(null);
+  const [mon,setMon]=useState(null);
+  const [log,setLog]=useState([]);
+  const [busy,setBusy]=useState(false);
+  const [pAnim,setPAnim]=useState('');
+  const [mAnim,setMAnim]=useState('');
+  const [showSkill,setShowSkill]=useState(false);
+  const [dmgs,setDmgs]=useState([]);
+  const [sparks,setSparks]=useState([]);
+  const uid=useRef(0);
+  const addLog=m=>setLog(p=>[m,...p].slice(0,10));
+  const addDmg=(v,type)=>{const id=uid.current++;setDmgs(p=>[...p,{id,v,type}]);setTimeout(()=>setDmgs(p=>p.filter(d=>d.id!==id)),1000);};
+  const addSpark=(x,y)=>{const id=uid.current++;setSparks(p=>[...p,{id,x,y}]);setTimeout(()=>setSparks(p=>p.filter(s=>s.id!==id)),700);};
+
+  const selectChar=k=>{
+    SFX.cursor();ac();
+    const c=CHARS[k];
+    setPl({...c,charKey:k,exp:0,level:1,gold:100,inventory:[],floor:0,skillUsed:false});
+    setLog([`🌟 ${c.name}の大冒険、はじまり！`]);
+    setScr('map');
+  };
+  const encounter=()=>{
+    SFX.cursor();
+    const base=MONSTERS[FLOORS[pl.floor].monster];
+    setMon({...base,hp:base.maxHp});
+    setPAnim('');setMAnim('');
+    setScr('battle');
+    addLog(`⚠️ ${base.emoji} ${base.name}があらわれた！`);
+  };
+  const doAttack=async(isSkill=false)=>{
+    if(busy)return;setBusy(true);ac();
+    setPAnim(isSkill?'skill':'attack');
+    if(isSkill){setShowSkill(true);SFX.skill();}else SFX.attack();
+    let dmg=pl.atk-mon.def+Math.floor(Math.random()*6);
+    if(isSkill)dmg=Math.floor(pl.atk*CHARS[pl.charKey].skill.mult);
+    if(mon.weak===pl.charKey)dmg=Math.floor(dmg*1.3);
+    dmg=Math.max(1,dmg);
+    await sleep(300);setShowSkill(false);setPAnim('idle');
+    setMAnim('hurt');SFX.hit();addSpark('62%','25%');addDmg(dmg,'e');
+    addLog(isSkill?`✨ ${CHARS[pl.charKey].skill.name}！${dmg}ダメージ！${mon.weak===pl.charKey?'🎯こうかばつぐん！':''}`:`⚔️ こうげき！${dmg}ダメージ！${mon.weak===pl.charKey?'🎯こうかばつぐん！':''}`);
+    const newMHp=mon.hp-dmg;
+    await sleep(400);
+    if(newMHp<=0){
+      setMAnim('dead');SFX.win();
+      const nExp=pl.exp+mon.exp,nGold=pl.gold+mon.gold;
+      let up={...pl,exp:nExp,gold:nGold,skillUsed:isSkill||pl.skillUsed};
+      while(up.exp>=calcNext(up.level)*up.level){up.level++;up.maxHp+=20;up.atk+=3;up.def+=2;SFX.lvup();addLog(`🌟 レベルアップ！Lv.${up.level}！`);}
+      addLog(`✨ ${mon.name}をたおした！EXP+${mon.exp} G+${mon.gold}`);
+      await sleep(700);setPl(up);setMon(null);setScr('map');setBusy(false);return;
     }
-
-    // Register Service Worker
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    await sleep(300);
+    const mdmg=Math.max(1,mon.atk-pl.def+Math.floor(Math.random()*4)-2);
+    setPAnim('hurt');SFX.phit();addSpark('18%','22%');addDmg(mdmg,'p');
+    addLog(`💥 ${mon.emoji}のこうげき！${mdmg}ダメージ！`);
+    setMon(m=>({...m,hp:newMHp}));
+    const nHp=pl.hp-mdmg;
+    await sleep(400);setPAnim('idle');
+    if(nHp<=0){setPl(p=>({...p,hp:0}));SFX.dead();setScr('gameover');}
+    else setPl(p=>({...p,hp:nHp,skillUsed:isSkill||p.skillUsed}));
+    setBusy(false);
+  };
+  const doFlee=async()=>{
+    if(busy)return;setBusy(true);
+    if(Math.random()>0.4){SFX.flee();addLog('🏃 にげだした！');await sleep(300);setMon(null);setScr('map');}
+    else{
+      const dmg=Math.max(1,mon.atk-pl.def);SFX.phit();setPAnim('hurt');addSpark('18%','22%');addDmg(dmg,'p');
+      addLog(`❌ にげられなかった！${dmg}ダメージ！`);const nHp=pl.hp-dmg;
+      await sleep(400);setPAnim('idle');
+      if(nHp<=0){setPl(p=>({...p,hp:0}));SFX.dead();setScr('gameover');}
+      else setPl(p=>({...p,hp:nHp}));
     }
-  </script>
+    setBusy(false);
+  };
+  const doHeal=async()=>{
+    if(busy)return;const idx=pl.inventory.findIndex(i=>i.effect?.hp);
+    if(idx===-1){addLog('💊 かいふくアイテムがない！');return;}
+    setBusy(true);const item=pl.inventory[idx];
+    const add=Math.min(item.effect.hp,pl.maxHp-pl.hp);
+    const inv=[...pl.inventory];inv.splice(idx,1);
+    SFX.heal();addDmg(add,'h');addLog(`${item.emoji} ${item.name}！HP+${add}`);
+    setPl(p=>({...p,hp:Math.min(p.maxHp,p.hp+item.effect.hp),inventory:inv}));
+    await sleep(300);setBusy(false);
+  };
+  const goNext=()=>{
+    SFX.cursor();const next=pl.floor+1;
+    if(next>=FLOORS.length){SFX.win();setScr('clear');return;}
+    setPl(p=>({...p,floor:next,skillUsed:false}));addLog(`🚪 ${FLOORS[next].emoji} ${FLOORS[next].name}へ！`);
+  };
+  const buyItem=item=>{
+    if(pl.gold<item.cost){addLog('💸 おかねがたりない！');return;}SFX.buy();
+    setPl(p=>({...p,gold:p.gold-item.cost,atk:item.effect.atk?p.atk+item.effect.atk:p.atk,def:item.effect.def?p.def+item.effect.def:p.def,inventory:item.effect.hp?[...p.inventory,item]:p.inventory}));
+    addLog(`🛒 ${item.emoji}${item.name}をかった！`);
+  };
+  const restart=()=>{setPl(null);setMon(null);setLog([]);setScr('select');};
 
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  const cc=pl?CHARS[pl.charKey].color:'#ffd700';
+  const card={background:'rgba(255,255,255,0.04)',border:`1px solid ${cc}22`,borderRadius:'16px',padding:'14px',marginBottom:'10px',width:'100%',maxWidth:'440px',backdropFilter:'blur(10px)'};
+  const btn=(col,dis=false)=>({background:dis?'rgba(80,80,80,0.3)':`linear-gradient(135deg,${col}bb,${col}55)`,border:`1px solid ${dis?'#444':col}`,color:dis?'#555':'#fff',padding:'11px 16px',borderRadius:'10px',fontFamily:'inherit',fontWeight:900,fontSize:'0.9rem',cursor:dis?'not-allowed':'pointer',boxShadow:dis?'none':`0 0 12px ${col}33`,transition:'all 0.15s',margin:'4px'});
 
-  <script type="text/babel">
-    const { useState, useCallback } = React;
+  // Battle stage render
+  const pAnimStyle=()=>{
+    if(pAnim==='attack')return{animation:'shakeX 0.4s ease',filter:'drop-shadow(0 0 20px rgba(100,200,255,1))'};
+    if(pAnim==='skill')return{animation:'winDance 0.5s ease',filter:'drop-shadow(0 0 24px rgba(255,215,0,1))'};
+    if(pAnim==='hurt')return{animation:'shakeX 0.35s ease',filter:'drop-shadow(0 0 20px rgba(255,50,50,1))'};
+    return{animation:'floatSlow 3s ease-in-out infinite',filter:'drop-shadow(0 0 10px rgba(100,180,255,0.7))'};
+  };
+  const mAnimStyle=()=>{
+    if(mAnim==='hurt')return{animation:'shakeX 0.4s ease',filter:'drop-shadow(0 0 24px rgba(255,80,0,1))'};
+    if(mAnim==='dead')return{opacity:0,transform:'rotate(90deg) scale(0.3)',transition:'all 0.6s ease',filter:'none'};
+    return{animation:'float 2.5s ease-in-out infinite',filter:'drop-shadow(0 0 10px rgba(255,100,50,0.7))'};
+  };
 
-    const CHARACTERS = {
-      yuuri: {
-        name: "ゆうり",
-        emoji: "🥋",
-        desc: "柔道少年（13さい）",
-        hp: 130, maxHp: 130,
-        atk: 22, def: 10,
-        skill: { name: "一本背負い！", emoji: "🥋", multiplier: 2.5 },
-        color: "#3b82f6",
-      },
-      souya: {
-        name: "そうや",
-        emoji: "🏊",
-        desc: "プログラマー×スイマー（8さい）",
-        hp: 100, maxHp: 100,
-        atk: 16, def: 7,
-        skill: { name: "ハックアタック！", emoji: "💻", multiplier: 3.0 },
-        color: "#22c55e",
-      },
-    };
+  return(
+    <div style={{minHeight:'100vh',background:'linear-gradient(160deg,#08080f,#0f0520,#080f08)',display:'flex',flexDirection:'column',alignItems:'center',padding:'14px 12px 80px',color:'#e2e8f0'}}>
 
-    const MONSTERS = [
-      { name: "スライムくん", hp: 20, maxHp: 20, atk: 5, def: 2, exp: 10, gold: 8, emoji: "🟢", weak: "yuuri" },
-      { name: "いたずらゴブリン", hp: 35, maxHp: 35, atk: 10, def: 4, exp: 20, gold: 15, emoji: "👺", weak: "souya" },
-      { name: "おおきなオーク", hp: 60, maxHp: 60, atk: 18, def: 8, exp: 40, gold: 30, emoji: "👹", weak: "yuuri" },
-      { name: "まおうドラゴン", hp: 180, maxHp: 180, atk: 38, def: 15, exp: 150, gold: 120, emoji: "🐉", weak: null },
-    ];
+      {/* Title */}
+      <div style={{fontSize:'clamp(1rem,4.5vw,1.5rem)',fontWeight:900,textAlign:'center',marginBottom:'2px',background:'linear-gradient(90deg,#ffd700,#ff6b35,#ffd700)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 16px rgba(255,200,0,0.4))'}}>
+        ✨ ゆうりとそうやの大冒険 ✨
+      </div>
+      <div style={{color:'#475569',fontSize:'0.72rem',textAlign:'center',marginBottom:'14px'}}>ドラゴンをたおして せかいをすくえ！</div>
 
-    const FLOORS = [
-      { name: "ふしぎな森", monster: 0, emoji: "🌲" },
-      { name: "まほうの洞窟", monster: 1, emoji: "🕌" },
-      { name: "くらやみの城", monster: 2, emoji: "🏯" },
-      { name: "まおうの間", monster: 3, emoji: "👑" },
-    ];
-
-    const ITEMS = [
-      { id: "potion", name: "えいようドリンク", emoji: "🥤", cost: 40, effect: { hp: 50 }, desc: "HP+50" },
-      { id: "judogi", name: "柔道着（強化版）", emoji: "🥋", cost: 160, effect: { atk: 12 }, desc: "ATK+12" },
-      { id: "swim_suit", name: "ハイテク水着", emoji: "🏊", cost: 120, effect: { def: 9 }, desc: "DEF+9" },
-      { id: "laptop", name: "魔法のパソコン", emoji: "💻", cost: 200, effect: { atk: 8, def: 5 }, desc: "ATK+8 DEF+5" },
-      { id: "elixir", name: "スペシャルゼリー", emoji: "⭐", cost: 300, effect: { hp: 999 }, desc: "HP全回復" },
-    ];
-
-    const calcExpToNext = (lv) => lv * 50;
-
-    const initState = (charKey) => {
-      const c = CHARACTERS[charKey];
-      return { ...c, charKey, exp: 0, level: 1, gold: 100, inventory: [], floor: 0, skillUsed: false };
-    };
-
-    function App() {
-      const [screen, setScreen] = useState("select");
-      const [player, setPlayer] = useState(null);
-      const [monster, setMonster] = useState(null);
-      const [log, setLog] = useState([]);
-      const [animating, setAnimating] = useState(false);
-      const [shake, setShake] = useState(false);
-      const [playerShake, setPlayerShake] = useState(false);
-      const [showSkillAnim, setShowSkillAnim] = useState(false);
-
-      const addLog = (msg) => setLog(prev => [msg, ...prev].slice(0, 8));
-
-      const selectChar = (key) => {
-        setPlayer(initState(key));
-        setLog([`🌟 ${CHARACTERS[key].name}の大冒険、はじまり！`]);
-        setScreen("map");
-      };
-
-      const encounter = () => {
-        const base = MONSTERS[FLOORS[player.floor].monster];
-        setMonster({ ...base, hp: base.maxHp });
-        setScreen("battle");
-        addLog(`⚠️ ${base.emoji} ${base.name}があらわれた！`);
-      };
-
-      const handleAttack = (isSkill = false) => {
-        if (animating) return;
-        setAnimating(true);
-        let dmgBase = player.atk - monster.def + Math.floor(Math.random() * 6);
-        if (isSkill) {
-          dmgBase = Math.floor(player.atk * CHARACTERS[player.charKey].skill.multiplier);
-          setShowSkillAnim(true);
-          setTimeout(() => setShowSkillAnim(false), 800);
-        }
-        if (monster.weak === player.charKey) dmgBase = Math.floor(dmgBase * 1.3);
-        const dmgToMonster = Math.max(1, dmgBase);
-        addLog(isSkill
-          ? `✨ ${CHARACTERS[player.charKey].skill.name} ${dmgToMonster}ダメージ！${monster.weak === player.charKey ? "🎯こうかばつぐん！" : ""}`
-          : `⚔️ こうげき！${dmgToMonster}ダメージ！${monster.weak === player.charKey ? "🎯こうかばつぐん！" : ""}`
-        );
-        setShake(true);
-        setTimeout(() => setShake(false), 400);
-        const newMonHp = monster.hp - dmgToMonster;
-        if (newMonHp <= 0) {
-          setMonster(null);
-          const newExp = player.exp + monster.exp;
-          const newGold = player.gold + monster.gold;
-          let updated = { ...player, exp: newExp, gold: newGold, skillUsed: isSkill ? true : player.skillUsed };
-          while (updated.exp >= calcExpToNext(updated.level) * updated.level) {
-            updated.level++;
-            updated.maxHp += 20;
-            updated.atk += 3;
-            updated.def += 2;
-            addLog(`🌟 レベルアップ！Lv.${updated.level}になった！`);
-          }
-          addLog(`✨ ${monster.name}をたおした！EXP+${monster.exp} G+${monster.gold}`);
-          setPlayer(updated);
-          setScreen("map");
-          setAnimating(false);
-          return;
-        }
-        setTimeout(() => {
-          const dmgToPlayer = Math.max(1, monster.atk - player.def + Math.floor(Math.random() * 4) - 2);
-          addLog(`💥 ${monster.emoji}のこうげき！${dmgToPlayer}ダメージ！`);
-          setPlayerShake(true);
-          setTimeout(() => setPlayerShake(false), 400);
-          setMonster(m => ({ ...m, hp: newMonHp }));
-          const newHp = player.hp - dmgToPlayer;
-          if (newHp <= 0) {
-            setPlayer(p => ({ ...p, hp: 0 }));
-            setScreen("gameover");
-          } else {
-            setPlayer(p => ({ ...p, hp: newHp, skillUsed: isSkill ? true : p.skillUsed }));
-          }
-          setAnimating(false);
-        }, 600);
-      };
-
-      const flee = () => {
-        if (Math.random() > 0.4) {
-          addLog("🏃 にげだした！");
-          setMonster(null);
-          setScreen("map");
-        } else {
-          const dmg = Math.max(1, monster.atk - player.def);
-          const newHp = player.hp - dmg;
-          addLog(`❌ にげられなかった！${dmg}ダメージ！`);
-          if (newHp <= 0) { setPlayer(p => ({ ...p, hp: 0 })); setScreen("gameover"); }
-          else setPlayer(p => ({ ...p, hp: newHp }));
-        }
-      };
-
-      const usePotion = () => {
-        const idx = player.inventory.findIndex(i => i.effect?.hp);
-        if (idx === -1) { addLog("💊 かいふくアイテムがない！"); return; }
-        const item = player.inventory[idx];
-        const newHp = Math.min(player.maxHp, player.hp + item.effect.hp);
-        const newInv = [...player.inventory];
-        newInv.splice(idx, 1);
-        setPlayer(p => ({ ...p, hp: newHp, inventory: newInv }));
-        addLog(`${item.emoji} ${item.name}をつかった！HP+${Math.min(item.effect.hp, player.maxHp - player.hp)}`);
-      };
-
-      const goNext = () => {
-        const next = player.floor + 1;
-        if (next >= FLOORS.length) { setScreen("clear"); return; }
-        setPlayer(p => ({ ...p, floor: next, skillUsed: false }));
-        addLog(`🚪 ${FLOORS[next].emoji} ${FLOORS[next].name}へすすんだ！`);
-      };
-
-      const buyItem = (item) => {
-        if (player.gold < item.cost) { addLog("💸 おかねがたりない！"); return; }
-        setPlayer(p => ({
-          ...p,
-          gold: p.gold - item.cost,
-          atk: item.effect.atk ? p.atk + item.effect.atk : p.atk,
-          def: item.effect.def ? p.def + item.effect.def : p.def,
-          inventory: item.effect.hp ? [...p.inventory, item] : p.inventory,
-        }));
-        addLog(`🛒 ${item.emoji}${item.name}をかった！`);
-      };
-
-      const restart = () => { setPlayer(null); setMonster(null); setLog([]); setScreen("select"); };
-
-      const hpPct = (hp, max) => Math.max(0, (hp / max) * 100);
-      const hpColor = (pct) => pct > 50 ? "#4ade80" : pct > 25 ? "#facc15" : "#f87171";
-      const charColor = player ? CHARACTERS[player.charKey].color : "#ffd700";
-
-      const s = {
-        page: {
-          minHeight: "100vh",
-          background: "linear-gradient(160deg, #0f0c29 0%, #1a0a2e 50%, #0a1a1a 100%)",
-          fontFamily: "'Hiragino Maru Gothic Pro', 'BIZ UDPGothic', 'M PLUS Rounded 1c', sans-serif",
-          display: "flex", flexDirection: "column", alignItems: "center",
-          padding: "16px 12px 80px", color: "#e2e8f0",
-        },
-        title: {
-          textAlign: "center", marginBottom: "4px",
-          fontSize: "clamp(1.1rem,5vw,1.6rem)",
-          fontWeight: "900",
-          background: "linear-gradient(90deg,#ffd700,#ff9900,#ffd700)",
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-          filter: "drop-shadow(0 0 12px rgba(255,200,0,0.4))",
-        },
-        subtitle: { color: "#94a3b8", fontSize: "0.75rem", textAlign: "center", marginBottom: "16px" },
-        card: {
-          background: "rgba(255,255,255,0.04)",
-          border: `1px solid ${charColor}44`,
-          borderRadius: "16px", padding: "14px",
-          marginBottom: "10px", width: "100%", maxWidth: "420px",
-          backdropFilter: "blur(12px)",
-        },
-        charCard: (key) => ({
-          background: key === "yuuri" ? "rgba(59,130,246,0.1)" : "rgba(34,197,94,0.1)",
-          border: `2px solid ${CHARACTERS[key].color}66`,
-          borderRadius: "16px", padding: "16px",
-          margin: "6px", flex: 1, cursor: "pointer",
-          textAlign: "center", transition: "all 0.2s", maxWidth: "180px",
-        }),
-        btn: (color = "#ffd700", disabled = false, small = false) => ({
-          background: disabled ? "rgba(100,100,100,0.3)" : `linear-gradient(135deg, ${color}cc, ${color}66)`,
-          border: `1px solid ${disabled ? "#444" : color}`,
-          color: disabled ? "#555" : "#fff",
-          padding: small ? "8px 12px" : "11px 16px",
-          borderRadius: "10px",
-          cursor: disabled ? "not-allowed" : "pointer",
-          fontSize: small ? "0.8rem" : "0.9rem",
-          fontFamily: "inherit", fontWeight: "bold",
-          margin: "4px",
-          boxShadow: disabled ? "none" : `0 0 12px ${color}33`,
-          transition: "all 0.2s",
-        }),
-        hpBarBg: { background: "rgba(0,0,0,0.4)", borderRadius: "6px", overflow: "hidden", marginBottom: "8px", height: "10px" },
-        hpBar: (pct, color) => ({
-          width: `${pct}%`, height: "100%",
-          background: color, borderRadius: "6px",
-          transition: "width 0.4s ease", boxShadow: `0 0 8px ${color}`,
-        }),
-        log: { fontSize: "0.78rem", lineHeight: "1.7", color: "#94a3b8", maxHeight: "130px", overflowY: "auto" },
-      };
-
-      return (
-        <div style={s.page}>
-          <div style={s.title}>✨ ゆうりとそうやの大冒険 ✨</div>
-          <div style={s.subtitle}>ドラゴンをたおして せかいをすくえ！</div>
-
-          {screen === "select" && (
-            <div style={{ width: "100%", maxWidth: "420px" }}>
-              <div style={{ textAlign: "center", color: "#ffd700", fontWeight: "bold", marginBottom: "16px" }}>
-                👇 どっちでぼうけんする？
-              </div>
-              <div style={{ display: "flex", justifyContent: "center" }}>
-                {Object.entries(CHARACTERS).map(([key, c]) => (
-                  <div key={key} style={s.charCard(key)} onClick={() => selectChar(key)}>
-                    <div style={{ fontSize: "3rem", marginBottom: "8px" }}>{c.emoji}</div>
-                    <div style={{ color: c.color, fontWeight: "900", fontSize: "1.1rem", marginBottom: "4px" }}>{c.name}</div>
-                    <div style={{ color: "#94a3b8", fontSize: "0.72rem", marginBottom: "10px" }}>{c.desc}</div>
-                    <div style={{ fontSize: "0.72rem", color: "#64748b" }}>
-                      <div>HP: {c.hp}</div><div>ATK: {c.atk} / DEF: {c.def}</div>
-                    </div>
-                    <div style={{ marginTop: "8px", padding: "6px", background: `${c.color}22`, borderRadius: "8px", fontSize: "0.7rem", color: c.color }}>
-                      必殺技 {c.skill.emoji}<br />{c.skill.name}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {screen === "map" && player && (
-            <>
-              <div style={s.card}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                  <span style={{ color: charColor, fontWeight: "900" }}>{player.emoji} {player.name} Lv.{player.level}</span>
-                  <span style={{ color: "#fbbf24", fontSize: "0.85rem" }}>💰 {player.gold}G</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#94a3b8", marginBottom: "4px" }}>
-                  <span>HP: {player.hp}/{player.maxHp}</span>
-                  <span>ATK:{player.atk} DEF:{player.def}</span>
-                </div>
-                <div style={s.hpBarBg}><div style={s.hpBar(hpPct(player.hp, player.maxHp), hpColor(hpPct(player.hp, player.maxHp)))} /></div>
-                <div style={{ fontSize: "0.7rem", color: "#475569" }}>
-                  📍 {FLOORS[player.floor].emoji} {FLOORS[player.floor].name} ／ 持ち物: {player.inventory.map(i => i.emoji).join("") || "なし"}
+      {/* SELECT */}
+      {scr==='select'&&(
+        <div style={{width:'100%',maxWidth:'440px',animation:'fadeIn 0.4s ease'}}>
+          <div style={{textAlign:'center',color:'#ffd700',fontWeight:900,marginBottom:'14px'}}>👇 どっちでぼうけんする？</div>
+          <div style={{display:'flex',justifyContent:'center',gap:'10px'}}>
+            {Object.entries(CHARS).map(([k,c])=>(
+              <div key={k} onClick={()=>selectChar(k)} style={{flex:1,maxWidth:'185px',textAlign:'center',cursor:'pointer',background:k==='yuuri'?'rgba(59,130,246,0.1)':'rgba(34,197,94,0.1)',border:`2px solid ${c.color}55`,borderRadius:'18px',padding:'18px 12px',transition:'all 0.2s'}}
+                onTouchStart={e=>e.currentTarget.style.transform='scale(0.96)'}
+                onTouchEnd={e=>e.currentTarget.style.transform=''}>
+                <div style={{fontSize:'3.5rem',marginBottom:'8px',animation:'floatSlow 3s ease-in-out infinite'}}>{c.emoji}</div>
+                <div style={{color:c.color,fontWeight:900,fontSize:'1.1rem',marginBottom:'4px'}}>{c.name}</div>
+                <div style={{color:'#64748b',fontSize:'0.72rem',marginBottom:'8px'}}>{c.desc}</div>
+                <div style={{fontSize:'0.72rem',color:'#475569',marginBottom:'8px'}}>HP:{c.hp} ATK:{c.atk} DEF:{c.def}</div>
+                <div style={{padding:'6px 8px',background:`${c.color}22`,borderRadius:'8px',fontSize:'0.72rem',color:c.color}}>
+                  必殺技 {c.skill.emoji}<br/><b>{c.skill.name}</b>
                 </div>
               </div>
-              <div style={{ ...s.card, textAlign: "center" }}>
-                <div style={{ fontSize: "3.5rem", marginBottom: "8px", animation: "float 3s ease-in-out infinite" }}>
-                  {FLOORS[player.floor].emoji}
-                </div>
-                <div style={{ color: charColor, fontWeight: "bold", marginBottom: "16px" }}>{FLOORS[player.floor].name}</div>
-                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
-                  <button style={s.btn("#ef4444")} onClick={encounter}>⚔️ たたかう</button>
-                  <button style={s.btn("#f59e0b")} onClick={() => setScreen("shop")}>🛒 ショップ</button>
-                  <button style={s.btn("#22c55e")} onClick={goNext}>🚪 つぎへすすむ</button>
-                </div>
-              </div>
-            </>
-          )}
-
-          {screen === "battle" && player && monster && (
-            <>
-              <div style={s.card}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                  <span style={{ color: charColor, fontWeight: "900" }}>{player.emoji} {player.name}</span>
-                  <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>HP: {player.hp}/{player.maxHp}</span>
-                </div>
-                <div style={s.hpBarBg}><div style={s.hpBar(hpPct(player.hp, player.maxHp), hpColor(hpPct(player.hp, player.maxHp)))} /></div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
-                  <span style={{ color: "#f87171", fontWeight: "bold" }}>{monster.emoji} {monster.name}</span>
-                  <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>HP: {monster.hp}/{monster.maxHp}</span>
-                </div>
-                <div style={s.hpBarBg}><div style={s.hpBar(hpPct(monster.hp, monster.maxHp), "#f87171")} /></div>
-              </div>
-              <div style={{ ...s.card, textAlign: "center", position: "relative", overflow: "hidden" }}>
-                {showSkillAnim && (
-                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: "4rem", animation: "skillFlash 0.8s ease forwards", zIndex: 10, background: "rgba(255,215,0,0.15)" }}>
-                    ✨
-                  </div>
-                )}
-                <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", padding: "12px 0" }}>
-                  <div style={{ fontSize: "3rem", animation: playerShake ? "shake 0.4s ease" : "float 2.5s ease-in-out infinite" }}>{player.emoji}</div>
-                  <div style={{ color: "#475569", fontSize: "1.2rem" }}>⚔️</div>
-                  <div style={{ fontSize: "3rem", animation: shake ? "shake 0.4s ease" : "float 3s ease-in-out infinite" }}>{monster.emoji}</div>
-                </div>
-                {monster.weak === player.charKey && (
-                  <div style={{ fontSize: "0.72rem", color: "#fbbf24", marginBottom: "8px" }}>⚡ このてきは{player.name}によわい！</div>
-                )}
-                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
-                  <button style={s.btn("#ef4444", animating)} onClick={() => handleAttack(false)} disabled={animating}>⚔️ こうげき</button>
-                  <button style={s.btn("#a855f7", animating || player.skillUsed)} onClick={() => handleAttack(true)} disabled={animating || player.skillUsed}>
-                    {CHARACTERS[player.charKey].skill.emoji} 必殺技{player.skillUsed ? "×" : ""}
-                  </button>
-                  <button style={s.btn("#22c55e", animating)} onClick={usePotion} disabled={animating}>🥤 かいふく</button>
-                  <button style={s.btn("#6b7280", animating)} onClick={flee} disabled={animating}>🏃 にげる</button>
-                </div>
-              </div>
-            </>
-          )}
-
-          {screen === "shop" && player && (
-            <div style={s.card}>
-              <div style={{ color: "#ffd700", fontWeight: "bold", textAlign: "center", marginBottom: "12px" }}>
-                🛒 おみせ（もちきん: {player.gold}G）
-              </div>
-              {ITEMS.map(item => (
-                <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
-                  marginBottom: "8px", padding: "8px 10px", background: "rgba(255,255,255,0.03)", borderRadius: "10px" }}>
-                  <span style={{ fontSize: "1.1rem" }}>{item.emoji}</span>
-                  <span style={{ flex: 1, marginLeft: "8px", fontSize: "0.82rem" }}>{item.name}</span>
-                  <span style={{ color: "#94a3b8", fontSize: "0.72rem", marginRight: "8px" }}>{item.desc}</span>
-                  <button style={s.btn("#fbbf24", player.gold < item.cost, true)}
-                    onClick={() => buyItem(item)} disabled={player.gold < item.cost}>{item.cost}G</button>
-                </div>
-              ))}
-              <div style={{ textAlign: "center", marginTop: "8px" }}>
-                <button style={s.btn("#6b7280")} onClick={() => setScreen("map")}>🔙 もどる</button>
-              </div>
-            </div>
-          )}
-
-          {screen === "gameover" && player && (
-            <div style={{ ...s.card, textAlign: "center" }}>
-              <div style={{ fontSize: "4rem", marginBottom: "8px" }}>💀</div>
-              <div style={{ color: "#f87171", fontSize: "1.5rem", fontWeight: "900", marginBottom: "4px" }}>GAME OVER</div>
-              <div style={{ color: "#94a3b8", marginBottom: "16px" }}>{player.name}はたおれてしまった…</div>
-              <button style={s.btn("#ef4444")} onClick={restart}>🔄 もういちど</button>
-            </div>
-          )}
-
-          {screen === "clear" && player && (
-            <div style={{ ...s.card, textAlign: "center" }}>
-              <div style={{ fontSize: "4rem", marginBottom: "8px" }}>🏆</div>
-              <div style={{ color: "#ffd700", fontSize: "1.4rem", fontWeight: "900", marginBottom: "4px" }}>🎉 ぼうけんクリア！ 🎉</div>
-              <div style={{ color: "#a3e635", marginBottom: "8px" }}>{player.name}が まおうを たおした！</div>
-              <div style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "16px" }}>
-                さいしゅうレベル: {player.level} ／ のこりHP: {player.hp}
-              </div>
-              <button style={s.btn("#ffd700")} onClick={restart}>🔄 もういちど</button>
-            </div>
-          )}
-
-          {screen !== "select" && (
-            <div style={{ ...s.card, ...s.log }}>
-              {log.map((entry, i) => (
-                <div key={i} style={{ opacity: 1 - i * 0.1, marginBottom: "1px" }}>{entry}</div>
-              ))}
-            </div>
-          )}
+            ))}
+          </div>
         </div>
-      );
-    }
+      )}
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
+      {/* MAP */}
+      {scr==='map'&&pl&&(
+        <>
+          <div style={card}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
+              <span style={{color:cc,fontWeight:900}}>{pl.emoji} {pl.name} Lv.{pl.level}</span>
+              <span style={{color:'#fbbf24',fontSize:'0.85rem'}}>💰 {pl.gold}G</span>
+            </div>
+            <HpBar hp={pl.hp} maxHp={pl.maxHp} label="HP" color={cc}/>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#475569',marginTop:'2px'}}>
+              <span>ATK:{pl.atk} DEF:{pl.def}</span>
+              <span>持ち物:{pl.inventory.map(i=>i.emoji).join('')||'なし'}</span>
+            </div>
+          </div>
+          <div style={{...card,textAlign:'center'}}>
+            <div style={{fontSize:'4rem',marginBottom:'8px',animation:'float 3s ease-in-out infinite'}}>{FLOORS[pl.floor].emoji}</div>
+            <div style={{color:cc,fontWeight:900,marginBottom:'14px',fontSize:'1.05rem'}}>{FLOORS[pl.floor].name}</div>
+            <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center'}}>
+              <button style={btn('#ef4444')} onClick={encounter}>⚔️ たたかう</button>
+              <button style={btn('#f59e0b')} onClick={()=>{SFX.cursor();setScr('shop');}}>🛒 ショップ</button>
+              <button style={btn('#22c55e')} onClick={goNext}>🚪 つぎへ</button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* BATTLE */}
+      {scr==='battle'&&pl&&mon&&(
+        <>
+          {/* Visual battle stage */}
+          <div style={{position:'relative',width:'100%',maxWidth:'440px',height:'230px',borderRadius:'16px',overflow:'hidden',marginBottom:'10px',border:'2px solid rgba(255,80,80,0.25)'}}>
+            {/* Sky bg */}
+            <div style={{position:'absolute',inset:0,background:FLOORS[pl.floor].sky}}/>
+            {/* Stars */}
+            <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.8) 1px,transparent 1px)',backgroundSize:'25px 25px',animation:'bgStars 4s ease-in-out infinite'}}/>
+            {/* Ground */}
+            <div style={{position:'absolute',bottom:0,left:0,right:0,height:'55px',background:'linear-gradient(transparent,rgba(80,30,180,0.35))',borderTop:'1px solid rgba(150,100,255,0.3)'}}/>
+            {/* Glow spots */}
+            <div style={{position:'absolute',bottom:'8px',left:'18%',width:'70px',height:'14px',background:`rgba(100,180,255,0.4)`,borderRadius:'50%',filter:'blur(6px)',animation:'groundGlow 2s ease-in-out infinite'}}/>
+            <div style={{position:'absolute',bottom:'8px',right:'15%',width:'80px',height:'14px',background:'rgba(255,100,50,0.4)',borderRadius:'50%',filter:'blur(6px)',animation:'groundGlow 2s 0.5s ease-in-out infinite'}}/>
+            {/* Player */}
+            <div style={{position:'absolute',bottom:'32px',left:'12%',fontSize:'5.2rem',lineHeight:1,transformOrigin:'bottom center',...pAnimStyle()}}>
+              {pl.emoji}
+            </div>
+            {/* Monster */}
+            <div style={{position:'absolute',bottom:'28px',right:'10%',fontSize:'5.8rem',lineHeight:1,transformOrigin:'bottom center',...mAnimStyle()}}>
+              {mon.emoji}
+            </div>
+            {/* VS */}
+            <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',fontSize:'1.2rem',fontWeight:900,color:'rgba(255,200,50,0.3)',letterSpacing:'0.1em'}}>VS</div>
+            {/* Floor name */}
+            <div style={{position:'absolute',top:'8px',left:'50%',transform:'translateX(-50%)',fontSize:'0.72rem',color:'rgba(255,255,255,0.4)',letterSpacing:'0.1em',whiteSpace:'nowrap'}}>
+              {FLOORS[pl.floor].emoji} {FLOORS[pl.floor].name}
+            </div>
+            {/* Skill overlay */}
+            {showSkill&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'5rem',animation:'skillFlash 0.7s ease forwards',zIndex:50,background:'rgba(255,215,0,0.12)',pointerEvents:'none'}}>
+              {CHARS[pl.charKey].skill.emoji}✨
+            </div>}
+            {/* Damage numbers */}
+            {dmgs.map(d=>(
+              <div key={d.id} style={{position:'absolute',fontWeight:900,fontSize:'2rem',pointerEvents:'none',zIndex:100,animation:'dmgFloat 1s ease forwards',textShadow:'0 2px 8px rgba(0,0,0,0.9)',
+                color:d.type==='e'?'#ff6b6b':d.type==='h'?'#4ade80':'#ffd700',
+                left:d.type==='e'?'58%':'12%',top:'18%'}}>
+                {d.type==='h'?`+${d.v>200?'MAX':d.v}`:`-${d.v}`}
+              </div>
+            ))}
+            {/* Sparks */}
+            {sparks.map(s=>Array.from({length:7},(_,i)=>{
+              const a=(i/7)*Math.PI*2,dist=30+Math.random()*25;
+              return <div key={s.id+i} style={{position:'absolute',width:'7px',height:'7px',borderRadius:'50%',left:s.x,top:s.y,background:`hsl(${20+i*12},100%,65%)`,pointerEvents:'none',zIndex:60,animation:'spark 0.6s ease forwards','--tx':`${Math.cos(a)*dist}px`,'--ty':`${Math.sin(a)*dist}px`}}/>;
+            }))}
+          </div>
+
+          {/* HP bars */}
+          <div style={card}>
+            <HpBar hp={pl.hp} maxHp={pl.maxHp} label={`${pl.emoji} ${pl.name} Lv.${pl.level}`} color={cc}/>
+            <HpBar hp={mon.hp} maxHp={mon.maxHp} label={`${mon.emoji} ${mon.name}`} color="#ef4444"/>
+            {mon.weak===pl.charKey&&<div style={{textAlign:'center',fontSize:'0.72rem',color:'#fbbf24',marginTop:'2px'}}>⚡ このてきは{pl.name}によわい！</div>}
+          </div>
+
+          {/* Action buttons */}
+          <div style={{...card,padding:'12px'}}>
+            <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
+              {[
+                {label:'⚔️ こうげき',sub:'通常攻撃',col:'#ef4444',dis:busy,fn:()=>doAttack(false)},
+                {label:`${CHARS[pl.charKey].skill.emoji} 必殺技`,sub:pl.skillUsed?'使用済み':CHARS[pl.charKey].skill.name,col:'#a855f7',dis:busy||pl.skillUsed,fn:()=>doAttack(true)},
+                {label:'🥤 かいふく',sub:`${pl.inventory.filter(i=>i.effect?.hp).length}個持ち`,col:'#22c55e',dis:busy,fn:doHeal},
+                {label:'🏃 にげる',sub:'60%で成功',col:'#6b7280',dis:busy,fn:doFlee},
+              ].map(b=>(
+                <button key={b.label} disabled={b.dis} onClick={b.fn} style={{
+                  background:b.dis?'rgba(80,80,80,0.25)':`linear-gradient(135deg,${b.col}bb,${b.col}44)`,
+                  border:`1px solid ${b.dis?'#333':b.col}`,color:b.dis?'#444':'#fff',
+                  padding:'13px 8px',borderRadius:'12px',fontFamily:'inherit',fontWeight:900,
+                  display:'flex',flexDirection:'column',alignItems:'center',gap:'3px',cursor:b.dis?'not-allowed':'pointer',
+                  boxShadow:b.dis?'none':`0 0 14px ${b.col}33`,transition:'all 0.15s',
+                }}>
+                  <span style={{fontSize:'1rem'}}>{b.label}</span>
+                  <span style={{fontSize:'0.68rem',opacity:0.7,fontWeight:'normal'}}>{b.sub}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* SHOP */}
+      {scr==='shop'&&pl&&(
+        <div style={{...card,animation:'fadeIn 0.3s ease'}}>
+          <div style={{color:'#ffd700',fontWeight:900,textAlign:'center',marginBottom:'12px'}}>🛒 おみせ　もちきん: {pl.gold}G</div>
+          {ITEMS.map(item=>(
+            <div key={item.id} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px',padding:'10px',background:'rgba(255,255,255,0.03)',borderRadius:'10px'}}>
+              <span style={{fontSize:'1.4rem'}}>{item.emoji}</span>
+              <div style={{flex:1}}>
+                <div style={{fontSize:'0.85rem',fontWeight:'bold'}}>{item.name}</div>
+                <div style={{fontSize:'0.72rem',color:'#64748b'}}>{item.desc}</div>
+              </div>
+              <button onClick={()=>buyItem(item)} disabled={pl.gold<item.cost} style={{...btn('#f59e0b',pl.gold<item.cost),margin:0,padding:'8px 10px',fontSize:'0.82rem'}}>{item.cost}G</button>
+            </div>
+          ))}
+          <div style={{textAlign:'center',marginTop:'8px'}}>
+            <button style={btn('#475569')} onClick={()=>{SFX.cursor();setScr('map');}}>🔙 もどる</button>
+          </div>
+        </div>
+      )}
+
+      {/* GAME OVER */}
+      {scr==='gameover'&&(
+        <div style={{...card,textAlign:'center',animation:'popIn 0.5s ease',borderColor:'rgba(255,50,50,0.3)'}}>
+          <div style={{fontSize:'4rem',marginBottom:'8px'}}>💀</div>
+          <div style={{color:'#ef4444',fontSize:'1.6rem',fontWeight:900,letterSpacing:'0.1em',marginBottom:'4px'}}>GAME OVER</div>
+          <div style={{color:'#94a3b8',marginBottom:'4px'}}>{pl?.name}はたおれてしまった…</div>
+          <div style={{color:'#475569',fontSize:'0.8rem',marginBottom:'16px'}}>でも、あきらめないで！もう一度！</div>
+          <button style={btn('#ef4444')} onClick={restart}>🔄 もういちど</button>
+        </div>
+      )}
+
+      {/* CLEAR */}
+      {scr==='clear'&&(
+        <div style={{...card,textAlign:'center',animation:'popIn 0.5s ease',borderColor:'rgba(255,215,0,0.3)'}}>
+          <div style={{fontSize:'4rem',marginBottom:'8px',animation:'winDance 0.8s ease-in-out infinite'}}>🏆</div>
+          <div style={{color:'#ffd700',fontSize:'1.4rem',fontWeight:900,marginBottom:'6px'}}>🎉 ぼうけんクリア！ 🎉</div>
+          <div style={{color:'#a3e635',marginBottom:'6px'}}>{pl?.name}が まおうを たおした！</div>
+          <div style={{color:'#94a3b8',fontSize:'0.82rem',marginBottom:'16px'}}>さいしゅうLv.{pl?.level} ／ のこりHP:{pl?.hp}</div>
+          <button style={btn('#ffd700')} onClick={restart}>🔄 もういちど</button>
+        </div>
+      )}
+
+      {/* LOG */}
+      {scr!=='select'&&(
+        <div style={{...card,maxHeight:'140px',overflowY:'auto'}}>
+          {log.map((e,i)=>(
+            <div key={i} style={{padding:'3px 0',fontSize:'0.8rem',lineHeight:1.5,borderBottom:'1px solid rgba(255,255,255,0.04)',opacity:1-i*0.08,color:i===0?'#e2e8f0':'#94a3b8'}}>{e}</div>
+          ))}
+        </div>
+      )}
+
+      {/* iOS install hint */}
+      <div id="iosBanner" style={{display:'none',position:'fixed',bottom:0,left:0,right:0,background:'linear-gradient(135deg,#1e1b4b,#312e81)',borderTop:'1px solid #ffd70055',padding:'12px 16px',zIndex:9999,alignItems:'center',gap:'10px'}}>
+        <div style={{flex:1,fontSize:'0.82rem',color:'#e2e8f0'}}>📱 Safari → 共有(□↑) →「ホーム画面に追加」でアプリになるよ！</div>
+        <button onClick={()=>document.getElementById('iosBanner').style.display='none'} style={{background:'transparent',border:'none',color:'#94a3b8',fontSize:'1.2rem',cursor:'pointer'}}>✕</button>
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
+const isSA=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
+if(isIOS&&!isSA)setTimeout(()=>document.getElementById('iosBanner').style.display='flex',5000);
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
 </body>
 </html>
