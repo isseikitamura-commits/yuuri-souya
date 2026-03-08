@@ -269,11 +269,11 @@ const ENEMY_SPELL_DB={
 
 // パーティレベルに合わせて敵を強化
 const scaleEnemy=(tpl,avgLv,partySize)=>{
-  if(avgLv<=5&&partySize<=2)return{...tpl};
-  const lvBonus=avgLv>5?1+(avgLv-5)*0.09:1;
-  const sizeBonus=partySize>=4?1.35:partySize===3?1.15:1;
-  const s=lvBonus*sizeBonus;
-  const gs=avgLv>5?1+(avgLv-5)*0.05:1;
+  // 4人=2.5x, 3人=1.8x, 2人=1.2x, 1人=1.0x
+  const ps=partySize>=4?2.5:partySize===3?1.8:partySize===2?1.2:1.0;
+  const lv=Math.max(1,avgLv);
+  const s=(1+(lv-1)*0.18)*ps;
+  const gs=1+(lv-1)*0.08;
   return{...tpl,hp:Math.round(tpl.maxHp*s),maxHp:Math.round(tpl.maxHp*s),atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*s),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*gs)};
 };
 const SK='ysd_v5';
@@ -449,15 +449,15 @@ function App(){
     let p2=fp.map(m=>{if(m.hp<=0)return m;const prevLv=m.level;const nm=doLevelUp(m,tExp,msg=>lvLogs.push(msg));if(nm.level>prevLv)SFX.lvup();return nm;});
     setParty(p2);setGold(g=>g+tGold);await sleep(500);
     let newDB=dragonBalls,gotDB=false;
-    if(Math.random()<.30&&dragonBalls<3){newDB=dragonBalls+1;setDragonBalls(newDB);SFX.dragonball();gotDB=true;setDbPopup(true);setTimeout(()=>setDbPopup(false),3000);}
     const isBoss=fe.some(e=>e.boss);
+    if(isBoss&&Math.random()<.80&&dragonBalls<3){newDB=dragonBalls+1;setDragonBalls(newDB);SFX.dragonball();gotDB=true;setDbPopup(true);setTimeout(()=>setDbPopup(false),3000);}
     // 仲間加入判定(30%) ボス戦以外 - 全候補を表示して選ばせる
     let recruitTpls=[];
     if(!isBoss&&monsterRoster.length<5){
       const recs=fe.filter(e=>e.recruitable&&e.hp<=0);
       recs.forEach(e=>{if(Math.random()<.30)recruitTpls.push(e);});
     }
-    const isChClear=(chBattleNum>=5);
+    const isChClear=(chBattleNum>=10);
     setBattleResult({tExp,tGold,lvLogs,gotDB,dbCount:newDB,recruitTpls,isBoss,isChClear,isFinal:chIdx>=9});
     setScr('result');setBusy(false);
   },[chIdx,chBattleNum,clearCount,dragonBalls,monsterRoster,addLog]);
@@ -647,8 +647,8 @@ function App(){
         </div>
         <div style={{display:'flex',gap:'4px',marginTop:'6px',alignItems:'center'}}>
           <span style={{fontSize:'.7rem',color:'#94a3b8',marginRight:'2px'}}>戦闘:</span>
-          {Array.from({length:5},(_,i)=>{const done=i<chBattleNum-1,cur=i===chBattleNum-1,boss=i===4;return <div key={i} style={{width:'28px',height:'18px',borderRadius:'5px',fontSize:'.58rem',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,background:done?'#22c55e':cur?(boss?'rgba(220,38,38,.5)':'rgba(212,160,23,.4)'):'rgba(255,255,255,.05)',color:done||cur?'#fff':'#374151',border:`1px solid ${done?'#22c55e':cur?(boss?'#ef4444':'#d4a017'):'#1e1e3a'}`}}>{boss?'👑':done?'✓':i+1}</div>;})}
-          <span style={{fontSize:'.68rem',color:chBattleNum>=5?'#ef4444':'#fbbf24',fontWeight:900,marginLeft:'4px'}}>{chBattleNum>=5?'⚡BOSS':'次: 第'+chBattleNum+'戦'}</span>
+          {Array.from({length:10},(_,i)=>{const done=i<chBattleNum-1,cur=i===chBattleNum-1,boss=i===9;return <div key={i} style={{width:'28px',height:'18px',borderRadius:'5px',fontSize:'.58rem',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,background:done?'#22c55e':cur?(boss?'rgba(220,38,38,.5)':'rgba(212,160,23,.4)'):'rgba(255,255,255,.05)',color:done||cur?'#fff':'#374151',border:`1px solid ${done?'#22c55e':cur?(boss?'#ef4444':'#d4a017'):'#1e1e3a'}`}}>{boss?'👑':done?'✓':i+1}</div>;})}
+          <span style={{fontSize:'.68rem',color:chBattleNum>=10?'#ef4444':'#fbbf24',fontWeight:900,marginLeft:'4px'}}>{chBattleNum>=10?'⚡BOSS':'次: 第'+chBattleNum+'戦'}</span>
         </div>
       </div>
       <div className="card" style={{borderColor:'rgba(251,191,36,.18)',padding:'9px 12px'}}>
@@ -678,14 +678,14 @@ function App(){
         {inv.length>0&&<div style={{fontSize:'.65rem',color:'#374151',marginTop:'5px',borderTop:'1px solid rgba(255,255,255,.05)',paddingTop:'4px'}}>🎒 {inv.map(i=>i.emoji+i.name).join('  ')}</div>}
       </div>
       <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center'}}>
-        {chIdx===9&&chBattleNum>=5&&(<div style={{width:'100%',maxWidth:'460px',background:'rgba(220,38,38,.15)',border:'2px solid #ef4444',borderRadius:'12px',padding:'12px 16px',marginBottom:'8px',textAlign:'center',animation:'blink 1.5s ease-in-out infinite'}}>
+        {chIdx===9&&chBattleNum>=10&&(<div style={{width:'100%',maxWidth:'460px',background:'rgba(220,38,38,.15)',border:'2px solid #ef4444',borderRadius:'12px',padding:'12px 16px',marginBottom:'8px',textAlign:'center',animation:'blink 1.5s ease-in-out infinite'}}>
           <div style={{color:'#ef4444',fontWeight:900,fontSize:'.9rem',marginBottom:'6px'}}>⚠️ 最終ボス「悪魔サタン」戦の直前！</div>
           <div style={{color:'#94a3b8',fontSize:'.72rem',marginBottom:'8px'}}>非常に手強い敵です。ここでセーブしておくことをお勧めします！</div>
           <button style={{...bs('#ef4444'),animation:'none'}} onClick={doSave}>💾 ここでセーブしてから戦う！</button>
         </div>)}
         <button style={bs('#ef4444')} onClick={()=>{
           // 5戦目はボス、1-4戦目は通常エンカウンター
-          const isBossBattle=(chBattleNum>=5);
+          const isBossBattle=(chBattleNum>=10);
           const avgLv=party.length>0?Math.round(party.reduce((s,m)=>s+m.level,0)/party.length):1;
           const partySize=party.filter(m=>m.hp>0).length;
           let encData;
@@ -696,11 +696,11 @@ function App(){
           const fi=party.findIndex(m=>m.hp>0);
           setPhase(fi>=0?['p0','p1','p2','p3'][fi]:'p0');
           setSpellMenu(false);setBusy(false);
-          const battleLabel=isBossBattle?'🚨 第5戦・BOSS！':'第'+chBattleNum+'戦！';
+          const battleLabel=isBossBattle?'🚨 第10戦・BOSS！':'第'+chBattleNum+'戦！';
           addLog('⚠️ '+battleLabel+' '+ens.map(e=>e.name).join(' & ')+'が現れた！');
           bgm(isBossBattle?chDef.bgm||'boss':'battle');
           setScr('battle');
-        }}>⚔️ {chBattleNum>=5?'⚡ BOSS戦！':'第'+chBattleNum+'戦へ ▸'}</button>
+        }}>⚔️ {chBattleNum>=10?'⚡ BOSS戦！':'第'+chBattleNum+'戦へ ▸'}</button>
         <button style={bs('#d97706')} onClick={()=>{SFX.cursor();bgm('town');setScr('shop');}}>🛒 ショップ</button>
         <button style={bs('#22c55e')} onClick={doSave}>💾 セーブ</button>
         {monsterRoster.length>0&&<button style={bs('#60a5fa')} onClick={()=>{SFX.cursor();setScr('party_mgmt');}}>👥 なかま管理</button>}
