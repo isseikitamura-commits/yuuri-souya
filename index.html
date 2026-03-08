@@ -471,12 +471,13 @@ function App(){
       setMAnim(enIdx,'atk');SFX.phit();
       addSpark(`${ti*22+5}%`,'50%');addDmg(dmg,'p',`${ti*22+5}%`);
       setPAnim(ti,'hurt');
-      addLog(`💢 ${en.name}が${target.name???CLASSES[target.classId].name:'?'}に${dmg}ダメージ！`);
+      addLog(`💢 ${en.name}が${CLASSES[target.classId].name}に${dmg}ダメージ！`);
       newParty[ti]={...target,hp:Math.max(0,target.hp-dmg)};
       // Enemy status inflict
       if(en.si&&!target.status&&Math.random()<0.22){
         newParty[ti]={...newParty[ti],status:en.si,statusTurns:3};
-        addLog(`${en.si==='poison'?'☠️毒':'en.si==='burn'?'🔥燃焼':'💫スタン'}！${CLASSES[target.classId].name}が${en.si}状態に！`);
+        const statusLabel=en.si==='poison'?'☠️毒':en.si==='burn'?'🔥燃焼':'💫スタン';
+        addLog(`${statusLabel}！${CLASSES[target.classId].name}が${en.si}状態に！`);
       }
       await sleep(380);setPAnim(ti,'idle');setMAnim(enIdx,'idle');
       await sleep(100);
