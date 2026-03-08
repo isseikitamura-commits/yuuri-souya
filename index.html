@@ -698,18 +698,15 @@ function App(){
     const pIdx=activePIdx;
     const member={...nParty[pIdx]};
 
-    // Stun check
+    // --- Player action (stun = skip, else execute) ---
     if(member.status==='stun'){
       const mname=member.isMonster?member.name:CLASSES[member.classId].name;
       addLog('💫 '+mname+'はスタン中！動けない！');
       SFX.stun();
-      nParty[pIdx]={...member,statusTurns:Math.max(0,member.statusTurns-1),status:member.statusTurns<=1?null:member.status};
-      setParty(nParty);
-      setPhase(nextPhase(phase,nParty,false));
-      setBusy(false);return;
+      nParty[pIdx]={...member,statusTurns:Math.max(0,member.statusTurns-1),
+        status:member.statusTurns<=1?null:member.status};
     }
-
-    if(action==='spell'&&spellId){
+    else if(action==='spell'&&spellId){
       const allSpells=getMemberSpells(member);
       const sp=allSpells.find(s=>s.id===spellId);
       if(sp){
@@ -719,8 +716,8 @@ function App(){
       }
     }
     else if(action==='atk'){
-      const ti=(targetEnemyIdx!=null)?targetEnemyIdx:nEnemies.findIndex(e=>e.hp>0);
-      if(ti<0||ti===null||!nEnemies[ti]){setBusy(false);return;}
+      const ti=nEnemies.findIndex(e=>e.hp>0);
+      if(ti<0){setBusy(false);return;}
       const en=nEnemies[ti];
       const effAtk=Math.floor(member.atk*(member.atkBuffMult||1));
       let dmg=calcDamage(effAtk,en.def);
@@ -739,7 +736,7 @@ function App(){
     else if(action==='defend'){
       nParty[pIdx]={...member,defending:true,defBuffMult:2.2,defBuffTurns:1};
       const mname=member.isMonster?member.name:CLASSES[member.classId].name;
-      addLog('🛡️ '+mname+'は防御態勢をとった！（このターンダメージ55%減）');
+      addLog('🛡️ '+mname+'は防御！このターンのダメージ55%減！');
       SFX.buff();
     }
     else if(action==='heal'){
@@ -750,19 +747,15 @@ function App(){
       if(member.status&&cureIdx>=0){
         const it=inv[cureIdx];const ni=[...inv];ni.splice(cureIdx,1);
         setInv(ni);nParty[pIdx]={...member,status:null,statusTurns:0};
-        addLog(it.emoji+' '+it.name+'！状態異常を回復！');SFX.heal();used=true;
+        addLog(it.emoji+' '+it.name+'！状態異常回復！');SFX.heal();used=true;
       } else if(member.hp<member.maxHp&&healIdx>=0){
-        const it=inv[healIdx];const ni=[...inv];ni.splice(healIdx,1);
-        setInv(ni);
-        // strictly cap at maxHp
-        const add=Math.min(it.eff.hp, member.maxHp-member.hp);
-        const newHp=Math.min(member.maxHp, member.hp+it.eff.hp);
-        nParty[pIdx]={...member,hp:newHp};
+        const it=inv[healIdx];const ni=[...inv];ni.splice(healIdx,1);setInv(ni);
+        const add=Math.min(it.eff.hp,member.maxHp-member.hp);
+        nParty[pIdx]={...member,hp:Math.min(member.maxHp,member.hp+it.eff.hp)};
         addDmg(add,'h','12%','22%');
-        addLog(it.emoji+' '+it.name+'！HP+'+add+'（最大'+member.maxHp+'まで）');SFX.heal();used=true;
+        addLog(it.emoji+' '+it.name+'！HP+'+add);SFX.heal();used=true;
       } else if(member.mp<member.maxMp&&mpIdx>=0){
-        const it=inv[mpIdx];const ni=[...inv];ni.splice(mpIdx,1);
-        setInv(ni);
+        const it=inv[mpIdx];const ni=[...inv];ni.splice(mpIdx,1);setInv(ni);
         const addMp=Math.min(it.eff.mp,member.maxMp-member.mp);
         nParty[pIdx]={...member,mp:Math.min(member.maxMp,member.mp+it.eff.mp)};
         addLog(it.emoji+' '+it.name+'！MP+'+addMp);used=true;
@@ -770,7 +763,10 @@ function App(){
       if(!used){addLog('使えるアイテムがない！');setBusy(false);return;}
     }
     else if(action==='flee'){
-      if(Math.random()>0.42){SFX.flee();addLog('🏃 逃げ出した！');setParty(nParty);setScr('map');bgm('field');setBusy(false);return;}
+      if(Math.random()>0.42){
+        SFX.flee();addLog('🏃 逃げ出した！');
+        setParty(nParty);setScr('map');bgm('field');setBusy(false);return;
+      }
       const fen=nEnemies.find(e=>e.hp>0);
       if(fen){
         const dmg=Math.max(1,fen.atk-member.def+Math.floor(Math.random()*5)-2);
@@ -1309,20 +1305,24 @@ function App(){
             {spellMenu&&activeM&&(
               <div>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'7px'}}>
-                  <span style={{fontSize:'.82rem',fontWeight:900,color:'#a78bfa'}}>✨ 呪文を選べ</span>
+                  <span style={{fontSize:'.82rem',fontWeight:900,color:'#a78bfa'}}>
+                    ✨ 呪文を選べ — {activeM.isMonster?activeM.name:CLASSES[activeM.classId].name}
+                  </span>
                   <button onClick={()=>setSpellMenu(false)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'3px 8px',borderRadius:'8px',fontSize:'.75rem',cursor:'pointer'}}>← もどる</button>
                 </div>
-                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'5px',maxHeight:'210px',overflowY:'auto'}}>
+                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'5px',maxHeight:'240px',overflowY:'auto'}}>
                   {activeMemberSpells.map((sp,i)=>{
-                    const noMp=activeM.mp<sp.mp;
-                    const used=(sp.id===CLASSES[activeM.classId]?.baseSkill?.id&&activeM.baseSkillUsed)||(activeM.isMonster&&activeM.allySkillUsed&&i===0);
-                    const dis=busy||noMp||used;
+                    const noMp=(activeM.mp||0)<(sp.mp||0);
+                    const dis=busy||noMp;
                     return(
                       <button key={sp.id||i} disabled={dis} onClick={()=>{setSpellMenu(false);handleAction('spell',sp.id,null);}}
-                        style={{...bs(sp.color||'#8b5cf6',dis),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'2px',padding:'9px 5px',fontSize:'.78rem'}}>
-                        <span>{sp.e} {sp.name}</span>
-                        <span style={{fontSize:'.62rem',opacity:.7,fontWeight:'normal'}}>MP:{sp.mp} {sp.desc}</span>
-                        {used&&<span style={{fontSize:'.58rem',color:'#374151'}}>使用済み</span>}
+                        style={{...bs(sp.color||'#8b5cf6',dis),margin:0,display:'flex',flexDirection:'column',
+                          alignItems:'center',gap:'2px',padding:'10px 5px',fontSize:'.78rem',
+                          border:'1px solid '+(dis?'#1e1e3a':sp.color||'#8b5cf6')}}>
+                        <span style={{fontSize:'1.1rem'}}>{sp.e}</span>
+                        <span style={{fontWeight:900}}>{sp.name}</span>
+                        <span style={{fontSize:'.62rem',opacity:.75,fontWeight:'normal',textAlign:'center'}}>{sp.desc}</span>
+                        <span style={{fontSize:'.65rem',color:noMp?'#ef4444':'#38bdf8',marginTop:'2px'}}>MP:{sp.mp}</span>
                       </button>
                     );
                   })}
