@@ -1,253 +1,590 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="大冒険" />
-  <meta name="theme-color" content="#ffd700" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-192.png" />
-  <title>ゆうりとそうやの大冒険</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-    body{background:#0a0a1a;overflow-x:hidden;font-family:'Hiragino Maru Gothic Pro','BIZ UDPGothic',sans-serif}
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-    @keyframes floatSlow{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-    @keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-14px)}40%{transform:translateX(14px)}60%{transform:translateX(-10px)}80%{transform:translateX(10px)}}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-    @keyframes popIn{from{opacity:0;transform:scale(0.5)}to{opacity:1;transform:scale(1)}}
-    @keyframes dmgFloat{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-80px) scale(1.5)}}
-    @keyframes skillFlash{0%{opacity:0;transform:scale(0.3) rotate(-10deg)}50%{opacity:1;transform:scale(1.6) rotate(5deg)}100%{opacity:0;transform:scale(1.2)}}
-    @keyframes pulse{0%,100%{opacity:0.7}50%{opacity:1}}
-    @keyframes bgStars{0%{opacity:0.15}50%{opacity:0.35}100%{opacity:0.15}}
-    @keyframes spark{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
-    @keyframes monsterEntry{from{opacity:0;transform:translateX(60px) scale(0.7)}to{opacity:1;transform:translateX(0) scale(1)}}
-    @keyframes playerEntry{from{opacity:0;transform:translateX(-60px) scale(0.7)}to{opacity:1;transform:translateX(0) scale(1)}}
-    @keyframes winDance{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.15)}}
-    @keyframes groundGlow{0%,100%{opacity:0.4}50%{opacity:0.8}}
-    button{touch-action:manipulation;cursor:pointer}
-    button:active{transform:scale(0.92)!important;filter:brightness(1.3)!important}
-    ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#333}
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="大冒険"/>
+<meta name="theme-color" content="#ffd700"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<title>ゆうりとそうやの大冒険</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#08080f;font-family:'Hiragino Maru Gothic Pro','BIZ UDPGothic',sans-serif;color:#e2e8f0;overflow-x:hidden}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes floatFast{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(0.4)}to{opacity:1;transform:scale(1)}}
+@keyframes dmgUp{0%{opacity:1;transform:translateY(0) scale(1)}100%{opacity:0;transform:translateY(-70px) scale(1.4)}}
+@keyframes skillBurst{0%{opacity:0;transform:scale(0.2) rotate(-15deg)}60%{opacity:1;transform:scale(1.6) rotate(5deg)}100%{opacity:0;transform:scale(1.1)}}
+@keyframes starPulse{0%,100%{opacity:.15}50%{opacity:.4}}
+@keyframes groundPulse{0%,100%{opacity:.4}50%{opacity:.8}}
+@keyframes winSpin{0%,100%{transform:rotate(-8deg) scale(1)}50%{transform:rotate(8deg) scale(1.12)}}
+@keyframes sparkFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+button{touch-action:manipulation;cursor:pointer;font-family:inherit}
+button:active:not(:disabled){transform:scale(0.91)!important;filter:brightness(1.35)!important}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#2a2a4a}
+.card{background:rgba(255,255,255,0.04);border-radius:16px;padding:14px;margin-bottom:10px;width:100%;max-width:460px;backdrop-filter:blur(10px)}
+.hptrack{height:11px;background:rgba(0,0,0,0.5);border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.07);margin-bottom:6px}
+.hpfill{height:100%;border-radius:6px;transition:width 0.4s ease}
+.exptrack{height:7px;background:rgba(0,0,0,0.4);border-radius:4px;overflow:hidden;border:1px solid rgba(100,100,255,0.2)}
+.expfill{height:100%;border-radius:4px;background:linear-gradient(90deg,#6366f1,#818cf8);transition:width 0.4s ease;box-shadow:0 0 6px #6366f188}
+.btn{border:none;color:#fff;border-radius:10px;padding:11px 16px;font-weight:900;font-size:0.9rem;cursor:pointer;transition:all 0.15s;margin:4px}
+.btn:disabled{opacity:0.28;cursor:not-allowed!important;transform:none!important;filter:none!important}
+.abtn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:13px 8px;border-radius:12px;border:none;color:#fff;font-weight:900;cursor:pointer;transition:all 0.15s}
+.abtn .icon{font-size:1.5rem}
+.abtn .sub{font-size:0.68rem;opacity:0.7;font-weight:normal}
+</style>
 </head>
 <body>
 <div id="root"></div>
 <script>
-const AudioCtx=window.AudioContext||window.webkitAudioContext;
-let _ctx=null;
-function ac(){if(!_ctx)_ctx=new AudioCtx();if(_ctx.state==='suspended')_ctx.resume();return _ctx;}
-function tone(f,t,dur,vol=0.3,delay=0){
-  try{const c=ac(),o=c.createOscillator(),g=c.createGain();
-  o.connect(g);g.connect(c.destination);
-  o.type=t;o.frequency.setValueAtTime(f,c.currentTime+delay);
-  g.gain.setValueAtTime(vol,c.currentTime+delay);
-  g.gain.exponentialRampToValueAtTime(0.001,c.currentTime+delay+dur);
-  o.start(c.currentTime+delay);o.stop(c.currentTime+delay+dur);}catch(e){}
+// ============ AUDIO ENGINE ============
+const N={
+  R:0,
+  C3:131,D3:147,E3:165,F3:175,G3:196,Ab3:208,A3:220,Bb3:233,B3:247,
+  C4:262,Db4:277,D4:294,Eb4:311,E4:330,F4:349,Gb4:370,G4:392,Ab4:415,A4:440,Bb4:466,B4:494,
+  C5:523,Db5:554,D5:587,Eb5:622,E5:659,F5:698,Gb5:740,G5:784,Ab5:831,A5:880,Bb5:932,B5:988,
+  C6:1047,D6:1175,E6:1319,G6:1568
+};
+// DQ-style BGM sequences: [freq, beats]
+const BGMS={
+  field:{bpm:112,seq:[
+    [N.C5,.5],[N.E5,.5],[N.G5,.5],[N.E5,.5],[N.F5,.5],[N.A5,.5],[N.C6,1],[N.R,.5],[N.C6,.25],[N.B5,.25],
+    [N.A5,.5],[N.G5,.5],[N.F5,.5],[N.E5,.5],[N.D5,1.5],[N.R,.5],
+    [N.E5,.5],[N.G5,.5],[N.B5,.5],[N.G5,.5],[N.A5,.5],[N.C6,.5],[N.E6,1],[N.R,.5],[N.D6,.5],
+    [N.C6,.5],[N.B5,.5],[N.A5,.5],[N.G5,.5],[N.C5,2],[N.R,1]
+  ]},
+  battle:{bpm:172,seq:[
+    [N.G4,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.Eb5,.5],[N.R,.25],[N.D5,.25],
+    [N.G4,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.D5,.5],[N.R,.25],[N.C5,.25],
+    [N.G4,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.Eb5,.5],[N.F5,.25],[N.Eb5,.25],
+    [N.D5,.5],[N.Bb4,.5],[N.C5,.5],[N.R,.5],
+    [N.Bb4,.25],[N.Bb4,.25],[N.B4,.25],[N.Bb4,.25],[N.F5,.5],[N.R,.25],[N.Eb5,.25],
+    [N.Bb4,.25],[N.Bb4,.25],[N.B4,.25],[N.Bb4,.25],[N.Eb5,.5],[N.R,.25],[N.D5,.25],
+    [N.C5,.5],[N.D5,.5],[N.Eb5,.5],[N.F5,.5],[N.G5,1.5],[N.R,.5]
+  ]},
+  boss:{bpm:188,seq:[
+    [N.D5,.25],[N.R,.125],[N.D5,.25],[N.R,.125],[N.D5,.5],[N.Eb5,.25],[N.D5,.25],
+    [N.Bb4,.5],[N.R,.25],[N.Bb4,.25],[N.C5,.5],[N.D5,.5],
+    [N.E5,.25],[N.R,.125],[N.E5,.25],[N.R,.125],[N.E5,.5],[N.F5,.25],[N.E5,.25],
+    [N.C5,.5],[N.R,.25],[N.C5,.25],[N.D5,.5],[N.E5,.5],
+    [N.F5,1],[N.G5,.5],[N.F5,.5],[N.E5,.5],[N.D5,.5],[N.C5,.5],[N.B4,.5],
+    [N.Bb4,1.5],[N.R,.5]
+  ]},
+};
+class AudioMgr{
+  constructor(){this.ctx=null;this.tid=null;this.cur=null;this.on=true;}
+  getCtx(){if(!this.ctx)this.ctx=new(window.AudioContext||window.webkitAudioContext)();if(this.ctx.state==='suspended')this.ctx.resume();return this.ctx;}
+  note(f,t,dur,vol=0.18,wave='square'){
+    if(!f||!this.on)return;
+    try{const c=this.getCtx(),o=c.createOscillator(),g=c.createGain();
+    o.connect(g);g.connect(c.destination);o.type=wave;o.frequency.value=f;
+    g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur*0.88);
+    o.start(t);o.stop(t+dur);}catch(e){}
+  }
+  bgm(name){
+    if(this.cur===name)return;
+    this.stopBgm();this.cur=name;this._loop(name);
+  }
+  _loop(name){
+    if(this.cur!==name||!this.on)return;
+    const b=BGMS[name];if(!b)return;
+    try{const c=this.getCtx();let t=c.currentTime+0.05;const bd=60/b.bpm;
+    b.seq.forEach(([f,beats])=>{this.note(f,t,beats*bd*0.88);t+=beats*bd;});
+    this.tid=setTimeout(()=>this._loop(name),(t-c.currentTime)*1000-80);}catch(e){}
+  }
+  stopBgm(){this.cur=null;if(this.tid)clearTimeout(this.tid);this.tid=null;}
+  sfx(type){
+    if(!this.on)return;
+    const c=this.getCtx(),now=c.currentTime;
+    const t=(f,dur,vol,wave='square',delay=0)=>this.note(f,now+delay,dur,vol,wave);
+    const map={
+      attack:()=>{t(220,.1,.5,'sawtooth');t(180,.15,.25,'square',.05);},
+      skill:()=>{[440,554,659].forEach((f,i)=>t(f,.3,.28,'sawtooth',i*.05));t(880,.45,.18,'sine',.2);},
+      magic:()=>{[523,659,784,1047].forEach((f,i)=>t(f,.2,.22,'sine',i*.06));t(1319,.3,.15,'triangle',.28);},
+      heal:()=>{[523,659,784].forEach((f,i)=>t(f,.28,.22,'sine',i*.09));},
+      fullheal:()=>{[523,659,784,1047,1319].forEach((f,i)=>t(f,.35,.22,'sine',i*.08));},
+      hit:()=>{t(150,.09,.6,'sawtooth');t(100,.13,.35,'square',.04);},
+      phit:()=>{t(200,.13,.5,'sawtooth');t(130,.16,.32,'square',.06);},
+      lvup:()=>{[523,659,784,1047].forEach((f,i)=>t(f,.35,.28,'triangle',i*.11));},
+      victory:()=>{[523,659,784,1047,1319,1568].forEach((f,i)=>t(f,.4,.28,'triangle',i*.11));},
+      dead:()=>{[440,330,220,110].forEach((f,i)=>t(f,.45,.25,'sawtooth',i*.16));},
+      cursor:()=>{t(660,.09,.22,'sine');},
+      flee:()=>{[300,200,150].forEach((f,i)=>t(f,.22,.22,'sawtooth',i*.07));},
+      buy:()=>{t(880,.15,.3,'sine');t(1100,.15,.22,'sine',.11);},
+      save:()=>{[440,550,660].forEach((f,i)=>t(f,.2,.22,'sine',i*.07));},
+    };
+    if(map[type])map[type]();
+  }
+  toggle(){this.on=!this.on;if(!this.on)this.stopBgm();return this.on;}
 }
-const SFX={
-  attack(){tone(220,'sawtooth',0.1,0.4);tone(180,'square',0.15,0.2,0.05);},
-  skill(){[440,554,659].forEach((f,i)=>tone(f,'sawtooth',0.3,0.25,i*0.05));tone(880,'sine',0.4,0.15,0.2);},
-  hit(){tone(150,'sawtooth',0.08,0.5);tone(100,'square',0.12,0.3,0.04);},
-  phit(){tone(200,'sawtooth',0.12,0.4);tone(130,'square',0.15,0.3,0.06);},
-  heal(){[523,659,784].forEach((f,i)=>tone(f,'sine',0.25,0.2,i*0.08));},
-  lvup(){[523,659,784,1047].forEach((f,i)=>tone(f,'sine',0.3,0.25,i*0.1));},
-  win(){[523,659,784,1047,1319].forEach((f,i)=>tone(f,'triangle',0.4,0.25,i*0.12));},
-  dead(){[440,330,220,110].forEach((f,i)=>tone(f,'sawtooth',0.4,0.2,i*0.15));},
-  cursor(){tone(660,'sine',0.08,0.2);},
-  flee(){[300,200,150].forEach((f,i)=>tone(f,'sawtooth',0.2,0.2,i*0.06));},
-  buy(){tone(880,'sine',0.15,0.3);tone(1100,'sine',0.15,0.2,0.1);},
+const aud=new AudioMgr();
+
+// ============ GAME DATA ============
+const CLASSES={
+  hero:{id:'hero',name:'勇者',emoji:'⚔️',desc:'バランス型。どんな場面でも活躍できる！',
+    hp:130,mp:20,atk:20,def:10,mat:15,
+    skill:{name:'会心の一撃',emoji:'💥',desc:'確実にクリティカル！ATK×2.8',mp:8,fn:(p)=>Math.floor(p.atk*2.8)},
+    color:'#f59e0b',bg:'rgba(245,158,11,0.12)'},
+  warrior:{id:'warrior',name:'戦士',emoji:'🛡️',desc:'攻防に優れた肉体派。HPがとても高い！',
+    hp:170,mp:8,atk:26,def:18,mat:5,
+    skill:{name:'大剣ぶんまわし',emoji:'🗡️',desc:'全力攻撃！ATK×2.2 + 防御無視',mp:5,fn:(p)=>Math.floor(p.atk*2.2+15)},
+    color:'#ef4444',bg:'rgba(239,68,68,0.12)'},
+  priest:{id:'priest',name:'僧侶',emoji:'✨',desc:'回復と補助の専門家。MPが高く長期戦に強い！',
+    hp:110,mp:45,atk:12,def:12,mat:22,
+    skill:{name:'ベホマ（完全回復）',emoji:'💊',desc:'HPを全回復する！',mp:15,fn:(p)=>9999},
+    color:'#22c55e',bg:'rgba(34,197,94,0.12)'},
+  mage:{id:'mage',name:'魔法使い',emoji:'🔮',desc:'魔法攻撃の使い手。一撃が超強力！',
+    hp:90,mp:50,atk:10,def:6,mat:35,
+    skill:{name:'メラゾーマ',emoji:'🔥',desc:'最強の炎魔法！MAT×3.5',mp:18,fn:(p)=>Math.floor(p.mat*3.5+20)},
+    color:'#8b5cf6',bg:'rgba(139,92,246,0.12)'},
 };
-const CHARS={
-  yuuri:{name:'ゆうり',emoji:'🥋',desc:'じゅうどう少年（13さい）',hp:130,maxHp:130,atk:22,def:10,skill:{name:'一本背負い！',emoji:'🥋',mult:2.5},color:'#3b82f6'},
-  souya:{name:'そうや',emoji:'🏊',desc:'プログラマー×スイマー（8さい）',hp:100,maxHp:100,atk:16,def:7,skill:{name:'ハックアタック！',emoji:'💻',mult:3.0},color:'#22c55e'},
-};
-const MONSTERS=[
-  {name:'スライムくん',hp:20,maxHp:20,atk:5,def:2,exp:10,gold:8,emoji:'🟢',weak:'yuuri'},
-  {name:'いたずらゴブリン',hp:35,maxHp:35,atk:10,def:4,exp:20,gold:15,emoji:'👺',weak:'souya'},
-  {name:'おおきなオーク',hp:60,maxHp:60,atk:18,def:8,exp:40,gold:30,emoji:'👹',weak:'yuuri'},
-  {name:'まおうドラゴン',hp:180,maxHp:180,atk:38,def:15,exp:150,gold:120,emoji:'🐉',weak:null},
+
+// Monster: base emoji, top overlay, filter, combat stats
+const MONSTERS_BY_STAGE=[
+  // Stage 0: 地上
+  [
+    {id:'s1m1',name:'スライムウサ',base:'🐰',top:'💧',filter:'hue-rotate(110deg) saturate(1.5)',
+     hp:25,maxHp:25,atk:6,def:2,exp:12,gold:10,weak:'warrior',glowColor:'#4ade80',
+     desc:'ウサギとスライムが合体！ぷにぷに可愛い'},
+    {id:'s1m2',name:'ポチゴン',base:'🐕',top:'⚡',filter:'hue-rotate(30deg)',
+     hp:42,maxHp:42,atk:12,def:5,exp:22,gold:18,weak:'mage',glowColor:'#facc15',
+     desc:'いぬポケモン系。電気をまとったイヌ怪物'},
+    {id:'s1m3',name:'クマゴーレム',base:'🐻',top:'🪨',filter:'saturate(0.6) brightness(0.8)',
+     hp:68,maxHp:68,atk:20,def:10,exp:40,gold:32,weak:'priest',glowColor:'#a78bfa',
+     desc:'クマと岩石が融合！のっそり動く強敵'},
+    {id:'s1boss',name:'ライオンドレイク',base:'🦁',top:'🔥',filter:'hue-rotate(20deg) saturate(2)',
+     hp:160,maxHp:160,atk:30,def:14,exp:100,gold:80,weak:null,glowColor:'#f97316',
+     desc:'炎のたてがみを持つ獅子竜王！【ボス】',isBoss:true},
+  ],
+  // Stage 1: 地中
+  [
+    {id:'s2m1',name:'モグラソン',base:'🦔',top:'☠️',filter:'hue-rotate(280deg) saturate(1.8)',
+     hp:50,maxHp:50,atk:14,def:7,exp:30,gold:24,weak:'hero',glowColor:'#c084fc',
+     desc:'毒の針を持つもぐらポケモン。地中から奇襲！'},
+    {id:'s2m2',name:'コウモリング',base:'🦇',top:'👑',filter:'brightness(0.7) saturate(1.4)',
+     hp:70,maxHp:70,atk:22,def:9,exp:48,gold:38,weak:'warrior',glowColor:'#a78bfa',
+     desc:'洞窟の王。超音波で混乱させる'},
+    {id:'s2m3',name:'クモサソリ',base:'🕷️',top:'💀',filter:'hue-rotate(310deg) saturate(2)',
+     hp:90,maxHp:90,atk:28,def:12,exp:65,gold:52,weak:'mage',glowColor:'#f43f5e',
+     desc:'クモとサソリのキメラ！毒と鋏が恐怖'},
+    {id:'s2boss',name:'マグマリザード',base:'🦎',top:'🌋',filter:'hue-rotate(15deg) saturate(3) brightness(1.2)',
+     hp:220,maxHp:220,atk:38,def:17,exp:140,gold:110,weak:null,glowColor:'#ef4444',
+     desc:'溶岩をまとった巨大トカゲ！【ボス】',isBoss:true},
+  ],
+  // Stage 2: 空中
+  [
+    {id:'s3m1',name:'フワトリ',base:'🐦',top:'💨',filter:'hue-rotate(200deg) saturate(1.6)',
+     hp:60,maxHp:60,atk:18,def:6,exp:40,gold:32,weak:'priest',glowColor:'#38bdf8',
+     desc:'雲の羽根を持つ空の鳥型怪物。すばしっこい！'},
+    {id:'s3m2',name:'タコクラゲ',base:'🐙',top:'🌊',filter:'hue-rotate(180deg) brightness(1.2)',
+     hp:80,maxHp:80,atk:24,def:10,exp:55,gold:44,weak:'hero',glowColor:'#06b6d4',
+     desc:'空を飛ぶタコ＆クラゲの融合体。触手が怖い！'},
+    {id:'s3m3',name:'ペンギット',base:'🐧',top:'🔱',filter:'saturate(2.5) hue-rotate(10deg)',
+     hp:100,maxHp:100,atk:30,def:14,exp:72,gold:58,weak:'warrior',glowColor:'#60a5fa',
+     desc:'三叉槍を持つペンギン戦士！鎧もある'},
+    {id:'s3boss',name:'ストームワイバーン',base:'🐲',top:'⛈️',filter:'hue-rotate(210deg) saturate(2)',
+     hp:280,maxHp:280,atk:46,def:20,exp:180,gold:140,weak:null,glowColor:'#818cf8',
+     desc:'嵐を呼ぶ翼竜。雷と暴風の化身！【ボス】',isBoss:true},
+  ],
+  // Stage 3: 天空
+  [
+    {id:'s4m1',name:'ユニコスター',base:'🦄',top:'✨',filter:'brightness(1.4) saturate(1.8)',
+     hp:75,maxHp:75,atk:24,def:12,exp:55,gold:45,weak:'mage',glowColor:'#f9a8d4',
+     desc:'星のユニコーン。虹色の角から光線を発射！'},
+    {id:'s4m2',name:'エンジェルフォックス',base:'🦊',top:'👼',filter:'hue-rotate(50deg) brightness(1.3)',
+     hp:95,maxHp:95,atk:32,def:16,exp:72,gold:58,weak:'priest',glowColor:'#fde68a',
+     desc:'天使の翼を持つキツネ。神聖な炎を操る！'},
+    {id:'s4m3',name:'セレスドラゴン',base:'🐉',top:'🌟',filter:'hue-rotate(240deg) brightness(1.4) saturate(1.5)',
+     hp:115,maxHp:115,atk:38,def:20,exp:90,gold:72,weak:'hero',glowColor:'#c084fc',
+     desc:'天空に住む神龍。見た目は美しく力は超強力'},
+    {id:'s4boss',name:'魔天王ゼロス',base:'👹',top:'👑',filter:'hue-rotate(300deg) saturate(2) brightness(0.9)',
+     hp:380,maxHp:380,atk:58,def:28,exp:300,gold:200,weak:null,glowColor:'#dc2626',
+     desc:'天空を支配する魔物の王者。最強の敵！【最終ボス】',isBoss:true},
+  ],
 ];
-const FLOORS=[
-  {name:'ふしぎな森',monster:0,emoji:'🌲',sky:'linear-gradient(180deg,#0a1a0a,#1a2a0a,#0a1a0a)'},
-  {name:'まほうの洞窟',monster:1,emoji:'🕌',sky:'linear-gradient(180deg,#0a0a2a,#1a0a3a,#0a0a2a)'},
-  {name:'くらやみの城',monster:2,emoji:'🏯',sky:'linear-gradient(180deg,#1a0a0a,#2a0a0a,#1a0a0a)'},
-  {name:'まおうの間',monster:3,emoji:'👑',sky:'linear-gradient(180deg,#0a0010,#1a0030,#0a0010)'},
+
+const STAGES=[
+  {name:'地上の大地',emoji:'🌿',sky:'linear-gradient(180deg,#0a1a06,#152808,#0a1800)',
+   ground:'rgba(50,120,30,0.3)',groundBorder:'rgba(80,180,40,0.4)',bgm:'field'},
+  {name:'地中の迷宮',emoji:'⛏️',sky:'linear-gradient(180deg,#0a0510,#150a20,#100515)',
+   ground:'rgba(80,40,120,0.3)',groundBorder:'rgba(120,60,180,0.4)',bgm:'battle'},
+  {name:'空中の楽園',emoji:'☁️',sky:'linear-gradient(180deg,#061830,#0a2a50,#062040)',
+   ground:'rgba(20,80,180,0.25)',groundBorder:'rgba(40,130,255,0.4)',bgm:'battle'},
+  {name:'天空の聖地',emoji:'⭐',sky:'linear-gradient(180deg,#05050f,#0a0820,#050510)',
+   ground:'rgba(100,60,200,0.3)',groundBorder:'rgba(150,100,255,0.5)',bgm:'boss'},
 ];
+
 const ITEMS=[
-  {id:'p',name:'えいようドリンク',emoji:'🥤',cost:40,effect:{hp:50},desc:'HP+50'},
-  {id:'j',name:'強化柔道着',emoji:'🥋',cost:160,effect:{atk:12},desc:'ATK+12'},
-  {id:'s',name:'ハイテク水着',emoji:'🏊',cost:120,effect:{def:9},desc:'DEF+9'},
-  {id:'l',name:'魔法のパソコン',emoji:'💻',cost:200,effect:{atk:8,def:5},desc:'ATK+8 DEF+5'},
-  {id:'e',name:'スペシャルゼリー',emoji:'⭐',cost:300,effect:{hp:999},desc:'HP全回復'},
+  {id:'herb',name:'やくそう',emoji:'🌿',cost:30,effect:{hp:60},desc:'HP+60'},
+  {id:'elixir',name:'エリクサー',emoji:'🧪',cost:80,effect:{hp:999},desc:'HP全回復'},
+  {id:'mpherb',name:'まんねんぐさ',emoji:'🌸',cost:50,effect:{mp:20},desc:'MP+20'},
+  {id:'sword',name:'はがねのけん',emoji:'⚔️',cost:180,effect:{atk:14},desc:'ATK+14'},
+  {id:'shield',name:'はがねのたて',emoji:'🛡️',cost:150,effect:{def:10},desc:'DEF+10'},
+  {id:'staff',name:'まほうのつえ',emoji:'🪄',cost:160,effect:{mat:15},desc:'MAT+15'},
+  {id:'armor',name:'はがねのよろい',emoji:'🥋',cost:200,effect:{def:14,hp:30},desc:'DEF+14 HP+30'},
 ];
-const calcNext=lv=>lv*50;
+
+const calcNext=lv=>Math.floor(50*lv*1.3);
+
+// ============ SAVE / LOAD ============
+const SAVE_KEY='yuuri_souya_save_v2';
+function saveGame(state){
+  try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));return true;}catch(e){return false;}
+}
+function loadGame(){
+  try{const d=localStorage.getItem(SAVE_KEY);return d?JSON.parse(d):null;}catch(e){return null;}
+}
+function deleteSave(){
+  try{localStorage.removeItem(SAVE_KEY);}catch(e){}
+}
+function hasSave(){
+  return !!localStorage.getItem(SAVE_KEY);
+}
 </script>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script type="text/babel">
-const {useState,useRef,useEffect}=React;
+const {useState,useEffect,useRef,useCallback}=React;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-function HpBar({hp,maxHp,label,color}){
-  const pct=Math.max(0,(hp/maxHp)*100);
-  const col=pct>50?'#22c55e':pct>25?'#facc15':'#ef4444';
+// Monster visual component
+function MonSprite({mon,anim,size=5}){
+  const baseStyle={fontSize:`${size}rem`,lineHeight:1,display:'inline-block',filter:mon.filter||'none',transition:'filter 0.2s'};
+  const animStyle=anim==='hurt'?{animation:'shakeX 0.4s ease',filter:(mon.filter||'none')+' drop-shadow(0 0 22px rgba(255,50,0,1))'}
+    :anim==='dead'?{opacity:0,transform:'rotate(90deg) scale(0.2)',transition:'all 0.6s'}
+    :anim==='skill'?{animation:'winSpin 0.5s ease',filter:(mon.filter||'none')+' drop-shadow(0 0 22px rgba(255,215,0,1))'}
+    :{animation:'float 2.5s ease-in-out infinite'};
   return(
-    <div style={{marginBottom:'8px'}}>
-      <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.8rem',marginBottom:'3px'}}>
-        <span style={{color,fontWeight:900}}>{label}</span>
-        <span style={{color:'#94a3b8'}}>HP {Math.max(0,hp)}/{maxHp}</span>
-      </div>
-      <div style={{height:'11px',background:'rgba(0,0,0,0.5)',borderRadius:'6px',overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)'}}>
-        <div style={{width:pct+'%',height:'100%',borderRadius:'6px',
-          background:`linear-gradient(90deg,${col},${col}99)`,
-          transition:'width 0.4s ease',
-          boxShadow:`0 0 6px ${col}88`}}/>
-      </div>
+    <div style={{position:'relative',display:'inline-block'}}>
+      <span style={{...baseStyle,...animStyle}}>{mon.base}</span>
+      {mon.top&&<span style={{position:'absolute',top:'-10px',right:'-8px',fontSize:`${size*0.36}rem`,pointerEvents:'none'}}>{mon.top}</span>}
     </div>
   );
 }
 
+// HP bar
+function HpBar({hp,maxHp,label,color}){
+  const pct=Math.max(0,(hp/maxHp)*100);
+  const col=pct>50?'#22c55e':pct>25?'#facc15':'#ef4444';
+  return(
+    <div style={{marginBottom:'6px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.78rem',marginBottom:'2px'}}>
+        <span style={{color,fontWeight:900}}>{label}</span>
+        <span style={{color:'#94a3b8'}}>{Math.max(0,hp)}/{maxHp}</span>
+      </div>
+      <div className="hptrack"><div className="hpfill" style={{width:pct+'%',background:`linear-gradient(90deg,${col},${col}99)`,boxShadow:`0 0 6px ${col}88`}}/></div>
+    </div>
+  );
+}
+
+// EXP bar with next level info
+function ExpBar({exp,level}){
+  const prev=level===1?0:calcNext(level-1);
+  const next=calcNext(level);
+  const cur=exp-prev;
+  const needed=next-prev;
+  const pct=Math.min(100,(cur/needed)*100);
+  return(
+    <div style={{marginTop:'6px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.7rem',color:'#6366f1',marginBottom:'2px'}}>
+        <span>EXP</span><span>{cur}/{needed}（次のレベルまで{needed-cur}）</span>
+      </div>
+      <div className="exptrack"><div className="expfill" style={{width:pct+'%'}}/></div>
+    </div>
+  );
+}
+
+function initPlayer(classId){
+  const c=CLASSES[classId];
+  return{classId,...c,hp:c.hp,maxHp:c.hp,mp:c.mp,maxMp:c.mp,atk:c.atk,def:c.def,mat:c.mat,
+    exp:0,level:1,gold:120,inventory:[],stage:0,stageKills:0,skillUsed:false,name:c.name};
+}
+
 function App(){
-  const [scr,setScr]=useState('select');
+  const [scr,setScr]=useState('title'); // title|select|map|battle|shop|save|gameover|clear
   const [pl,setPl]=useState(null);
   const [mon,setMon]=useState(null);
   const [log,setLog]=useState([]);
   const [busy,setBusy]=useState(false);
-  const [pAnim,setPAnim]=useState('');
-  const [mAnim,setMAnim]=useState('');
+  const [pAnim,setPAnim]=useState('idle');
+  const [mAnim,setMAnim]=useState('idle');
   const [showSkill,setShowSkill]=useState(false);
   const [dmgs,setDmgs]=useState([]);
   const [sparks,setSparks]=useState([]);
+  const [autoMode,setAutoMode]=useState(false);
+  const [muted,setMuted]=useState(false);
+  const [saveMsg,setSaveMsg]=useState('');
   const uid=useRef(0);
-  const addLog=m=>setLog(p=>[m,...p].slice(0,10));
-  const addDmg=(v,type)=>{const id=uid.current++;setDmgs(p=>[...p,{id,v,type}]);setTimeout(()=>setDmgs(p=>p.filter(d=>d.id!==id)),1000);};
-  const addSpark=(x,y)=>{const id=uid.current++;setSparks(p=>[...p,{id,x,y}]);setTimeout(()=>setSparks(p=>p.filter(s=>s.id!==id)),700);};
+  const autoRef=useRef(autoMode);
+  useEffect(()=>{autoRef.current=autoMode;},[autoMode]);
 
-  const selectChar=k=>{
-    SFX.cursor();ac();
-    const c=CHARS[k];
-    setPl({...c,charKey:k,exp:0,level:1,gold:100,inventory:[],floor:0,skillUsed:false});
-    setLog([`🌟 ${c.name}の大冒険、はじまり！`]);
-    setScr('map');
+  const addLog=m=>setLog(p=>[m,...p].slice(0,10));
+  const addDmg=(v,type)=>{const id=uid.current++;setDmgs(p=>[...p,{id,v,type}]);setTimeout(()=>setDmgs(p=>p.filter(d=>d.id!==id)),950);};
+  const addSpark=(x,y)=>{const id=uid.current++;setSparks(p=>[...p,{id,x,y}]);setTimeout(()=>setSparks(p=>p.filter(s=>s.id!==id)),650);};
+
+  // Choose monster for current stage
+  const pickMonster=(player)=>{
+    const stg=MONSTERS_BY_STAGE[player.stage];
+    if(player.stageKills>=3) return {...stg[3],hp:stg[3].maxHp}; // boss
+    const idx=Math.min(player.stageKills,2);
+    return {...stg[idx],hp:stg[idx].maxHp};
   };
-  const encounter=()=>{
-    SFX.cursor();
-    const base=MONSTERS[FLOORS[pl.floor].monster];
-    setMon({...base,hp:base.maxHp});
-    setPAnim('');setMAnim('');
+
+  // Auto-battle AI decision
+  const aiDecide=(player,monster)=>{
+    const hpRatio=player.hp/player.maxHp;
+    const hasHeal=player.inventory.some(i=>i.effect?.hp);
+    if(hpRatio<0.25&&hasHeal) return 'heal';
+    if(!player.skillUsed&&player.mp>=CLASSES[player.classId].skill.mp) return 'skill';
+    if(hpRatio<0.15&&Math.random()<0.3) return 'flee';
+    return 'attack';
+  };
+
+  const doEncounter=(playerState)=>{
+    aud.sfx('cursor');
+    const m=pickMonster(playerState||pl);
+    setMon(m);setPAnim('idle');setMAnim('idle');
     setScr('battle');
-    addLog(`⚠️ ${base.emoji} ${base.name}があらわれた！`);
+    addLog(`⚠️ ${m.base}${m.top||''} ${m.name}があらわれた！`);
+    if(m.isBoss) addLog('🚨 ボスだ！全力でたたかえ！');
+    if((playerState||pl).stage===3&&(playerState||pl).stageKills>=3){
+      aud.bgm('boss');
+    } else {
+      aud.bgm(STAGES[(playerState||pl).stage].bgm);
+    }
   };
-  const doAttack=async(isSkill=false)=>{
-    if(busy)return;setBusy(true);ac();
-    setPAnim(isSkill?'skill':'attack');
-    if(isSkill){setShowSkill(true);SFX.skill();}else SFX.attack();
-    let dmg=pl.atk-mon.def+Math.floor(Math.random()*6);
-    if(isSkill)dmg=Math.floor(pl.atk*CHARS[pl.charKey].skill.mult);
-    if(mon.weak===pl.charKey)dmg=Math.floor(dmg*1.3);
+
+  // Combat step
+  const doAction=useCallback(async(action,currentPl,currentMon)=>{
+    if(!currentMon)return;
+    aud.getCtx();
+    const cls=CLASSES[currentPl.classId];
+    let newPl={...currentPl};
+    let newMon={...currentMon};
+    let ended=false;
+
+    if(action==='heal'){
+      const idx=newPl.inventory.findIndex(i=>i.effect?.hp||i.effect?.mp);
+      if(idx===-1){addLog('💊 アイテムがない！');return{pl:newPl,mon:newMon,ended:false};}
+      const item=newPl.inventory[idx];
+      const inv=[...newPl.inventory];inv.splice(idx,1);
+      if(item.effect.hp){
+        const add=Math.min(item.effect.hp,newPl.maxHp-newPl.hp);
+        newPl={...newPl,hp:Math.min(newPl.maxHp,newPl.hp+item.effect.hp),inventory:inv};
+        aud.sfx(item.effect.hp>200?'fullheal':'heal');
+        addDmg(add>200?'MAX':add,'h');
+        addLog(`${item.emoji} ${item.name}をつかった！HP+${Math.min(item.effect.hp,currentPl.maxHp-currentPl.hp)}`);
+      } else if(item.effect.mp){
+        newPl={...newPl,mp:Math.min(newPl.maxMp,newPl.mp+item.effect.mp),inventory:inv};
+        addLog(`${item.emoji} ${item.name}をつかった！MP+${item.effect.mp}`);
+      }
+      return{pl:newPl,mon:newMon,ended:false};
+    }
+
+    if(action==='flee'){
+      if(Math.random()>0.4){
+        aud.sfx('flee');addLog('🏃 にげだした！');
+        return{pl:newPl,mon:null,ended:false,fled:true};
+      }
+      const dmg=Math.max(1,newMon.atk-newPl.def);
+      aud.sfx('phit');setPAnim('hurt');addSpark('15%','25%');addDmg(dmg,'p');
+      addLog(`❌ にげられなかった！${dmg}ダメージ！`);
+      newPl={...newPl,hp:newPl.hp-dmg};
+      await sleep(350);setPAnim('idle');
+      if(newPl.hp<=0) return{pl:{...newPl,hp:0},mon:newMon,ended:true,dead:true};
+      return{pl:newPl,mon:newMon,ended:false};
+    }
+
+    // Attack or skill
+    const isSkill=action==='skill';
+    let dmg;
+    if(isSkill){
+      if(newPl.mp<cls.skill.mp){addLog(`MP不足！（必要MP: ${cls.skill.mp}）`);return{pl:newPl,mon:newMon,ended:false};}
+      dmg=cls.skill.fn(newPl);
+      newPl={...newPl,mp:newPl.mp-cls.skill.mp,skillUsed:true};
+      setPAnim('skill');setShowSkill(true);
+      aud.sfx(currentPl.classId==='mage'?'magic':'skill');
+    } else {
+      dmg=Math.max(1,newPl.atk-newMon.def+Math.floor(Math.random()*6)-2);
+      setPAnim('attack');aud.sfx('attack');
+    }
+    await sleep(280);setShowSkill(false);setPAnim('idle');
+
+    // Weakness bonus
+    if(newMon.weak===newPl.classId) dmg=Math.floor(dmg*1.35);
     dmg=Math.max(1,dmg);
-    await sleep(300);setShowSkill(false);setPAnim('idle');
-    setMAnim('hurt');SFX.hit();addSpark('62%','25%');addDmg(dmg,'e');
-    addLog(isSkill?`✨ ${CHARS[pl.charKey].skill.name}！${dmg}ダメージ！${mon.weak===pl.charKey?'🎯こうかばつぐん！':''}`:`⚔️ こうげき！${dmg}ダメージ！${mon.weak===pl.charKey?'🎯こうかばつぐん！':''}`);
-    const newMHp=mon.hp-dmg;
-    await sleep(400);
-    if(newMHp<=0){
-      setMAnim('dead');SFX.win();
-      const nExp=pl.exp+mon.exp,nGold=pl.gold+mon.gold;
-      let up={...pl,exp:nExp,gold:nGold,skillUsed:isSkill||pl.skillUsed};
-      while(up.exp>=calcNext(up.level)*up.level){up.level++;up.maxHp+=20;up.atk+=3;up.def+=2;SFX.lvup();addLog(`🌟 レベルアップ！Lv.${up.level}！`);}
-      addLog(`✨ ${mon.name}をたおした！EXP+${mon.exp} G+${mon.gold}`);
-      await sleep(700);setPl(up);setMon(null);setScr('map');setBusy(false);return;
+
+    setMAnim('hurt');aud.sfx('hit');addSpark('62%','28%');addDmg(dmg,'e');
+    addLog(isSkill
+      ?`✨ ${cls.skill.name}！${dmg}ダメージ！${newMon.weak===newPl.classId?'🎯こうかばつぐん！':''}`
+      :`⚔️ こうげき！${dmg}ダメージ！${newMon.weak===newPl.classId?'🎯こうかばつぐん！':''}`);
+    newMon={...newMon,hp:newMon.hp-dmg};
+    await sleep(380);
+
+    if(newMon.hp<=0){
+      setMAnim('dead');aud.sfx('victory');
+      addLog(`🎉 ${newMon.name}をたおした！EXP+${newMon.exp} G+${newMon.gold}`);
+      newPl={...newPl,exp:newPl.exp+newMon.exp,gold:newPl.gold+newMon.gold};
+      // Level up check
+      while(newPl.exp>=calcNext(newPl.level)){
+        newPl={...newPl,level:newPl.level+1,maxHp:newPl.maxHp+22,hp:newPl.maxHp+22,
+          maxMp:newPl.maxMp+8,mp:newPl.maxMp+8,atk:newPl.atk+4,def:newPl.def+3,mat:newPl.mat+4};
+        aud.sfx('lvup');addLog(`🌟 レベルアップ！Lv.${newPl.level}！HP・MP全回復！`);
+      }
+      // Stage progress
+      const kills=newPl.stageKills+1;
+      if(newMon.isBoss){
+        if(newPl.stage>=3){return{pl:newPl,mon:null,ended:true,clear:true};}
+        newPl={...newPl,stage:newPl.stage+1,stageKills:0,skillUsed:false};
+        addLog(`🚪 ${STAGES[newPl.stage].name}へ進んだ！`);
+      } else {
+        newPl={...newPl,stageKills:kills,skillUsed:false};
+      }
+      return{pl:newPl,mon:null,ended:true,killed:true};
     }
-    await sleep(300);
-    const mdmg=Math.max(1,mon.atk-pl.def+Math.floor(Math.random()*4)-2);
-    setPAnim('hurt');SFX.phit();addSpark('18%','22%');addDmg(mdmg,'p');
-    addLog(`💥 ${mon.emoji}のこうげき！${mdmg}ダメージ！`);
-    setMon(m=>({...m,hp:newMHp}));
-    const nHp=pl.hp-mdmg;
-    await sleep(400);setPAnim('idle');
-    if(nHp<=0){setPl(p=>({...p,hp:0}));SFX.dead();setScr('gameover');}
-    else setPl(p=>({...p,hp:nHp,skillUsed:isSkill||p.skillUsed}));
+
+    setMAnim('idle');
+    // Monster attacks
+    await sleep(250);
+    const mdmg=Math.max(1,newMon.atk-newPl.def+Math.floor(Math.random()*5)-2);
+    setPAnim('hurt');aud.sfx('phit');addSpark('15%','22%');addDmg(mdmg,'p');
+    addLog(`💢 ${newMon.name}のこうげき！${mdmg}ダメージ！`);
+    newPl={...newPl,hp:newPl.hp-mdmg};
+    await sleep(350);setPAnim('idle');
+    if(newPl.hp<=0) return{pl:{...newPl,hp:0},mon:newMon,ended:true,dead:true};
+    return{pl:newPl,mon:newMon,ended:false};
+  },[]);
+
+  const executeAction=async(action)=>{
+    if(busy||!mon)return;
+    setBusy(true);
+    const result=await doAction(action,pl,mon);
+    if(!result){setBusy(false);return;}
+    setPl(result.pl);
+    if(result.mon!==undefined) setMon(result.mon);
+    if(result.clear){aud.stopBgm();setScr('clear');}
+    else if(result.dead){aud.stopBgm();aud.sfx('dead');setScr('gameover');}
+    else if(result.fled){setScr('map');aud.bgm('field');}
+    else if(result.killed){setScr('map');aud.bgm('field');}
+    else if(autoRef.current&&result.pl.hp>0){
+      // Continue auto-battle
+      await sleep(600);
+      const nextAction=aiDecide(result.pl,result.mon);
+      setBusy(false);
+      executeAction(nextAction);
+      return;
+    }
     setBusy(false);
   };
-  const doFlee=async()=>{
-    if(busy)return;setBusy(true);
-    if(Math.random()>0.4){SFX.flee();addLog('🏃 にげだした！');await sleep(300);setMon(null);setScr('map');}
-    else{
-      const dmg=Math.max(1,mon.atk-pl.def);SFX.phit();setPAnim('hurt');addSpark('18%','22%');addDmg(dmg,'p');
-      addLog(`❌ にげられなかった！${dmg}ダメージ！`);const nHp=pl.hp-dmg;
-      await sleep(400);setPAnim('idle');
-      if(nHp<=0){setPl(p=>({...p,hp:0}));SFX.dead();setScr('gameover');}
-      else setPl(p=>({...p,hp:nHp}));
+
+  // Auto-battle trigger
+  useEffect(()=>{
+    if(autoMode&&scr==='battle'&&!busy&&mon&&pl){
+      const timer=setTimeout(()=>{
+        if(autoRef.current&&!busy){
+          const act=aiDecide(pl,mon);
+          executeAction(act);
+        }
+      },800);
+      return()=>clearTimeout(timer);
     }
-    setBusy(false);
+  },[autoMode,scr,busy,mon,pl]);
+
+  const doSave=()=>{
+    if(!pl) return;
+    const ok=saveGame({pl,log});
+    aud.sfx('save');
+    setSaveMsg(ok?'💾 セーブしました！':'❌ セーブ失敗...');
+    setTimeout(()=>setSaveMsg(''),2500);
   };
-  const doHeal=async()=>{
-    if(busy)return;const idx=pl.inventory.findIndex(i=>i.effect?.hp);
-    if(idx===-1){addLog('💊 かいふくアイテムがない！');return;}
-    setBusy(true);const item=pl.inventory[idx];
-    const add=Math.min(item.effect.hp,pl.maxHp-pl.hp);
-    const inv=[...pl.inventory];inv.splice(idx,1);
-    SFX.heal();addDmg(add,'h');addLog(`${item.emoji} ${item.name}！HP+${add}`);
-    setPl(p=>({...p,hp:Math.min(p.maxHp,p.hp+item.effect.hp),inventory:inv}));
-    await sleep(300);setBusy(false);
+
+  const doLoad=()=>{
+    const data=loadGame();
+    if(!data){setSaveMsg('❌ セーブデータがありません');setTimeout(()=>setSaveMsg(''),2000);return;}
+    setPl(data.pl);setLog(data.log||[]);
+    setSaveMsg('📂 ロードしました！');setTimeout(()=>setSaveMsg(''),2000);
+    setScr('map');aud.bgm('field');
   };
-  const goNext=()=>{
-    SFX.cursor();const next=pl.floor+1;
-    if(next>=FLOORS.length){SFX.win();setScr('clear');return;}
-    setPl(p=>({...p,floor:next,skillUsed:false}));addLog(`🚪 ${FLOORS[next].emoji} ${FLOORS[next].name}へ！`);
-  };
-  const buyItem=item=>{
-    if(pl.gold<item.cost){addLog('💸 おかねがたりない！');return;}SFX.buy();
-    setPl(p=>({...p,gold:p.gold-item.cost,atk:item.effect.atk?p.atk+item.effect.atk:p.atk,def:item.effect.def?p.def+item.effect.def:p.def,inventory:item.effect.hp?[...p.inventory,item]:p.inventory}));
+
+  const buyItem=(item)=>{
+    if(pl.gold<item.cost){addLog('💸 おかねがたりない！');return;}
+    aud.sfx('buy');
+    setPl(p=>({...p,gold:p.gold-item.cost,
+      atk:item.effect.atk?p.atk+item.effect.atk:p.atk,
+      def:item.effect.def?p.def+item.effect.def:p.def,
+      mat:item.effect.mat?p.mat+item.effect.mat:p.mat,
+      maxHp:item.effect.hp?p.maxHp+item.effect.hp:p.maxHp,
+      hp:item.effect.hp?Math.min(p.hp+item.effect.hp,p.maxHp+item.effect.hp):p.hp,
+      inventory:item.effect.hp&&item.id!=='armor'?[...p.inventory,item]:p.inventory,
+    }));
     addLog(`🛒 ${item.emoji}${item.name}をかった！`);
   };
-  const restart=()=>{setPl(null);setMon(null);setLog([]);setScr('select');};
 
-  const cc=pl?CHARS[pl.charKey].color:'#ffd700';
-  const card={background:'rgba(255,255,255,0.04)',border:`1px solid ${cc}22`,borderRadius:'16px',padding:'14px',marginBottom:'10px',width:'100%',maxWidth:'440px',backdropFilter:'blur(10px)'};
-  const btn=(col,dis=false)=>({background:dis?'rgba(80,80,80,0.3)':`linear-gradient(135deg,${col}bb,${col}55)`,border:`1px solid ${dis?'#444':col}`,color:dis?'#555':'#fff',padding:'11px 16px',borderRadius:'10px',fontFamily:'inherit',fontWeight:900,fontSize:'0.9rem',cursor:dis?'not-allowed':'pointer',boxShadow:dis?'none':`0 0 12px ${col}33`,transition:'all 0.15s',margin:'4px'});
+  const restart=()=>{setPl(null);setMon(null);setLog([]);setScr('title');aud.stopBgm();};
+  const cc=pl?CLASSES[pl.classId].color:'#ffd700';
+  const stage=pl?STAGES[pl.stage]:STAGES[0];
 
-  // Battle stage render
-  const pAnimStyle=()=>{
-    if(pAnim==='attack')return{animation:'shakeX 0.4s ease',filter:'drop-shadow(0 0 20px rgba(100,200,255,1))'};
-    if(pAnim==='skill')return{animation:'winDance 0.5s ease',filter:'drop-shadow(0 0 24px rgba(255,215,0,1))'};
-    if(pAnim==='hurt')return{animation:'shakeX 0.35s ease',filter:'drop-shadow(0 0 20px rgba(255,50,50,1))'};
-    return{animation:'floatSlow 3s ease-in-out infinite',filter:'drop-shadow(0 0 10px rgba(100,180,255,0.7))'};
-  };
-  const mAnimStyle=()=>{
-    if(mAnim==='hurt')return{animation:'shakeX 0.4s ease',filter:'drop-shadow(0 0 24px rgba(255,80,0,1))'};
-    if(mAnim==='dead')return{opacity:0,transform:'rotate(90deg) scale(0.3)',transition:'all 0.6s ease',filter:'none'};
-    return{animation:'float 2.5s ease-in-out infinite',filter:'drop-shadow(0 0 10px rgba(255,100,50,0.7))'};
-  };
+  // Styles
+  const card={...{className:'card'},style:{borderColor:`${cc}22`}};
+  const btnStyle=(col,dis=false)=>({background:dis?'rgba(80,80,80,0.25)':`linear-gradient(135deg,${col}bb,${col}44)`,border:`1px solid ${dis?'#333':col}`,color:dis?'#444':'#fff',padding:'10px 14px',borderRadius:'10px',fontFamily:'inherit',fontWeight:900,fontSize:'0.88rem',cursor:dis?'not-allowed':'pointer',boxShadow:dis?'none':`0 0 10px ${col}33`,transition:'all 0.15s',margin:'4px'});
 
   return(
-    <div style={{minHeight:'100vh',background:'linear-gradient(160deg,#08080f,#0f0520,#080f08)',display:'flex',flexDirection:'column',alignItems:'center',padding:'14px 12px 80px',color:'#e2e8f0'}}>
+    <div style={{minHeight:'100vh',background:'linear-gradient(160deg,#06060e,#0c0820,#060e06)',display:'flex',flexDirection:'column',alignItems:'center',padding:'14px 10px 80px',color:'#e2e8f0'}}>
 
-      {/* Title */}
-      <div style={{fontSize:'clamp(1rem,4.5vw,1.5rem)',fontWeight:900,textAlign:'center',marginBottom:'2px',background:'linear-gradient(90deg,#ffd700,#ff6b35,#ffd700)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 16px rgba(255,200,0,0.4))'}}>
-        ✨ ゆうりとそうやの大冒険 ✨
+      {/* Header */}
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
+        <div style={{fontSize:'clamp(0.9rem,4vw,1.3rem)',fontWeight:900,background:'linear-gradient(90deg,#ffd700,#ff6b35,#ffd700)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 12px rgba(255,200,0,0.4))'}}>
+          ✨ ゆうりとそうやの大冒険 ✨
+        </div>
+        <button onClick={()=>{const on=aud.toggle();setMuted(!on);}} style={{background:'transparent',border:'1px solid #333',borderRadius:'8px',color:'#94a3b8',padding:'5px 8px',fontSize:'0.8rem',cursor:'pointer'}}>
+          {muted?'🔇':'🔊'}
+        </button>
       </div>
-      <div style={{color:'#475569',fontSize:'0.72rem',textAlign:'center',marginBottom:'14px'}}>ドラゴンをたおして せかいをすくえ！</div>
+      {saveMsg&&<div style={{background:'rgba(100,200,100,0.2)',border:'1px solid #4ade8066',borderRadius:'8px',padding:'6px 14px',fontSize:'0.82rem',marginBottom:'8px',color:'#4ade80',animation:'fadeIn 0.3s ease'}}>{saveMsg}</div>}
 
-      {/* SELECT */}
+      {/* ===== TITLE ===== */}
+      {scr==='title'&&(
+        <div style={{width:'100%',maxWidth:'460px',textAlign:'center',animation:'fadeIn 0.4s ease'}}>
+          <div style={{fontSize:'4rem',margin:'24px 0 8px',animation:'float 3s ease-in-out infinite'}}>🏰</div>
+          <div style={{color:'#94a3b8',fontSize:'0.82rem',marginBottom:'24px'}}>4つのステージを超え、魔天王を倒せ！</div>
+          <button onClick={()=>{aud.sfx('cursor');aud.getCtx();setScr('select');}} style={{...btnStyle('#ffd700'),padding:'14px 36px',fontSize:'1rem',display:'block',margin:'0 auto 12px',width:'80%'}}>
+            🗡️ はじめから
+          </button>
+          {hasSave()&&<button onClick={doLoad} style={{...btnStyle('#22c55e'),padding:'14px 36px',fontSize:'1rem',display:'block',margin:'0 auto 12px',width:'80%'}}>
+            📂 つづきから
+          </button>}
+          <button onClick={()=>{aud.sfx('cursor');setScr('select');}} style={{...btnStyle('#6b7280',!hasSave()),padding:'10px 24px',fontSize:'0.85rem',display:'block',margin:'0 auto',opacity:hasSave()?1:0.3}}>
+            ℹ️ キャラ選択だけ変える
+          </button>
+        </div>
+      )}
+
+      {/* ===== CLASS SELECT ===== */}
       {scr==='select'&&(
-        <div style={{width:'100%',maxWidth:'440px',animation:'fadeIn 0.4s ease'}}>
-          <div style={{textAlign:'center',color:'#ffd700',fontWeight:900,marginBottom:'14px'}}>👇 どっちでぼうけんする？</div>
-          <div style={{display:'flex',justifyContent:'center',gap:'10px'}}>
-            {Object.entries(CHARS).map(([k,c])=>(
-              <div key={k} onClick={()=>selectChar(k)} style={{flex:1,maxWidth:'185px',textAlign:'center',cursor:'pointer',background:k==='yuuri'?'rgba(59,130,246,0.1)':'rgba(34,197,94,0.1)',border:`2px solid ${c.color}55`,borderRadius:'18px',padding:'18px 12px',transition:'all 0.2s'}}
+        <div style={{width:'100%',maxWidth:'460px',animation:'fadeIn 0.4s ease'}}>
+          <div style={{textAlign:'center',color:'#ffd700',fontWeight:900,marginBottom:'12px',fontSize:'1rem'}}>⚔️ クラスを選べ！</div>
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'10px'}}>
+            {Object.values(CLASSES).map(c=>(
+              <div key={c.id} onClick={()=>{aud.sfx('cursor');const p=initPlayer(c.id);setPl(p);setLog([`🌟 ${c.name}の冒険、はじまり！`]);setScr('map');aud.bgm('field');}}
+                style={{background:c.bg,border:`2px solid ${c.color}55`,borderRadius:'14px',padding:'14px 10px',cursor:'pointer',textAlign:'center',transition:'all 0.2s'}}
                 onTouchStart={e=>e.currentTarget.style.transform='scale(0.96)'}
                 onTouchEnd={e=>e.currentTarget.style.transform=''}>
-                <div style={{fontSize:'3.5rem',marginBottom:'8px',animation:'floatSlow 3s ease-in-out infinite'}}>{c.emoji}</div>
-                <div style={{color:c.color,fontWeight:900,fontSize:'1.1rem',marginBottom:'4px'}}>{c.name}</div>
-                <div style={{color:'#64748b',fontSize:'0.72rem',marginBottom:'8px'}}>{c.desc}</div>
-                <div style={{fontSize:'0.72rem',color:'#475569',marginBottom:'8px'}}>HP:{c.hp} ATK:{c.atk} DEF:{c.def}</div>
-                <div style={{padding:'6px 8px',background:`${c.color}22`,borderRadius:'8px',fontSize:'0.72rem',color:c.color}}>
-                  必殺技 {c.skill.emoji}<br/><b>{c.skill.name}</b>
+                <div style={{fontSize:'2.5rem',marginBottom:'6px',animation:'floatFast 2.5s ease-in-out infinite'}}>{c.emoji}</div>
+                <div style={{color:c.color,fontWeight:900,fontSize:'1rem',marginBottom:'3px'}}>{c.name}</div>
+                <div style={{color:'#64748b',fontSize:'0.7rem',marginBottom:'8px'}}>{c.desc}</div>
+                <div style={{fontSize:'0.68rem',color:'#475569',lineHeight:1.6}}>
+                  HP:{c.hp} MP:{c.mp}<br/>ATK:{c.atk} DEF:{c.def}
+                </div>
+                <div style={{marginTop:'8px',padding:'5px 6px',background:`${c.color}22`,borderRadius:'6px',fontSize:'0.68rem',color:c.color}}>
+                  {c.skill.emoji} {c.skill.name}<br/><span style={{opacity:0.8}}>{c.skill.desc}</span>
                 </div>
               </div>
             ))}
@@ -255,104 +592,148 @@ function App(){
         </div>
       )}
 
-      {/* MAP */}
+      {/* ===== MAP ===== */}
       {scr==='map'&&pl&&(
         <>
-          <div style={card}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
-              <span style={{color:cc,fontWeight:900}}>{pl.emoji} {pl.name} Lv.{pl.level}</span>
-              <span style={{color:'#fbbf24',fontSize:'0.85rem'}}>💰 {pl.gold}G</span>
+          <div className="card" style={{borderColor:`${cc}33`}}>
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'6px'}}>
+              <span style={{color:cc,fontWeight:900,fontSize:'0.95rem'}}>{CLASSES[pl.classId].emoji} {pl.name} Lv.{pl.level}</span>
+              <span style={{color:'#fbbf24',fontSize:'0.82rem'}}>💰 {pl.gold}G</span>
             </div>
-            <HpBar hp={pl.hp} maxHp={pl.maxHp} label="HP" color={cc}/>
-            <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.72rem',color:'#475569',marginTop:'2px'}}>
-              <span>ATK:{pl.atk} DEF:{pl.def}</span>
-              <span>持ち物:{pl.inventory.map(i=>i.emoji).join('')||'なし'}</span>
+            <HpBar hp={pl.hp} maxHp={pl.maxHp} label={`HP`} color={cc}/>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.75rem',color:'#94a3b8',marginBottom:'4px'}}>
+              <span>MP: {pl.mp}/{pl.maxMp}</span>
+              <span>ATK:{pl.atk} DEF:{pl.def} MAT:{pl.mat}</span>
+            </div>
+            <ExpBar exp={pl.exp} level={pl.level}/>
+            <div style={{fontSize:'0.68rem',color:'#475569',marginTop:'4px'}}>
+              持ち物: {pl.inventory.map(i=>i.emoji).join('')||'なし'}
             </div>
           </div>
-          <div style={{...card,textAlign:'center'}}>
-            <div style={{fontSize:'4rem',marginBottom:'8px',animation:'float 3s ease-in-out infinite'}}>{FLOORS[pl.floor].emoji}</div>
-            <div style={{color:cc,fontWeight:900,marginBottom:'14px',fontSize:'1.05rem'}}>{FLOORS[pl.floor].name}</div>
+
+          {/* Stage info */}
+          <div className="card" style={{textAlign:'center',borderColor:`${cc}22`}}>
+            <div style={{fontSize:'3.5rem',animation:'float 3s ease-in-out infinite',marginBottom:'6px'}}>{stage.emoji}</div>
+            <div style={{color:cc,fontWeight:900,marginBottom:'4px'}}>{stage.name}</div>
+            <div style={{fontSize:'0.75rem',color:'#475569',marginBottom:'14px'}}>
+              {pl.stageKills<3?`あと${3-pl.stageKills}体たおすとボス登場！`:'🚨 ボスが待っている！'}
+            </div>
+            {/* Progress dots */}
+            <div style={{display:'flex',justifyContent:'center',gap:'8px',marginBottom:'14px'}}>
+              {[0,1,2,3].map(i=>(
+                <div key={i} style={{width:'18px',height:'18px',borderRadius:'50%',fontSize:'0.7rem',display:'flex',alignItems:'center',justifyContent:'center',
+                  background:i<pl.stageKills?cc:i===3&&pl.stageKills>=3?'#ef4444':'rgba(255,255,255,0.1)',
+                  border:`1px solid ${i===3?'#ef4444':cc}55`}}>
+                  {i===3?'👑':i<pl.stageKills?'✓':''}
+                </div>
+              ))}
+            </div>
             <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center'}}>
-              <button style={btn('#ef4444')} onClick={encounter}>⚔️ たたかう</button>
-              <button style={btn('#f59e0b')} onClick={()=>{SFX.cursor();setScr('shop');}}>🛒 ショップ</button>
-              <button style={btn('#22c55e')} onClick={goNext}>🚪 つぎへ</button>
+              <button style={btnStyle('#ef4444')} onClick={()=>doEncounter()}>⚔️ たたかう</button>
+              <button style={btnStyle('#f59e0b')} onClick={()=>{aud.sfx('cursor');setScr('shop');}}>🛒 ショップ</button>
+              <button style={btnStyle('#22c55e')} onClick={doSave}>💾 セーブ</button>
+            </div>
+          </div>
+
+          {/* Stage map */}
+          <div className="card" style={{borderColor:'rgba(255,255,255,0.08)'}}>
+            <div style={{fontSize:'0.75rem',color:'#475569',marginBottom:'6px'}}>📍 ステージマップ</div>
+            <div style={{display:'flex',justifyContent:'space-between'}}>
+              {STAGES.map((s,i)=>(
+                <div key={i} style={{flex:1,textAlign:'center',fontSize:'0.7rem',padding:'6px 4px',borderRadius:'8px',
+                  background:i===pl.stage?`${cc}22`:i<pl.stage?'rgba(255,255,255,0.04)':'transparent',
+                  border:i===pl.stage?`1px solid ${cc}44`:'1px solid transparent'}}>
+                  <div style={{fontSize:'1.3rem'}}>{s.emoji}</div>
+                  <div style={{color:i===pl.stage?cc:i<pl.stage?'#22c55e':'#475569',fontWeight:i===pl.stage?900:400}}>
+                    {i<pl.stage?'✅':i===pl.stage?'📍':'🔒'}
+                  </div>
+                  <div style={{color:'#475569',fontSize:'0.62rem'}}>{s.name.slice(0,3)}</div>
+                </div>
+              ))}
             </div>
           </div>
         </>
       )}
 
-      {/* BATTLE */}
+      {/* ===== BATTLE ===== */}
       {scr==='battle'&&pl&&mon&&(
         <>
-          {/* Visual battle stage */}
-          <div style={{position:'relative',width:'100%',maxWidth:'440px',height:'230px',borderRadius:'16px',overflow:'hidden',marginBottom:'10px',border:'2px solid rgba(255,80,80,0.25)'}}>
-            {/* Sky bg */}
-            <div style={{position:'absolute',inset:0,background:FLOORS[pl.floor].sky}}/>
-            {/* Stars */}
-            <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.8) 1px,transparent 1px)',backgroundSize:'25px 25px',animation:'bgStars 4s ease-in-out infinite'}}/>
+          {/* Battle visual stage */}
+          <div style={{position:'relative',width:'100%',maxWidth:'460px',height:'235px',borderRadius:'16px',overflow:'hidden',marginBottom:'10px',border:`2px solid ${mon.isBoss?'rgba(255,50,50,0.4)':'rgba(255,150,50,0.2)'}`}}>
+            <div style={{position:'absolute',inset:0,background:stage.sky}}/>
+            <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,0.7) 1px,transparent 1px)',backgroundSize:'22px 22px',animation:'starPulse 4s ease-in-out infinite'}}/>
+            {mon.isBoss&&<div style={{position:'absolute',inset:0,background:`radial-gradient(circle at center,${mon.glowColor}15,transparent 70%)`,animation:'starPulse 2s ease-in-out infinite'}}/>}
             {/* Ground */}
-            <div style={{position:'absolute',bottom:0,left:0,right:0,height:'55px',background:'linear-gradient(transparent,rgba(80,30,180,0.35))',borderTop:'1px solid rgba(150,100,255,0.3)'}}/>
-            {/* Glow spots */}
-            <div style={{position:'absolute',bottom:'8px',left:'18%',width:'70px',height:'14px',background:`rgba(100,180,255,0.4)`,borderRadius:'50%',filter:'blur(6px)',animation:'groundGlow 2s ease-in-out infinite'}}/>
-            <div style={{position:'absolute',bottom:'8px',right:'15%',width:'80px',height:'14px',background:'rgba(255,100,50,0.4)',borderRadius:'50%',filter:'blur(6px)',animation:'groundGlow 2s 0.5s ease-in-out infinite'}}/>
+            <div style={{position:'absolute',bottom:0,left:0,right:0,height:'58px',background:`linear-gradient(transparent,${stage.ground})`,borderTop:`1px solid ${stage.groundBorder}`}}/>
+            {/* Glows under chars */}
+            <div style={{position:'absolute',bottom:'10px',left:'15%',width:'70px',height:'14px',background:`${cc}44`,borderRadius:'50%',filter:'blur(6px)',animation:'groundPulse 2s ease-in-out infinite'}}/>
+            <div style={{position:'absolute',bottom:'10px',right:'12%',width:'80px',height:'14px',background:`${mon.glowColor}55`,borderRadius:'50%',filter:'blur(8px)',animation:'groundPulse 2.5s .3s ease-in-out infinite'}}/>
             {/* Player */}
-            <div style={{position:'absolute',bottom:'32px',left:'12%',fontSize:'5.2rem',lineHeight:1,transformOrigin:'bottom center',...pAnimStyle()}}>
-              {pl.emoji}
+            <div style={{position:'absolute',bottom:'32px',left:'10%',fontSize:'4.5rem',lineHeight:1,
+              animation:pAnim==='hurt'?'shakeX 0.4s ease':pAnim==='attack'||pAnim==='skill'?'shakeX 0.35s ease':'floatFast 3s ease-in-out infinite',
+              filter:`drop-shadow(0 0 10px ${cc}88)${pAnim==='hurt'?' drop-shadow(0 0 18px rgba(255,50,50,1))':pAnim==='skill'?' drop-shadow(0 0 20px rgba(255,215,0,1))':''}`,
+              transformOrigin:'bottom center'}}>
+              {CLASSES[pl.classId].emoji}
             </div>
             {/* Monster */}
-            <div style={{position:'absolute',bottom:'28px',right:'10%',fontSize:'5.8rem',lineHeight:1,transformOrigin:'bottom center',...mAnimStyle()}}>
-              {mon.emoji}
+            <div style={{position:'absolute',bottom:'28px',right:'8%',transformOrigin:'bottom center'}}>
+              <MonSprite mon={mon} anim={mAnim} size={5.5}/>
             </div>
             {/* VS */}
-            <div style={{position:'absolute',top:'50%',left:'50%',transform:'translate(-50%,-50%)',fontSize:'1.2rem',fontWeight:900,color:'rgba(255,200,50,0.3)',letterSpacing:'0.1em'}}>VS</div>
-            {/* Floor name */}
-            <div style={{position:'absolute',top:'8px',left:'50%',transform:'translateX(-50%)',fontSize:'0.72rem',color:'rgba(255,255,255,0.4)',letterSpacing:'0.1em',whiteSpace:'nowrap'}}>
-              {FLOORS[pl.floor].emoji} {FLOORS[pl.floor].name}
-            </div>
+            <div style={{position:'absolute',top:'45%',left:'50%',transform:'translate(-50%,-50%)',fontSize:'1.1rem',fontWeight:900,color:'rgba(255,200,50,0.25)'}}>VS</div>
+            {/* Stage + floor label */}
+            <div style={{position:'absolute',top:'8px',left:'50%',transform:'translateX(-50%)',fontSize:'0.7rem',color:'rgba(255,255,255,0.35)',whiteSpace:'nowrap'}}>{stage.emoji} {stage.name}</div>
+            {mon.isBoss&&<div style={{position:'absolute',top:'8px',left:'8px',fontSize:'0.7rem',color:'#ef4444',fontWeight:900,animation:'blink 1s ease-in-out infinite'}}>⚠️ BOSS</div>}
+            {/* Auto indicator */}
+            {autoMode&&<div style={{position:'absolute',top:'8px',right:'8px',fontSize:'0.68rem',color:'#22c55e',background:'rgba(34,197,94,0.2)',padding:'2px 6px',borderRadius:'4px'}}>AUTO▶</div>}
             {/* Skill overlay */}
-            {showSkill&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'5rem',animation:'skillFlash 0.7s ease forwards',zIndex:50,background:'rgba(255,215,0,0.12)',pointerEvents:'none'}}>
-              {CHARS[pl.charKey].skill.emoji}✨
+            {showSkill&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'4.5rem',animation:'skillBurst 0.7s ease forwards',zIndex:50,background:'rgba(255,200,0,0.1)',pointerEvents:'none'}}>
+              {CLASSES[pl.classId].skill.emoji}
             </div>}
             {/* Damage numbers */}
             {dmgs.map(d=>(
-              <div key={d.id} style={{position:'absolute',fontWeight:900,fontSize:'2rem',pointerEvents:'none',zIndex:100,animation:'dmgFloat 1s ease forwards',textShadow:'0 2px 8px rgba(0,0,0,0.9)',
+              <div key={d.id} style={{position:'absolute',fontWeight:900,fontSize:'1.9rem',pointerEvents:'none',zIndex:100,animation:'dmgUp 0.95s ease forwards',textShadow:'0 2px 8px rgba(0,0,0,0.9)',
                 color:d.type==='e'?'#ff6b6b':d.type==='h'?'#4ade80':'#ffd700',
-                left:d.type==='e'?'58%':'12%',top:'18%'}}>
-                {d.type==='h'?`+${d.v>200?'MAX':d.v}`:`-${d.v}`}
+                left:d.type==='e'?'56%':'10%',top:'16%'}}>
+                {d.type==='h'?`+${d.v}`:`-${d.v}`}
               </div>
             ))}
             {/* Sparks */}
             {sparks.map(s=>Array.from({length:7},(_,i)=>{
-              const a=(i/7)*Math.PI*2,dist=30+Math.random()*25;
-              return <div key={s.id+i} style={{position:'absolute',width:'7px',height:'7px',borderRadius:'50%',left:s.x,top:s.y,background:`hsl(${20+i*12},100%,65%)`,pointerEvents:'none',zIndex:60,animation:'spark 0.6s ease forwards','--tx':`${Math.cos(a)*dist}px`,'--ty':`${Math.sin(a)*dist}px`}}/>;
+              const a=(i/7)*Math.PI*2,dist=28+Math.random()*22;
+              return <div key={s.id+i} style={{position:'absolute',width:'6px',height:'6px',borderRadius:'50%',left:s.x,top:s.y,background:`hsl(${15+i*14},100%,65%)`,pointerEvents:'none',zIndex:60,animation:'sparkFly 0.62s ease forwards','--tx':`${Math.cos(a)*dist}px`,'--ty':`${Math.sin(a)*dist}px`}}/>;
             }))}
           </div>
 
-          {/* HP bars */}
-          <div style={card}>
-            <HpBar hp={pl.hp} maxHp={pl.maxHp} label={`${pl.emoji} ${pl.name} Lv.${pl.level}`} color={cc}/>
-            <HpBar hp={mon.hp} maxHp={mon.maxHp} label={`${mon.emoji} ${mon.name}`} color="#ef4444"/>
-            {mon.weak===pl.charKey&&<div style={{textAlign:'center',fontSize:'0.72rem',color:'#fbbf24',marginTop:'2px'}}>⚡ このてきは{pl.name}によわい！</div>}
+          {/* HP/MP bars */}
+          <div className="card" style={{borderColor:'rgba(255,100,80,0.2)'}}>
+            <HpBar hp={pl.hp} maxHp={pl.maxHp} label={`${CLASSES[pl.classId].emoji} ${pl.name} Lv.${pl.level}`} color={cc}/>
+            <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.7rem',color:'#6366f1',marginBottom:'6px'}}>
+              <span>MP: {pl.mp}/{pl.maxMp}</span>
+              {mon.weak===pl.classId&&<span style={{color:'#fbbf24'}}>⚡ このてきに有利！</span>}
+            </div>
+            <HpBar hp={mon.hp} maxHp={mon.maxHp} label={`${mon.base}${mon.top||''} ${mon.name}${mon.isBoss?' 👑':''}`} color={mon.isBoss?'#ef4444':'#f87171'}/>
           </div>
 
           {/* Action buttons */}
-          <div style={{...card,padding:'12px'}}>
+          <div className="card" style={{borderColor:`${cc}22`}}>
+            {/* Auto toggle */}
+            <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}}>
+              <span style={{fontSize:'0.78rem',color:'#94a3b8'}}>オートバトル</span>
+              <button onClick={()=>setAutoMode(v=>!v)} style={{background:autoMode?'rgba(34,197,94,0.3)':'rgba(100,100,100,0.2)',border:`1px solid ${autoMode?'#22c55e':'#444'}`,color:autoMode?'#22c55e':'#666',padding:'4px 14px',borderRadius:'16px',fontSize:'0.78rem',fontWeight:900,cursor:'pointer',transition:'all 0.2s'}}>
+                {autoMode?'AUTO ON ●':'AUTO OFF ○'}
+              </button>
+            </div>
             <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'8px'}}>
               {[
-                {label:'⚔️ こうげき',sub:'通常攻撃',col:'#ef4444',dis:busy,fn:()=>doAttack(false)},
-                {label:`${CHARS[pl.charKey].skill.emoji} 必殺技`,sub:pl.skillUsed?'使用済み':CHARS[pl.charKey].skill.name,col:'#a855f7',dis:busy||pl.skillUsed,fn:()=>doAttack(true)},
-                {label:'🥤 かいふく',sub:`${pl.inventory.filter(i=>i.effect?.hp).length}個持ち`,col:'#22c55e',dis:busy,fn:doHeal},
-                {label:'🏃 にげる',sub:'60%で成功',col:'#6b7280',dis:busy,fn:doFlee},
+                {label:'⚔️ こうげき',sub:'通常攻撃',col:'#ef4444',dis:busy||autoMode,fn:()=>executeAction('attack')},
+                {label:`${CLASSES[pl.classId].skill.emoji} 必殺技`,sub:pl.skillUsed?'使用済み':`MP${CLASSES[pl.classId].skill.mp}`,col:'#8b5cf6',dis:busy||autoMode||pl.skillUsed||pl.mp<CLASSES[pl.classId].skill.mp,fn:()=>executeAction('skill')},
+                {label:'🌿 かいふく',sub:`${pl.inventory.filter(i=>i.effect?.hp||i.effect?.mp).length}個`,col:'#22c55e',dis:busy||autoMode,fn:()=>executeAction('heal')},
+                {label:'🏃 にげる',sub:'成功60%',col:'#6b7280',dis:busy||autoMode,fn:()=>executeAction('flee')},
               ].map(b=>(
-                <button key={b.label} disabled={b.dis} onClick={b.fn} style={{
-                  background:b.dis?'rgba(80,80,80,0.25)':`linear-gradient(135deg,${b.col}bb,${b.col}44)`,
-                  border:`1px solid ${b.dis?'#333':b.col}`,color:b.dis?'#444':'#fff',
-                  padding:'13px 8px',borderRadius:'12px',fontFamily:'inherit',fontWeight:900,
-                  display:'flex',flexDirection:'column',alignItems:'center',gap:'3px',cursor:b.dis?'not-allowed':'pointer',
-                  boxShadow:b.dis?'none':`0 0 14px ${b.col}33`,transition:'all 0.15s',
-                }}>
-                  <span style={{fontSize:'1rem'}}>{b.label}</span>
-                  <span style={{fontSize:'0.68rem',opacity:0.7,fontWeight:'normal'}}>{b.sub}</span>
+                <button key={b.label} className="abtn" disabled={b.dis} onClick={b.fn} style={{background:b.dis?'rgba(60,60,60,0.2)':`linear-gradient(135deg,${b.col}bb,${b.col}44)`,border:`1px solid ${b.dis?'#333':b.col}`,boxShadow:b.dis?'none':`0 0 12px ${b.col}33`,cursor:b.dis?'not-allowed':'pointer'}}>
+                  <span className="icon">{b.label}</span>
+                  <span className="sub">{b.sub}</span>
                 </button>
               ))}
             </div>
@@ -360,61 +741,62 @@ function App(){
         </>
       )}
 
-      {/* SHOP */}
+      {/* ===== SHOP ===== */}
       {scr==='shop'&&pl&&(
-        <div style={{...card,animation:'fadeIn 0.3s ease'}}>
-          <div style={{color:'#ffd700',fontWeight:900,textAlign:'center',marginBottom:'12px'}}>🛒 おみせ　もちきん: {pl.gold}G</div>
+        <div className="card" style={{animation:'fadeIn 0.3s ease',borderColor:`${cc}22`}}>
+          <div style={{color:'#ffd700',fontWeight:900,textAlign:'center',marginBottom:'12px'}}>🛒 ショップ　所持金: {pl.gold}G</div>
           {ITEMS.map(item=>(
             <div key={item.id} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px',padding:'10px',background:'rgba(255,255,255,0.03)',borderRadius:'10px'}}>
               <span style={{fontSize:'1.4rem'}}>{item.emoji}</span>
               <div style={{flex:1}}>
-                <div style={{fontSize:'0.85rem',fontWeight:'bold'}}>{item.name}</div>
-                <div style={{fontSize:'0.72rem',color:'#64748b'}}>{item.desc}</div>
+                <div style={{fontSize:'0.84rem',fontWeight:'bold'}}>{item.name}</div>
+                <div style={{fontSize:'0.7rem',color:'#64748b'}}>{item.desc}</div>
               </div>
-              <button onClick={()=>buyItem(item)} disabled={pl.gold<item.cost} style={{...btn('#f59e0b',pl.gold<item.cost),margin:0,padding:'8px 10px',fontSize:'0.82rem'}}>{item.cost}G</button>
+              <button onClick={()=>buyItem(item)} disabled={pl.gold<item.cost} style={{...btnStyle('#f59e0b',pl.gold<item.cost),margin:0,padding:'7px 10px',fontSize:'0.8rem'}}>{item.cost}G</button>
             </div>
           ))}
           <div style={{textAlign:'center',marginTop:'8px'}}>
-            <button style={btn('#475569')} onClick={()=>{SFX.cursor();setScr('map');}}>🔙 もどる</button>
+            <button style={btnStyle('#475569')} onClick={()=>{aud.sfx('cursor');setScr('map');}}>🔙 もどる</button>
           </div>
         </div>
       )}
 
-      {/* GAME OVER */}
+      {/* ===== GAME OVER ===== */}
       {scr==='gameover'&&(
-        <div style={{...card,textAlign:'center',animation:'popIn 0.5s ease',borderColor:'rgba(255,50,50,0.3)'}}>
+        <div className="card" style={{textAlign:'center',animation:'popIn 0.5s ease',borderColor:'rgba(255,50,50,0.3)'}}>
           <div style={{fontSize:'4rem',marginBottom:'8px'}}>💀</div>
           <div style={{color:'#ef4444',fontSize:'1.6rem',fontWeight:900,letterSpacing:'0.1em',marginBottom:'4px'}}>GAME OVER</div>
           <div style={{color:'#94a3b8',marginBottom:'4px'}}>{pl?.name}はたおれてしまった…</div>
-          <div style={{color:'#475569',fontSize:'0.8rem',marginBottom:'16px'}}>でも、あきらめないで！もう一度！</div>
-          <button style={btn('#ef4444')} onClick={restart}>🔄 もういちど</button>
+          <div style={{color:'#475569',fontSize:'0.78rem',marginBottom:'16px'}}>最終Lv.{pl?.level} / {STAGES[pl?.stage||0].name}</div>
+          <button style={btnStyle('#ef4444')} onClick={restart}>🔄 もういちど</button>
         </div>
       )}
 
-      {/* CLEAR */}
+      {/* ===== CLEAR ===== */}
       {scr==='clear'&&(
-        <div style={{...card,textAlign:'center',animation:'popIn 0.5s ease',borderColor:'rgba(255,215,0,0.3)'}}>
-          <div style={{fontSize:'4rem',marginBottom:'8px',animation:'winDance 0.8s ease-in-out infinite'}}>🏆</div>
-          <div style={{color:'#ffd700',fontSize:'1.4rem',fontWeight:900,marginBottom:'6px'}}>🎉 ぼうけんクリア！ 🎉</div>
-          <div style={{color:'#a3e635',marginBottom:'6px'}}>{pl?.name}が まおうを たおした！</div>
-          <div style={{color:'#94a3b8',fontSize:'0.82rem',marginBottom:'16px'}}>さいしゅうLv.{pl?.level} ／ のこりHP:{pl?.hp}</div>
-          <button style={btn('#ffd700')} onClick={restart}>🔄 もういちど</button>
+        <div className="card" style={{textAlign:'center',animation:'popIn 0.5s ease',borderColor:'rgba(255,215,0,0.4)'}}>
+          <div style={{fontSize:'4rem',marginBottom:'8px',animation:'winSpin 0.8s ease-in-out infinite'}}>🏆</div>
+          <div style={{color:'#ffd700',fontSize:'1.4rem',fontWeight:900,marginBottom:'6px'}}>🎉 ゲームクリア！ 🎉</div>
+          <div style={{color:'#a3e635',marginBottom:'4px'}}>{pl?.name}が 魔天王ゼロスを倒した！</div>
+          <div style={{color:'#94a3b8',fontSize:'0.8rem',marginBottom:'4px'}}>世界に平和が戻った！</div>
+          <div style={{color:'#475569',fontSize:'0.75rem',marginBottom:'16px'}}>最終Lv.{pl?.level} / EXP:{pl?.exp} / Gold:{pl?.gold}</div>
+          <button style={btnStyle('#ffd700')} onClick={restart}>🔄 もういちど</button>
         </div>
       )}
 
-      {/* LOG */}
-      {scr!=='select'&&(
-        <div style={{...card,maxHeight:'140px',overflowY:'auto'}}>
+      {/* ===== LOG ===== */}
+      {scr!=='title'&&scr!=='select'&&(
+        <div className="card" style={{maxHeight:'140px',overflowY:'auto',borderColor:'rgba(255,255,255,0.06)'}}>
           {log.map((e,i)=>(
-            <div key={i} style={{padding:'3px 0',fontSize:'0.8rem',lineHeight:1.5,borderBottom:'1px solid rgba(255,255,255,0.04)',opacity:1-i*0.08,color:i===0?'#e2e8f0':'#94a3b8'}}>{e}</div>
+            <div key={i} style={{padding:'3px 0',fontSize:'0.78rem',lineHeight:1.5,borderBottom:'1px solid rgba(255,255,255,0.04)',opacity:1-i*0.08,color:i===0?'#e2e8f0':'#64748b'}}>{e}</div>
           ))}
         </div>
       )}
 
-      {/* iOS install hint */}
-      <div id="iosBanner" style={{display:'none',position:'fixed',bottom:0,left:0,right:0,background:'linear-gradient(135deg,#1e1b4b,#312e81)',borderTop:'1px solid #ffd70055',padding:'12px 16px',zIndex:9999,alignItems:'center',gap:'10px'}}>
-        <div style={{flex:1,fontSize:'0.82rem',color:'#e2e8f0'}}>📱 Safari → 共有(□↑) →「ホーム画面に追加」でアプリになるよ！</div>
-        <button onClick={()=>document.getElementById('iosBanner').style.display='none'} style={{background:'transparent',border:'none',color:'#94a3b8',fontSize:'1.2rem',cursor:'pointer'}}>✕</button>
+      {/* iOS hint */}
+      <div id="iosHint" style={{display:'none',position:'fixed',bottom:0,left:0,right:0,background:'linear-gradient(135deg,#1e1b4b,#312e81)',borderTop:'1px solid #ffd70055',padding:'12px',zIndex:9999,alignItems:'center',gap:'10px'}}>
+        <div style={{flex:1,fontSize:'0.8rem',color:'#e2e8f0'}}>📱 Safari → 共有(□↑) →「ホーム画面に追加」でアプリになるよ！</div>
+        <button onClick={()=>document.getElementById('iosHint').style.display='none'} style={{background:'transparent',border:'none',color:'#94a3b8',fontSize:'1.2rem',cursor:'pointer'}}>✕</button>
       </div>
     </div>
   );
@@ -422,7 +804,7 @@ function App(){
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
 const isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent);
 const isSA=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
-if(isIOS&&!isSA)setTimeout(()=>document.getElementById('iosBanner').style.display='flex',5000);
+if(isIOS&&!isSA)setTimeout(()=>{const b=document.getElementById('iosHint');if(b)b.style.display='flex';},5000);
 if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
