@@ -44,7 +44,6 @@ button:active:not(:disabled){transform:scale(0.88)!important;filter:brightness(1
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script type="text/babel">
-window.onerror=function(msg,src,line,col,err){document.getElementById('root').innerHTML='<div style="color:red;padding:20px;font-family:monospace;font-size:12px;white-space:pre-wrap">ERROR: '+msg+'\nLine:'+line+' Col:'+col+'\n'+(err?err.stack:'')+'</div>';return true;};
 const {useState,useEffect,useRef,useCallback}=React;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
@@ -484,7 +483,12 @@ function App(){
     else if(action==='spell'&&spellId){const sp=getMemberSpells(member).find(s=>s.id===spellId);if(sp){const r=await executeSpell(sp,pIdx,nP,nE);if(!r){setBusy(false);return;}nP=r.party;nE=r.enemies;}}
     else if(action==='atk'){const ti=nE.findIndex(e=>e.hp>0);if(ti<0){setBusy(false);return;}const en=nE[ti];const effAtk=Math.floor(member.atk*(member.atkBuffMult||1));let dmg=calcDamage(effAtk,en.def);if(Math.random()<.11){dmg=Math.floor(dmg*1.7);addLog('💥 会心の一撃！');}dmg=Math.max(1,dmg);const xp=60+ti*(-12);setPAnim(pIdx,'atk');SFX.atk();await sleep(250);setPAnim(pIdx,'idle');setMAnim(ti,'hurt');SFX.hit();addSpark(xp+'%','28%');addDmg(dmg,'e',xp+'%','16%');addLog('⚔️ '+mn(member)+'の攻撃！'+dmg+'ダメージ！');nE[ti]={...en,hp:Math.max(0,en.hp-dmg)};await sleep(300);setMAnim(ti,'idle');}
     else if(action==='defend'){nP[pIdx]={...member,defending:true,defBuffMult:2.2,defBuffTurns:1};addLog('🛡️ '+mn(member)+'は防御！');SFX.buff();}
-    else if(action==='heal'){const ahIdx=inv.findIndex(it2=>it2.eff&&it2.eff.allHeal),cuIdx=inv.findIndex(it2=>it2.eff&&it2.eff.cure),hpIdx=inv.findIndex(it2=>it2.eff&&it2.eff.hp&&!it2.eff.cure&&!it2.eff.allHeal),mpIdx=inv.findIndex(it2=>it2.eff&&it2.eff.mp&&!it2.eff.hp&&!it2.eff.allHeal);let useIdx=-1,itype=null;if(ahIdx>=0){useIdx=ahIdx;itype='ah';}else if(member.status&&cuIdx>=0){useIdx=cuIdx;itype='cu';}else if(member.hp<member.maxHp&&hpIdx>=0){useIdx=hpIdx;itype='hp';}else if(member.mp<member.maxMp&&mpIdx>=0){useIdx=mpIdx;itype='mp';}if(useIdx<0){addLog('使えるアイテムがない！');setBusy(false);return;}const itu=inv[useIdx];const niu=[...inv];niu.splice(useIdx,1);setInv(niu);if(itype==='ah'){nP=nP.map(m=>m.hp<=0?m:{...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0});addLog(itu.emoji+' '+itu.name+'！全員HP・MP完全回復！');SFX.heal();}else if(itype==='cu'){nP[pIdx]={...member,status:null,statusTurns:0};addLog(itu.emoji+' '+itu.name+'！状態異常回復！');SFX.heal();}else if(itype==='hp'){const hadd=Math.min(itu.eff.hp,member.maxHp-member.hp);nP[pIdx]={...member,hp:Math.min(member.maxHp,member.hp+itu.eff.hp)};addDmg(hadd,'h','12%','22%');addLog(itu.emoji+' '+itu.name+'！HP+'+hadd);SFX.heal();}else if(itype==='mp'){const madd=Math.min(itu.eff.mp,member.maxMp-member.mp);nP[pIdx]={...member,mp:Math.min(member.maxMp,member.mp+itu.eff.mp)};addLog(itu.emoji+' '+itu.name+'！MP+'+madd);}}
+    else if(action==='heal'){const ci=inv.findIndex(i=>i.eff&&i.eff.cure),hi=inv.findIndex(i=>i.eff&&i.eff.hp&&!i.eff.cure&&!i.eff.allHeal),mi=inv.findIndex(i=>i.eff&&i.eff.mp&&!i.eff.hp&&!i.eff.allHeal),ai=inv.findIndex(i=>i.eff&&i.eff.allHeal);let used=false;
+      if(!used&&ai>=0){const it=inv[ai];const ni=[...inv];ni.splice(ai,1);setInv(ni);nP=nP.map(m=>m.hp<=0?m:{...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0});addLog(it.emoji+' '+it.name+'！全員HP・MP完全回復！');SFX.heal();used=true;}
+      if(member.status&&ci>=0){const it=inv[ci];const ni=[...inv];ni.splice(ci,1);setInv(ni);nP[pIdx]={...member,status:null,statusTurns:0};addLog(it.emoji+' '+it.name+'！状態異常回復！');SFX.heal();used=true;}
+      else if(!used&&member.hp<member.maxHp&&hi>=0){const it=inv[hi];const ni=[...inv];ni.splice(hi,1);setInv(ni);const add=Math.min(it.eff.hp,member.maxHp-member.hp);nP[pIdx]={...member,hp:Math.min(member.maxHp,member.hp+it.eff.hp)};addDmg(add,'h','12%','22%');addLog(it.emoji+' '+it.name+'！HP+'+add);SFX.heal();used=true;}
+      else if(!used&&member.mp<member.maxMp&&mi>=0){const it=inv[mi];const ni=[...inv];ni.splice(mi,1);setInv(ni);const addMp=Math.min(it.eff.mp,member.maxMp-member.mp);nP[pIdx]={...member,mp:Math.min(member.maxMp,member.mp+it.eff.mp)};addLog(it.emoji+' '+it.name+'！MP+'+addMp);used=true;}
+      if(!used){addLog('使えるアイテムがない！');setBusy(false);return;}}
     else if(action==='flee'){if(Math.random()>.42){SFX.flee();addLog('🏃 逃げ出した！');setParty(nP);setScr('map');bgm('field');setBusy(false);return;}const fen=nE.find(e=>e.hp>0);if(fen){const dmg=Math.max(1,fen.atk-member.def+Math.floor(Math.random()*5)-2);nP[pIdx]={...member,hp:Math.max(0,member.hp-dmg)};setPAnim(pIdx,'hurt');SFX.phit();addDmg(dmg,'p','12%','24%');addLog('❌ 逃げられなかった！'+dmg+'ダメージ！');await sleep(380);setPAnim(pIdx,'idle');}}
     setParty(nP);setEnemies(nE);
     if(nP.every(m=>m.hp<=0)){stopBgm();SFX.dead();setScr('gameover');setBusy(false);return;}
@@ -496,39 +500,17 @@ function App(){
         if(en.status==='stun'){ee[enIdx]={...en,statusTurns:Math.max(0,en.statusTurns-1),status:en.statusTurns<=1?null:en.status};addLog('💫 '+en.name+'はスタン中！');continue;}
         const pd=(en.phases||[]).find(ph=>en.hp/en.maxHp<=ph.hp);
         if(pd&&(en.currentPhase||0)<(en.phases||[]).indexOf(pd)+1){ee[enIdx]={...en,currentPhase:(en.currentPhase||0)+1,atkBonus:(en.atkBonus||0)+(pd.atkBonus||0),rageAoe:pd.aoe||false,tripleAtk:pd.tripleAttack||false};addLog('💢 '+en.name+'！'+pd.msg);SFX.rage();await sleep(500);}
-        const curEn=ee[enIdx];
-        const eSpells=ENEMY_SPELL_DB[curEn.id]||[];
+        const attacks=ee[enIdx].tripleAtk?3:ee[enIdx].doubleAttack?2:1;
+        const eSpells=ENEMY_SPELL_DB[ee[enIdx].id]||[];
         const castSpell=eSpells.length>0&&Math.random()<.42;
         if(castSpell){
           const esp=eSpells[Math.floor(Math.random()*eSpells.length)];
-          if(esp.type==='e_atk_all'){
-            const bd=Math.floor((curEn.mat||0)*(esp.pow||1.5)+8+(curEn.atkBonus||0)*.4);
-            for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;
-              const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1)*.3);
-              const dmg=Math.max(1,bd-effDef+Math.floor(Math.random()*8)-4);
-              ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};
-              setPAnim(pi,'hurt');SFX.magic();addDmg(dmg,'p',(pi*22+5)+'%','48%');
-              if(esp.inflict&&!ep[pi].status&&Math.random()<.35)ep[pi]={...ep[pi],status:esp.inflict,statusTurns:3};}
-            addLog(esp.e+' '+curEn.name+'の「'+esp.name+'」！全員に魔法ダメージ！');await sleep(400);
-          }else if(esp.type==='e_atk_one'){
-            const alive3=ep.filter(m=>m.hp>0);if(alive3.length>0){
-              const tgt3=alive3.reduce((a,b)=>a.hp<b.hp?a:b);const ti3=ep.indexOf(tgt3);
-              const bd3=Math.floor((curEn.mat||0)*(esp.pow||2.0)+5+(curEn.atkBonus||0)*.3);
-              const effDef3=Math.floor(ep[ti3].def*(ep[ti3].defBuffMult||1)*.25);
-              const dmg3=Math.max(1,bd3-effDef3+Math.floor(Math.random()*12)-6);
-              setPAnim(ti3,'hurt');SFX.magic();addDmg(dmg3,'p',(ti3*22+5)+'%','44%');
-              addLog(esp.e+' '+curEn.name+'の「'+esp.name+'」！'+mn(ep[ti3])+'に'+dmg3+'ダメージ！');
-              ep[ti3]={...ep[ti3],hp:Math.max(0,ep[ti3].hp-dmg3)};
-              if(esp.inflict&&!ep[ti3].status&&Math.random()<.42)ep[ti3]={...ep[ti3],status:esp.inflict,statusTurns:3};
-              await sleep(350);}
-          }else if(esp.type==='e_heal'){
-            const ha=Math.floor(curEn.maxHp*(esp.pow||.2));
-            ee[enIdx]={...ee[enIdx],hp:Math.min(curEn.maxHp,ee[enIdx].hp+ha)};
-            addLog(esp.e+' '+curEn.name+'がHP回復！+'+ha);SFX.heal();await sleep(300);}
+          if(esp.type==='e_atk_all'){const bd=Math.floor(ee[enIdx].mat*(esp.pow||1.5)+8+(ee[enIdx].atkBonus||0)*.4);for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1)*.3);let dmg=Math.max(1,bd-effDef+Math.floor(Math.random()*8)-4);ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,'hurt');SFX.magic();addDmg(dmg,'p',(pi*22+5)+'%','48%');if(esp.inflict&&!ep[pi].status&&Math.random()<.35)ep[pi]={...ep[pi],status:esp.inflict,statusTurns:3};}addLog(esp.e+' '+ee[enIdx].name+'の「'+esp.name+'」！全員に魔法ダメージ！');await sleep(420);}
+          else if(esp.type==='e_atk_one'){const alive3=ep.filter(m=>m.hp>0);if(alive3.length>0){const tgt3=alive3.reduce((a,b)=>a.hp<b.hp?a:b);const ti3=ep.indexOf(tgt3);const bd3=Math.floor(ee[enIdx].mat*(esp.pow||2.0)+5+(ee[enIdx].atkBonus||0)*.3);const effDef3=Math.floor(tgt3.def*(tgt3.defBuffMult||1)*.25);let dmg3=Math.max(1,bd3-effDef3+Math.floor(Math.random()*12)-6);ep[ti3]={...ep[ti3],hp:Math.max(0,tgt3.hp-dmg3)};setPAnim(ti3,'hurt');SFX.magic();addDmg(dmg3,'p',(ti3*22+5)+'%','44%');addLog(esp.e+' '+ee[enIdx].name+'の「'+esp.name+'」！'+mn(tgt3)+'に'+dmg3+'ダメージ！');if(esp.inflict&&!tgt3.status&&Math.random()<.42)ep[ti3]={...ep[ti3],status:esp.inflict,statusTurns:3};await sleep(380);}}
+          else if(esp.type==='e_heal'){const ha=Math.floor(ee[enIdx].maxHp*(esp.pow||.2));ee[enIdx]={...ee[enIdx],hp:Math.min(ee[enIdx].maxHp,ee[enIdx].hp+ha)};addLog(esp.e+' '+ee[enIdx].name+'がHP回復！+'+ha);SFX.heal();await sleep(320);}
           const enDotS=processDot(ee[enIdx]);if(enDotS.hp<ee[enIdx].hp){addDmg(ee[enIdx].hp-enDotS.hp,'e',(60+enIdx*(-12))+'%','16%');SFX.poison();}ee[enIdx]=enDotS;
-        }else{
-          const attacks=curEn.tripleAtk?3:curEn.doubleAttack?2:1;
-          for(let ai=0;ai<attacks;ai++){
+        } else {
+        for(let ai=0;ai<attacks;ai++){
             if(ee[enIdx].rageAoe){const aoeBase=Math.floor(ee[enIdx].atk*(.5+ai*.1))+(ee[enIdx].atkBonus||0);
               for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1));const dmg=Math.max(1,aoeBase-effDef+Math.floor(Math.random()*6)-3);ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,'hurt');SFX.phit();addDmg(dmg,'p',(pi*22+5)+'%','48%');}
               addLog('💥 '+ee[enIdx].name+'の全体攻撃！全員にダメージ！');await sleep(400);}
@@ -537,7 +519,7 @@ function App(){
               setPAnim(ti,'hurt');setMAnim(enIdx,'atk');SFX.phit();addSpark((ti*22+5)+'%','50%');addDmg(dmg,'p',(ti*22+5)+'%','44%');addLog('💢 '+ee[enIdx].name+'が'+mn(tgt)+'に'+dmg+'ダメージ！');ep[ti]={...tgt,hp:Math.max(0,tgt.hp-dmg)};
               if(ee[enIdx].si&&!tgt.status&&Math.random()<.22){ep[ti]={...ep[ti],status:ee[enIdx].si,statusTurns:3};addLog(ee[enIdx].si==='poison'?'☠️毒！':ee[enIdx].si==='burn'?'🔥燃焼！':'💫スタン！');}
               await sleep(330);setPAnim(ti,'idle');setMAnim(enIdx,'idle');await sleep(80);}}
-          const enDot=processDot(ee[enIdx]);if(enDot.hp<ee[enIdx].hp){addDmg(ee[enIdx].hp-enDot.hp,'e',(60+enIdx*(-12))+'%','16%');SFX.poison();}ee[enIdx]=enDot;}}
+        const enDot=processDot(ee[enIdx]);if(enDot.hp<ee[enIdx].hp){addDmg(ee[enIdx].hp-enDot.hp,'e',(60+enIdx*(-12))+'%','16%');SFX.poison();}ee[enIdx]=enDot;}}
       ep=ep.map((m,i)=>{if(m.hp<=0||!m.status)return m;const pm=processDot(m);if(pm.hp<m.hp)addDmg(m.hp-pm.hp,'p',(i*22+5)+'%','46%');return pm;});
       ep=ep.map(m=>decBuffs(m));setParty(ep);setEnemies(ee);
       if(ep.every(m=>m.hp<=0)){stopBgm();SFX.dead();setScr('gameover');setBusy(false);return;}
@@ -784,9 +766,7 @@ function App(){
       </div>
     </div>)}
 
-    {/* DUMMY (旧RECRUITエリア) */}
-    {false&&(<div
-    </div>)}
+    {false&&(<div></div>)}
 
     {/* BATTLE */}
     {scr==='battle'&&party.length>0&&enemies.length>0&&(<>
