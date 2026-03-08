@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="大冒険" />
+  <meta name="theme-color" content="#ffd700" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <title>ゆうりとそうやの大冒険</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { background: #0f0c29; overflow-x: hidden; }
+    #root { min-height: 100vh; }
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes skillFlash{0%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1.3)}100%{opacity:0;transform:scale(1)}}
+    button:hover:not(:disabled){filter:brightness(1.25);transform:translateY(-2px)}
+    button { touch-action: manipulation; }
+    ::-webkit-scrollbar{width:4px} ::-webkit-scrollbar-thumb{background:#333}
+    .install-banner {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: linear-gradient(135deg, #1e1b4b, #312e81);
+      border-top: 1px solid #ffd70066;
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 9999; font-family: sans-serif;
+    }
+    .install-banner p { color: #e2e8f0; font-size: 0.85rem; flex: 1; margin-right: 12px; }
+    .install-banner button { background: #ffd700; color: #1e1b4b; border: none; padding: 8px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85rem; }
+    .install-banner .close-btn { background: transparent; color: #94a3b8; border: none; padding: 4px 8px; font-size: 1.2rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Install Banner (iOS guide) -->
+  <div class="install-banner" id="installBanner" style="display:none">
+    <p>📱 ホーム画面に追加してアプリとして使えます！<br>
+    <small style="color:#94a3b8">Safari → 共有ボタン → 「ホーム画面に追加」</small></p>
+    <button class="close-btn" onclick="document.getElementById('installBanner').style.display='none'">✕</button>
+  </div>
+
+  <script>
+    // Show iOS install hint
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (isIOS && !isStandalone) {
+      setTimeout(() => {
+        document.getElementById('installBanner').style.display = 'flex';
+      }, 3000);
+    }
+
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+  </script>
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useCallback } = React;
+
+    const CHARACTERS = {
+      yuuri: {
+        name: "ゆうり",
+        emoji: "🥋",
+        desc: "柔道少年（13さい）",
+        hp: 130, maxHp: 130,
+        atk: 22, def: 10,
+        skill: { name: "一本背負い！", emoji: "🥋", multiplier: 2.5 },
+        color: "#3b82f6",
+      },
+      souya: {
+        name: "そうや",
+        emoji: "🏊",
+        desc: "プログラマー×スイマー（8さい）",
+        hp: 100, maxHp: 100,
+        atk: 16, def: 7,
+        skill: { name: "ハックアタック！", emoji: "💻", multiplier: 3.0 },
+        color: "#22c55e",
+      },
+    };
+
+    const MONSTERS = [
+      { name: "スライムくん", hp: 20, maxHp: 20, atk: 5, def: 2, exp: 10, gold: 8, emoji: "🟢", weak: "yuuri" },
+      { name: "いたずらゴブリン", hp: 35, maxHp: 35, atk: 10, def: 4, exp: 20, gold: 15, emoji: "👺", weak: "souya" },
+      { name: "おおきなオーク", hp: 60, maxHp: 60, atk: 18, def: 8, exp: 40, gold: 30, emoji: "👹", weak: "yuuri" },
+      { name: "まおうドラゴン", hp: 180, maxHp: 180, atk: 38, def: 15, exp: 150, gold: 120, emoji: "🐉", weak: null },
+    ];
+
+    const FLOORS = [
+      { name: "ふしぎな森", monster: 0, emoji: "🌲" },
+      { name: "まほうの洞窟", monster: 1, emoji: "🕌" },
+      { name: "くらやみの城", monster: 2, emoji: "🏯" },
+      { name: "まおうの間", monster: 3, emoji: "👑" },
+    ];
+
+    const ITEMS = [
+      { id: "potion", name: "えいようドリンク", emoji: "🥤", cost: 40, effect: { hp: 50 }, desc: "HP+50" },
+      { id: "judogi", name: "柔道着（強化版）", emoji: "🥋", cost: 160, effect: { atk: 12 }, desc: "ATK+12" },
+      { id: "swim_suit", name: "ハイテク水着", emoji: "🏊", cost: 120, effect: { def: 9 }, desc: "DEF+9" },
+      { id: "laptop", name: "魔法のパソコン", emoji: "💻", cost: 200, effect: { atk: 8, def: 5 }, desc: "ATK+8 DEF+5" },
+      { id: "elixir", name: "スペシャルゼリー", emoji: "⭐", cost: 300, effect: { hp: 999 }, desc: "HP全回復" },
+    ];
+
+    const calcExpToNext = (lv) => lv * 50;
+
+    const initState = (charKey) => {
+      const c = CHARACTERS[charKey];
+      return { ...c, charKey, exp: 0, level: 1, gold: 100, inventory: [], floor: 0, skillUsed: false };
+    };
+
+    function App() {
+      const [screen, setScreen] = useState("select");
+      const [player, setPlayer] = useState(null);
+      const [monster, setMonster] = useState(null);
+      const [log, setLog] = useState([]);
+      const [animating, setAnimating] = useState(false);
+      const [shake, setShake] = useState(false);
+      const [playerShake, setPlayerShake] = useState(false);
+      const [showSkillAnim, setShowSkillAnim] = useState(false);
+
+      const addLog = (msg) => setLog(prev => [msg, ...prev].slice(0, 8));
+
+      const selectChar = (key) => {
+        setPlayer(initState(key));
+        setLog([`🌟 ${CHARACTERS[key].name}の大冒険、はじまり！`]);
+        setScreen("map");
+      };
+
+      const encounter = () => {
+        const base = MONSTERS[FLOORS[player.floor].monster];
+        setMonster({ ...base, hp: base.maxHp });
+        setScreen("battle");
+        addLog(`⚠️ ${base.emoji} ${base.name}があらわれた！`);
+      };
+
+      const handleAttack = (isSkill = false) => {
+        if (animating) return;
+        setAnimating(true);
+        let dmgBase = player.atk - monster.def + Math.floor(Math.random() * 6);
+        if (isSkill) {
+          dmgBase = Math.floor(player.atk * CHARACTERS[player.charKey].skill.multiplier);
+          setShowSkillAnim(true);
+          setTimeout(() => setShowSkillAnim(false), 800);
+        }
+        if (monster.weak === player.charKey) dmgBase = Math.floor(dmgBase * 1.3);
+        const dmgToMonster = Math.max(1, dmgBase);
+        addLog(isSkill
+          ? `✨ ${CHARACTERS[player.charKey].skill.name} ${dmgToMonster}ダメージ！${monster.weak === player.charKey ? "🎯こうかばつぐん！" : ""}`
+          : `⚔️ こうげき！${dmgToMonster}ダメージ！${monster.weak === player.charKey ? "🎯こうかばつぐん！" : ""}`
+        );
+        setShake(true);
+        setTimeout(() => setShake(false), 400);
+        const newMonHp = monster.hp - dmgToMonster;
+        if (newMonHp <= 0) {
+          setMonster(null);
+          const newExp = player.exp + monster.exp;
+          const newGold = player.gold + monster.gold;
+          let updated = { ...player, exp: newExp, gold: newGold, skillUsed: isSkill ? true : player.skillUsed };
+          while (updated.exp >= calcExpToNext(updated.level) * updated.level) {
+            updated.level++;
+            updated.maxHp += 20;
+            updated.atk += 3;
+            updated.def += 2;
+            addLog(`🌟 レベルアップ！Lv.${updated.level}になった！`);
+          }
+          addLog(`✨ ${monster.name}をたおした！EXP+${monster.exp} G+${monster.gold}`);
+          setPlayer(updated);
+          setScreen("map");
+          setAnimating(false);
+          return;
+        }
+        setTimeout(() => {
+          const dmgToPlayer = Math.max(1, monster.atk - player.def + Math.floor(Math.random() * 4) - 2);
+          addLog(`💥 ${monster.emoji}のこうげき！${dmgToPlayer}ダメージ！`);
+          setPlayerShake(true);
+          setTimeout(() => setPlayerShake(false), 400);
+          setMonster(m => ({ ...m, hp: newMonHp }));
+          const newHp = player.hp - dmgToPlayer;
+          if (newHp <= 0) {
+            setPlayer(p => ({ ...p, hp: 0 }));
+            setScreen("gameover");
+          } else {
+            setPlayer(p => ({ ...p, hp: newHp, skillUsed: isSkill ? true : p.skillUsed }));
+          }
+          setAnimating(false);
+        }, 600);
+      };
+
+      const flee = () => {
+        if (Math.random() > 0.4) {
+          addLog("🏃 にげだした！");
+          setMonster(null);
+          setScreen("map");
+        } else {
+          const dmg = Math.max(1, monster.atk - player.def);
+          const newHp = player.hp - dmg;
+          addLog(`❌ にげられなかった！${dmg}ダメージ！`);
+          if (newHp <= 0) { setPlayer(p => ({ ...p, hp: 0 })); setScreen("gameover"); }
+          else setPlayer(p => ({ ...p, hp: newHp }));
+        }
+      };
+
+      const usePotion = () => {
+        const idx = player.inventory.findIndex(i => i.effect?.hp);
+        if (idx === -1) { addLog("💊 かいふくアイテムがない！"); return; }
+        const item = player.inventory[idx];
+        const newHp = Math.min(player.maxHp, player.hp + item.effect.hp);
+        const newInv = [...player.inventory];
+        newInv.splice(idx, 1);
+        setPlayer(p => ({ ...p, hp: newHp, inventory: newInv }));
+        addLog(`${item.emoji} ${item.name}をつかった！HP+${Math.min(item.effect.hp, player.maxHp - player.hp)}`);
+      };
+
+      const goNext = () => {
+        const next = player.floor + 1;
+        if (next >= FLOORS.length) { setScreen("clear"); return; }
+        setPlayer(p => ({ ...p, floor: next, skillUsed: false }));
+        addLog(`🚪 ${FLOORS[next].emoji} ${FLOORS[next].name}へすすんだ！`);
+      };
+
+      const buyItem = (item) => {
+        if (player.gold < item.cost) { addLog("💸 おかねがたりない！"); return; }
+        setPlayer(p => ({
+          ...p,
+          gold: p.gold - item.cost,
+          atk: item.effect.atk ? p.atk + item.effect.atk : p.atk,
+          def: item.effect.def ? p.def + item.effect.def : p.def,
+          inventory: item.effect.hp ? [...p.inventory, item] : p.inventory,
+        }));
+        addLog(`🛒 ${item.emoji}${item.name}をかった！`);
+      };
+
+      const restart = () => { setPlayer(null); setMonster(null); setLog([]); setScreen("select"); };
+
+      const hpPct = (hp, max) => Math.max(0, (hp / max) * 100);
+      const hpColor = (pct) => pct > 50 ? "#4ade80" : pct > 25 ? "#facc15" : "#f87171";
+      const charColor = player ? CHARACTERS[player.charKey].color : "#ffd700";
+
+      const s = {
+        page: {
+          minHeight: "100vh",
+          background: "linear-gradient(160deg, #0f0c29 0%, #1a0a2e 50%, #0a1a1a 100%)",
+          fontFamily: "'Hiragino Maru Gothic Pro', 'BIZ UDPGothic', 'M PLUS Rounded 1c', sans-serif",
+          display: "flex", flexDirection: "column", alignItems: "center",
+          padding: "16px 12px 80px", color: "#e2e8f0",
+        },
+        title: {
+          textAlign: "center", marginBottom: "4px",
+          fontSize: "clamp(1.1rem,5vw,1.6rem)",
+          fontWeight: "900",
+          background: "linear-gradient(90deg,#ffd700,#ff9900,#ffd700)",
+          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+          filter: "drop-shadow(0 0 12px rgba(255,200,0,0.4))",
+        },
+        subtitle: { color: "#94a3b8", fontSize: "0.75rem", textAlign: "center", marginBottom: "16px" },
+        card: {
+          background: "rgba(255,255,255,0.04)",
+          border: `1px solid ${charColor}44`,
+          borderRadius: "16px", padding: "14px",
+          marginBottom: "10px", width: "100%", maxWidth: "420px",
+          backdropFilter: "blur(12px)",
+        },
+        charCard: (key) => ({
+          background: key === "yuuri" ? "rgba(59,130,246,0.1)" : "rgba(34,197,94,0.1)",
+          border: `2px solid ${CHARACTERS[key].color}66`,
+          borderRadius: "16px", padding: "16px",
+          margin: "6px", flex: 1, cursor: "pointer",
+          textAlign: "center", transition: "all 0.2s", maxWidth: "180px",
+        }),
+        btn: (color = "#ffd700", disabled = false, small = false) => ({
+          background: disabled ? "rgba(100,100,100,0.3)" : `linear-gradient(135deg, ${color}cc, ${color}66)`,
+          border: `1px solid ${disabled ? "#444" : color}`,
+          color: disabled ? "#555" : "#fff",
+          padding: small ? "8px 12px" : "11px 16px",
+          borderRadius: "10px",
+          cursor: disabled ? "not-allowed" : "pointer",
+          fontSize: small ? "0.8rem" : "0.9rem",
+          fontFamily: "inherit", fontWeight: "bold",
+          margin: "4px",
+          boxShadow: disabled ? "none" : `0 0 12px ${color}33`,
+          transition: "all 0.2s",
+        }),
+        hpBarBg: { background: "rgba(0,0,0,0.4)", borderRadius: "6px", overflow: "hidden", marginBottom: "8px", height: "10px" },
+        hpBar: (pct, color) => ({
+          width: `${pct}%`, height: "100%",
+          background: color, borderRadius: "6px",
+          transition: "width 0.4s ease", boxShadow: `0 0 8px ${color}`,
+        }),
+        log: { fontSize: "0.78rem", lineHeight: "1.7", color: "#94a3b8", maxHeight: "130px", overflowY: "auto" },
+      };
+
+      return (
+        <div style={s.page}>
+          <div style={s.title}>✨ ゆうりとそうやの大冒険 ✨</div>
+          <div style={s.subtitle}>ドラゴンをたおして せかいをすくえ！</div>
+
+          {screen === "select" && (
+            <div style={{ width: "100%", maxWidth: "420px" }}>
+              <div style={{ textAlign: "center", color: "#ffd700", fontWeight: "bold", marginBottom: "16px" }}>
+                👇 どっちでぼうけんする？
+              </div>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                {Object.entries(CHARACTERS).map(([key, c]) => (
+                  <div key={key} style={s.charCard(key)} onClick={() => selectChar(key)}>
+                    <div style={{ fontSize: "3rem", marginBottom: "8px" }}>{c.emoji}</div>
+                    <div style={{ color: c.color, fontWeight: "900", fontSize: "1.1rem", marginBottom: "4px" }}>{c.name}</div>
+                    <div style={{ color: "#94a3b8", fontSize: "0.72rem", marginBottom: "10px" }}>{c.desc}</div>
+                    <div style={{ fontSize: "0.72rem", color: "#64748b" }}>
+                      <div>HP: {c.hp}</div><div>ATK: {c.atk} / DEF: {c.def}</div>
+                    </div>
+                    <div style={{ marginTop: "8px", padding: "6px", background: `${c.color}22`, borderRadius: "8px", fontSize: "0.7rem", color: c.color }}>
+                      必殺技 {c.skill.emoji}<br />{c.skill.name}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {screen === "map" && player && (
+            <>
+              <div style={s.card}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                  <span style={{ color: charColor, fontWeight: "900" }}>{player.emoji} {player.name} Lv.{player.level}</span>
+                  <span style={{ color: "#fbbf24", fontSize: "0.85rem" }}>💰 {player.gold}G</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem", color: "#94a3b8", marginBottom: "4px" }}>
+                  <span>HP: {player.hp}/{player.maxHp}</span>
+                  <span>ATK:{player.atk} DEF:{player.def}</span>
+                </div>
+                <div style={s.hpBarBg}><div style={s.hpBar(hpPct(player.hp, player.maxHp), hpColor(hpPct(player.hp, player.maxHp)))} /></div>
+                <div style={{ fontSize: "0.7rem", color: "#475569" }}>
+                  📍 {FLOORS[player.floor].emoji} {FLOORS[player.floor].name} ／ 持ち物: {player.inventory.map(i => i.emoji).join("") || "なし"}
+                </div>
+              </div>
+              <div style={{ ...s.card, textAlign: "center" }}>
+                <div style={{ fontSize: "3.5rem", marginBottom: "8px", animation: "float 3s ease-in-out infinite" }}>
+                  {FLOORS[player.floor].emoji}
+                </div>
+                <div style={{ color: charColor, fontWeight: "bold", marginBottom: "16px" }}>{FLOORS[player.floor].name}</div>
+                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
+                  <button style={s.btn("#ef4444")} onClick={encounter}>⚔️ たたかう</button>
+                  <button style={s.btn("#f59e0b")} onClick={() => setScreen("shop")}>🛒 ショップ</button>
+                  <button style={s.btn("#22c55e")} onClick={goNext}>🚪 つぎへすすむ</button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {screen === "battle" && player && monster && (
+            <>
+              <div style={s.card}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                  <span style={{ color: charColor, fontWeight: "900" }}>{player.emoji} {player.name}</span>
+                  <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>HP: {player.hp}/{player.maxHp}</span>
+                </div>
+                <div style={s.hpBarBg}><div style={s.hpBar(hpPct(player.hp, player.maxHp), hpColor(hpPct(player.hp, player.maxHp)))} /></div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                  <span style={{ color: "#f87171", fontWeight: "bold" }}>{monster.emoji} {monster.name}</span>
+                  <span style={{ color: "#94a3b8", fontSize: "0.8rem" }}>HP: {monster.hp}/{monster.maxHp}</span>
+                </div>
+                <div style={s.hpBarBg}><div style={s.hpBar(hpPct(monster.hp, monster.maxHp), "#f87171")} /></div>
+              </div>
+              <div style={{ ...s.card, textAlign: "center", position: "relative", overflow: "hidden" }}>
+                {showSkillAnim && (
+                  <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "4rem", animation: "skillFlash 0.8s ease forwards", zIndex: 10, background: "rgba(255,215,0,0.15)" }}>
+                    ✨
+                  </div>
+                )}
+                <div style={{ display: "flex", justifyContent: "space-around", alignItems: "center", padding: "12px 0" }}>
+                  <div style={{ fontSize: "3rem", animation: playerShake ? "shake 0.4s ease" : "float 2.5s ease-in-out infinite" }}>{player.emoji}</div>
+                  <div style={{ color: "#475569", fontSize: "1.2rem" }}>⚔️</div>
+                  <div style={{ fontSize: "3rem", animation: shake ? "shake 0.4s ease" : "float 3s ease-in-out infinite" }}>{monster.emoji}</div>
+                </div>
+                {monster.weak === player.charKey && (
+                  <div style={{ fontSize: "0.72rem", color: "#fbbf24", marginBottom: "8px" }}>⚡ このてきは{player.name}によわい！</div>
+                )}
+                <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center" }}>
+                  <button style={s.btn("#ef4444", animating)} onClick={() => handleAttack(false)} disabled={animating}>⚔️ こうげき</button>
+                  <button style={s.btn("#a855f7", animating || player.skillUsed)} onClick={() => handleAttack(true)} disabled={animating || player.skillUsed}>
+                    {CHARACTERS[player.charKey].skill.emoji} 必殺技{player.skillUsed ? "×" : ""}
+                  </button>
+                  <button style={s.btn("#22c55e", animating)} onClick={usePotion} disabled={animating}>🥤 かいふく</button>
+                  <button style={s.btn("#6b7280", animating)} onClick={flee} disabled={animating}>🏃 にげる</button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {screen === "shop" && player && (
+            <div style={s.card}>
+              <div style={{ color: "#ffd700", fontWeight: "bold", textAlign: "center", marginBottom: "12px" }}>
+                🛒 おみせ（もちきん: {player.gold}G）
+              </div>
+              {ITEMS.map(item => (
+                <div key={item.id} style={{ display: "flex", justifyContent: "space-between", alignItems: "center",
+                  marginBottom: "8px", padding: "8px 10px", background: "rgba(255,255,255,0.03)", borderRadius: "10px" }}>
+                  <span style={{ fontSize: "1.1rem" }}>{item.emoji}</span>
+                  <span style={{ flex: 1, marginLeft: "8px", fontSize: "0.82rem" }}>{item.name}</span>
+                  <span style={{ color: "#94a3b8", fontSize: "0.72rem", marginRight: "8px" }}>{item.desc}</span>
+                  <button style={s.btn("#fbbf24", player.gold < item.cost, true)}
+                    onClick={() => buyItem(item)} disabled={player.gold < item.cost}>{item.cost}G</button>
+                </div>
+              ))}
+              <div style={{ textAlign: "center", marginTop: "8px" }}>
+                <button style={s.btn("#6b7280")} onClick={() => setScreen("map")}>🔙 もどる</button>
+              </div>
+            </div>
+          )}
+
+          {screen === "gameover" && player && (
+            <div style={{ ...s.card, textAlign: "center" }}>
+              <div style={{ fontSize: "4rem", marginBottom: "8px" }}>💀</div>
+              <div style={{ color: "#f87171", fontSize: "1.5rem", fontWeight: "900", marginBottom: "4px" }}>GAME OVER</div>
+              <div style={{ color: "#94a3b8", marginBottom: "16px" }}>{player.name}はたおれてしまった…</div>
+              <button style={s.btn("#ef4444")} onClick={restart}>🔄 もういちど</button>
+            </div>
+          )}
+
+          {screen === "clear" && player && (
+            <div style={{ ...s.card, textAlign: "center" }}>
+              <div style={{ fontSize: "4rem", marginBottom: "8px" }}>🏆</div>
+              <div style={{ color: "#ffd700", fontSize: "1.4rem", fontWeight: "900", marginBottom: "4px" }}>🎉 ぼうけんクリア！ 🎉</div>
+              <div style={{ color: "#a3e635", marginBottom: "8px" }}>{player.name}が まおうを たおした！</div>
+              <div style={{ color: "#94a3b8", fontSize: "0.85rem", marginBottom: "16px" }}>
+                さいしゅうレベル: {player.level} ／ のこりHP: {player.hp}
+              </div>
+              <button style={s.btn("#ffd700")} onClick={restart}>🔄 もういちど</button>
+            </div>
+          )}
+
+          {screen !== "select" && (
+            <div style={{ ...s.card, ...s.log }}>
+              {log.map((entry, i) => (
+                <div key={i} style={{ opacity: 1 - i * 0.1, marginBottom: "1px" }}>{entry}</div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
