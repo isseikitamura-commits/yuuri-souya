@@ -92,7 +92,7 @@ const SFX={
 };
 
 // ====== GAME DATA ======
-const CHAR_VIS={hero:{face:'🦸',wpn:'⚡',aura:'👑'},warrior:{face:'🪖',wpn:'🗡️',aura:'🛡️'},priest:{face:'🧎',wpn:'📿',aura:'💫'},mage:{face:'🧙',wpn:'🔮',aura:'🌑'}};
+const CHAR_VIS={hero:{face:'🧝',wpn:'⚔️',aura:'✨',crown:'👑',trail:'🌟'},warrior:{face:'💪',wpn:'🗡️',aura:'🛡️',crown:'⚔️',trail:'🔥'},priest:{face:'🙏',wpn:'📿',aura:'💫',crown:'🌸',trail:'💖'},mage:{face:'🧙',wpn:'🔮',aura:'🌌',crown:'⭐',trail:'💜'}};
 const CLASSES={
   hero:{id:'hero',name:'勇者',color:'#d4a017',bg:'rgba(212,160,23,.1)',hp:155,mp:30,atk:24,def:13,mat:18,
     baseSkill:{id:'bs_hero',name:'会心の一撃',e:'💥',desc:'ATK×3.2 クリティカル',mp:8,type:'atk_one',pow:c=>Math.floor(c.atk*3.2),color:'#f97316'}},
@@ -185,10 +185,15 @@ const MOB_ENC=MOB_ENC_POOL.map(pool=>pool[0]);
 
 
 const RARE_ENCOUNTERS=[
-  // ゴールドスライム: 逃げ足が速く攻撃は弱いがGold大量
+  // ゴールドスライム
   [{id:'gslime',name:'ゴールドスライム',base:'🟡',ov:'💰',flt:'hue-rotate(40deg) saturate(5) brightness(1.4) contrast(1.3)',gc:'#fbbf24',hp:30,maxHp:30,atk:2,def:2,mat:1,exp:5,gold:1000,si:null,rare:true}],
-  // シルバースライム: 少し硬い、アイテムドロップ用（EXPを多めに）
+  // シルバースライム
   [{id:'sslime',name:'シルバースライム',base:'⚪',ov:'✨',flt:'grayscale(.2) saturate(2) brightness(1.5)',gc:'#e2e8f0',hp:50,maxHp:50,atk:5,def:10,mat:3,exp:200,gold:300,si:null,rare:true}],
+  // ゲンガー: 通常は弱いが会心で10000ダメージ
+  [{id:'gengar',name:'ゲンガー',base:'👻',ov:'💀',flt:'hue-rotate(260deg) saturate(2.5) brightness(.55) contrast(1.5)',gc:'#7c3aed',hp:80,maxHp:80,atk:8,def:5,mat:12,exp:120,gold:200,si:'stun',rare:true,gengarCrit:true}],
+  // 神獣ルギア: 最強の呪文使い
+  [{id:'lugia',name:'神獣ルギア',base:'🦅',ov:'✨',flt:'hue-rotate(200deg) saturate(3.5) brightness(1.3) contrast(1.2)',gc:'#c4b5fd',hp:1800,maxHp:1800,atk:55,def:80,mat:280,exp:1500,gold:2000,si:'burn',rare:true,boss:true,big:true,spellImmune:false,magicResist:0,divineSpellCaster:true,
+    phases:[{hp:.65,msg:'ルギアが神秘の翼を広げた！魔法力が爆発！',atkBonus:0},{hp:.3,msg:'ルギアが真の神力を解放！！',atkBonus:30,aoe:true}]}],
 ];
 
 const ENC=[
@@ -239,6 +244,12 @@ const calcNext=lv=>Math.floor(120*Math.pow(lv,1.5));
 
 // 敵の呪文データベース
 const ENEMY_SPELL_DB={
+  lugia:[
+    {name:'エアロブラスト',e:'💨',type:'e_atk_all',pow:3.5},
+    {name:'サイコキネシス',e:'🔮',type:'e_atk_all',pow:4.2},
+    {name:'しんぴのまもり',e:'✨',type:'e_heal',pow:.35},
+    {name:'ルギア絶叫',e:'🌊',type:'e_atk_all',pow:5.5},
+  ],
   luc:[
     {name:'冥界炎',e:'🔥',type:'e_atk_all',pow:1.4},
     {name:'ダークウェーブ',e:'🌑',type:'e_atk_one',pow:2.4},
@@ -311,22 +322,33 @@ function ExpBar({exp,level}){
 }
 function CharSprite({member,anim}){
   const cls=CLASSES[member.classId],alive=member.hp>0,v=CHAR_VIS[member.classId],st=member.status;
-  let flt=`drop-shadow(0 0 18px ${cls.color}cc) drop-shadow(0 0 8px ${cls.color}88)`;
-  if(!alive)flt='grayscale(1)';else if(st==='poison')flt='drop-shadow(0 0 16px #a855f7) hue-rotate(70deg)';else if(st==='burn')flt='drop-shadow(0 0 18px #ef4444) saturate(1.4)';else if(st==='stun')flt='drop-shadow(0 0 16px #fbbf24) brightness(1.2)';
+  const baseGlow=`drop-shadow(0 0 24px ${cls.color}) drop-shadow(0 0 10px ${cls.color}99)`;
+  let flt=baseGlow;
+  if(!alive)flt='grayscale(1) opacity(0.3)';
+  else if(st==='poison')flt='drop-shadow(0 0 20px #a855f7) hue-rotate(70deg) saturate(1.6)';
+  else if(st==='burn')flt='drop-shadow(0 0 22px #ef4444) saturate(1.8) brightness(1.1)';
+  else if(st==='stun')flt='drop-shadow(0 0 20px #fbbf24) brightness(1.3)';
   let an='floatB 3.2s ease-in-out infinite';
   if(!alive)an='none';else if(anim==='atk')an='charAtk .42s ease';else if(anim==='hurt')an='shakeX .38s ease';
   const stIcon=st==='poison'?'☠️':st==='burn'?'🔥':st==='stun'?'💫':null;
-  return(<div style={{display:'flex',flexDirection:'column',alignItems:'center',position:'relative',animation:an,opacity:alive?1:.22,transformOrigin:'bottom center',transition:'opacity .4s'}}>
-    {stIcon&&<div style={{position:'absolute',top:'-14px',right:'-2px',fontSize:'.75rem',zIndex:10}}>{stIcon}</div>}
-    <div style={{position:'relative'}}>
-      <div style={{position:'absolute',inset:'-6px',borderRadius:'50%',background:`radial-gradient(circle,${cls.color}44 0%,${cls.color}11 55%,transparent 75%)`,animation:'pulse 2.2s ease-in-out infinite',pointerEvents:'none',zIndex:0}}/>
-      <div style={{position:'relative',filter:flt,zIndex:1}}>
-        <span style={{fontSize:'4rem',lineHeight:1,display:'block'}}>{v.face}</span>
-        <span style={{position:'absolute',bottom:'-2px',right:'-13px',fontSize:'1.4rem',filter:`drop-shadow(0 0 5px ${cls.color})`}}>{v.wpn}</span>
-        <span style={{position:'absolute',top:'-8px',left:'-8px',fontSize:'1rem',filter:`drop-shadow(0 0 4px ${cls.color}cc)`}}>{v.aura}</span>
+  return(<div style={{display:'flex',flexDirection:'column',alignItems:'center',position:'relative',animation:an,opacity:alive?1:.18,transformOrigin:'bottom center',transition:'opacity .4s'}}>
+    {stIcon&&<div style={{position:'absolute',top:'-16px',right:'-4px',fontSize:'.8rem',zIndex:10}}>{stIcon}</div>}
+    <div style={{position:'relative',width:'52px',height:'62px'}}>
+      {/* オーラリング */}
+      <div style={{position:'absolute',inset:'-10px',borderRadius:'50%',background:`conic-gradient(${cls.color}88,${cls.color}22,${cls.color}88)`,animation:'winSpin 3s linear infinite',opacity:.6,filter:`blur(4px)`,zIndex:0}}/>
+      <div style={{position:'absolute',inset:'-4px',borderRadius:'50%',background:`radial-gradient(circle,${cls.color}55 0%,transparent 70%)`,animation:'pulse 2s ease-in-out infinite',zIndex:0}}/>
+      {/* メインキャラ */}
+      <div style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',filter:flt,zIndex:2,textAlign:'center'}}>
+        <div style={{fontSize:'2.6rem',lineHeight:1}}>{v.face}</div>
       </div>
+      {/* 武器 */}
+      <div style={{position:'absolute',bottom:'-2px',right:'-6px',fontSize:'1.6rem',zIndex:3,filter:`drop-shadow(0 0 6px ${cls.color}) drop-shadow(0 0 12px ${cls.color}88)`,animation:'floatA 2.4s ease-in-out infinite'}}>{v.wpn}</div>
+      {/* 冠 */}
+      <div style={{position:'absolute',top:'-10px',left:'50%',transform:'translateX(-50%)',fontSize:'1rem',zIndex:3,filter:`drop-shadow(0 0 5px ${cls.color})`}}>{v.crown}</div>
+      {/* 軌跡パーティクル */}
+      {alive&&<div style={{position:'absolute',bottom:'2px',left:'-6px',fontSize:'.75rem',zIndex:1,opacity:.7,animation:'floatB 1.8s ease-in-out infinite'}}>{v.trail}</div>}
     </div>
-    <div style={{fontSize:'.58rem',color:cls.color,fontWeight:900,marginTop:'5px',textShadow:`0 0 10px ${cls.color}99`,letterSpacing:'.04em'}}>{member.name}</div>
+    <div style={{fontSize:'.6rem',color:cls.color,fontWeight:900,marginTop:'8px',textShadow:`0 0 12px ${cls.color},0 0 4px ${cls.color}`,letterSpacing:'.06em',background:`rgba(0,0,0,.5)`,padding:'1px 5px',borderRadius:'4px',border:`1px solid ${cls.color}55`}}>{member.name}</div>
   </div>);
 }
 function MonSprite({mon,anim,size}){
@@ -389,14 +411,15 @@ function App(){
   const [dragonSummoned,setDragonSummoned]=useState(false);
   const [dbPopup,setDbPopup]=useState(false);
   const [clearCount,setClearCount]=useState(0);
-  const [savedParty,setSavedParty]=useState(null);
+  const [savedParty,setSavedParty]=useState(null); // 後方互換
+  const [clearHistory,setClearHistory]=useState([]); // 最大5件
   const [chBattleNum,setChBattleNum]=useState(1); // 各章の戦闘番号(1-5, 5=ボス)
   const [battleResult,setBattleResult]=useState(null); // 戦闘結果表示
   const [monsterRoster,setMonsterRoster]=useState([]); // 仲間モンスター全員(最大5)
   const [selExtra,setSelExtra]=useState([]); // 追加人間キャラ(3,4人目)
   const [selNames,setSelNames]=useState(['リン','カイ']); // 3,4人目の名前
 
-  useEffect(()=>{const d=ld();if(!d)return;if(d.clearCount)setClearCount(d.clearCount);if(d.savedParty)setSavedParty(d.savedParty);},[]);
+  useEffect(()=>{const d=ld();if(!d)return;if(d.clearCount)setClearCount(d.clearCount);if(d.savedParty)setSavedParty(d.savedParty);if(d.clearHistory)setClearHistory(d.clearHistory||[]);},[]);
 
   const uid=useRef(0),autoRef=useRef(autoMode);
   useEffect(()=>{autoRef.current=autoMode;},[autoMode]);
@@ -490,7 +513,7 @@ function App(){
       addLog('🤝 '+chosenTpl.name+'がなかまになった！（ロスター:'+newRoster.length+'/5）');
     }
     setBattleResult(null);
-    if(isFinal){const cc=clearCount+1;setClearCount(cc);setSavedParty(party);sv({clearCount:cc,savedParty:party});stopBgm();setScr('ending');return;}
+    if(isFinal){const cc=clearCount+1;setClearCount(cc);setSavedParty(party);const newHist=[{party:[...party],clearNo:cc,date:new Date().toLocaleDateString('ja')},...clearHistory].slice(0,5);setClearHistory(newHist);sv({clearCount:cc,savedParty:party,clearHistory:newHist});stopBgm();setScr('ending');return;}
     if(isChClear){const next=chIdx+1;setChIdx(next);setChBattleNum(1);setScr('map');bgm('field');setStoryScreen(CHAPTERS[next]);}
     else if(doSwap){setScr('party_mgmt');}
     else{setChBattleNum(n=>n+1);setScr('map');bgm('field');}
@@ -502,7 +525,7 @@ function App(){
     let nP=[...party],nE=[...enemies];const pIdx=activePIdx;const member={...nP[pIdx]};
     if(member.status==='stun'){addLog('💫 '+mn(member)+'はスタン中！');SFX.stun();nP[pIdx]={...member,statusTurns:Math.max(0,member.statusTurns-1),status:member.statusTurns<=1?null:member.status};}
     else if(action==='spell'&&spellId){const sp=getMemberSpells(member).find(s=>s.id===spellId);if(sp){const r=await executeSpell(sp,pIdx,nP,nE);if(!r){setBusy(false);return;}nP=r.party;nE=r.enemies;}}
-    else if(action==='atk'){const ti=nE.findIndex(e=>e.hp>0);if(ti<0){setBusy(false);return;}const en=nE[ti];const effAtk=Math.floor(member.atk*(member.atkBuffMult||1));let dmg=calcDamage(effAtk,en.def);if(Math.random()<.11){dmg=Math.floor(dmg*1.7);addLog('💥 会心の一撃！');}dmg=Math.max(1,dmg);const xp=60+ti*(-12);setPAnim(pIdx,'atk');SFX.atk();await sleep(250);setPAnim(pIdx,'idle');setMAnim(ti,'hurt');SFX.hit();addSpark(xp+'%','28%');addDmg(dmg,'e',xp+'%','16%');addLog('⚔️ '+mn(member)+'の攻撃！'+dmg+'ダメージ！');nE[ti]={...en,hp:Math.max(0,en.hp-dmg)};await sleep(300);setMAnim(ti,'idle');}
+    else if(action==='atk'){const ti=nE.findIndex(e=>e.hp>0);if(ti<0){setBusy(false);return;}const en=nE[ti];const effAtk=Math.floor(member.atk*(member.atkBuffMult||1));let dmg=calcDamage(effAtk,en.def);if(Math.random()<.05){dmg=Math.floor(dmg*3.0);addLog('💥💥 会心の一撃！！ダメージ3倍！');}dmg=Math.max(1,dmg);const xp=60+ti*(-12);setPAnim(pIdx,'atk');SFX.atk();await sleep(250);setPAnim(pIdx,'idle');setMAnim(ti,'hurt');SFX.hit();addSpark(xp+'%','28%');addDmg(dmg,'e',xp+'%','16%');addLog('⚔️ '+mn(member)+'の攻撃！'+dmg+'ダメージ！');nE[ti]={...en,hp:Math.max(0,en.hp-dmg)};await sleep(300);setMAnim(ti,'idle');}
     else if(action==='defend'){nP[pIdx]={...member,defending:true,defBuffMult:2.2,defBuffTurns:1};addLog('🛡️ '+mn(member)+'は防御！');SFX.buff();}
     else if(action==='heal'){const ci=inv.findIndex(i=>i.eff&&i.eff.cure),hi=inv.findIndex(i=>i.eff&&i.eff.hp&&!i.eff.cure&&!i.eff.allHeal),mi=inv.findIndex(i=>i.eff&&i.eff.mp&&!i.eff.hp&&!i.eff.allHeal),ai=inv.findIndex(i=>i.eff&&i.eff.allHeal);let used=false;
       if(!used&&ai>=0){const it=inv[ai];const ni=[...inv];ni.splice(ai,1);setInv(ni);nP=nP.map(m=>m.hp<=0?m:{...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0});addLog(it.emoji+' '+it.name+'！全員HP・MP完全回復！');SFX.heal();used=true;}
@@ -523,20 +546,27 @@ function App(){
         if(pd&&(en.currentPhase||0)<(en.phases||[]).indexOf(pd)+1){ee[enIdx]={...en,currentPhase:(en.currentPhase||0)+1,atkBonus:(en.atkBonus||0)+(pd.atkBonus||0),rageAoe:pd.aoe||false,tripleAtk:pd.tripleAttack||false};addLog('💢 '+en.name+'！'+pd.msg);SFX.rage();await sleep(500);}
         const attacks=ee[enIdx].tripleAtk?3:ee[enIdx].doubleAttack?2:1;
         const eSpells=ENEMY_SPELL_DB[ee[enIdx].id]||[];
-        const castSpell=eSpells.length>0&&Math.random()<.42;
+        const castSpell=eSpells.length>0&&(ee[enIdx].divineSpellCaster?Math.random()<0.85:Math.random()<0.42);
         if(castSpell){
           const esp=eSpells[Math.floor(Math.random()*eSpells.length)];
-          if(esp.type==='e_atk_all'){const bd=Math.floor(ee[enIdx].mat*(esp.pow||1.5)+8+(ee[enIdx].atkBonus||0)*.4);for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1)*.3);let dmg=Math.max(1,bd-effDef+Math.floor(Math.random()*8)-4);ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,'hurt');SFX.magic();addDmg(dmg,'p',(pi*22+5)+'%','48%');if(esp.inflict&&!ep[pi].status&&Math.random()<.35)ep[pi]={...ep[pi],status:esp.inflict,statusTurns:3};}addLog(esp.e+' '+ee[enIdx].name+'の「'+esp.name+'」！全員に魔法ダメージ！');await sleep(420);}
-          else if(esp.type==='e_atk_one'){const alive3=ep.filter(m=>m.hp>0);if(alive3.length>0){const tgt3=alive3.reduce((a,b)=>a.hp<b.hp?a:b);const ti3=ep.indexOf(tgt3);const bd3=Math.floor(ee[enIdx].mat*(esp.pow||2.0)+5+(ee[enIdx].atkBonus||0)*.3);const effDef3=Math.floor(tgt3.def*(tgt3.defBuffMult||1)*.25);let dmg3=Math.max(1,bd3-effDef3+Math.floor(Math.random()*12)-6);ep[ti3]={...ep[ti3],hp:Math.max(0,tgt3.hp-dmg3)};setPAnim(ti3,'hurt');SFX.magic();addDmg(dmg3,'p',(ti3*22+5)+'%','44%');addLog(esp.e+' '+ee[enIdx].name+'の「'+esp.name+'」！'+mn(tgt3)+'に'+dmg3+'ダメージ！');if(esp.inflict&&!tgt3.status&&Math.random()<.42)ep[ti3]={...ep[ti3],status:esp.inflict,statusTurns:3};await sleep(380);}}
+          if(esp.type==='e_atk_all'){const bd=Math.floor(ee[enIdx].mat*(esp.pow||1.5)+8+(ee[enIdx].atkBonus||0)*.4);for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1)*.3);let dmg=Math.max(1,bd-effDef+Math.floor(Math.random()*8)-4);if(ep[pi].defending)dmg=Math.max(1,Math.floor(dmg*0.70));ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,'hurt');SFX.magic();addDmg(dmg,'p',(pi*22+5)+'%','48%');if(esp.inflict&&!ep[pi].status&&Math.random()<.35)ep[pi]={...ep[pi],status:esp.inflict,statusTurns:3};}addLog(esp.e+' '+ee[enIdx].name+'の「'+esp.name+'」！全員に魔法ダメージ！');await sleep(420);}
+          else if(esp.type==='e_atk_one'){const alive3=ep.filter(m=>m.hp>0);if(alive3.length>0){const tgt3=alive3.reduce((a,b)=>a.hp<b.hp?a:b);const ti3=ep.indexOf(tgt3);const bd3=Math.floor(ee[enIdx].mat*(esp.pow||2.0)+5+(ee[enIdx].atkBonus||0)*.3);const effDef3=Math.floor(tgt3.def*(tgt3.defBuffMult||1)*.25);let dmg3=Math.max(1,bd3-effDef3+Math.floor(Math.random()*12)-6);if(tgt3.defending)dmg3=Math.max(1,Math.floor(dmg3*0.70));ep[ti3]={...ep[ti3],hp:Math.max(0,tgt3.hp-dmg3)};setPAnim(ti3,'hurt');SFX.magic();addDmg(dmg3,'p',(ti3*22+5)+'%','44%');addLog(esp.e+' '+ee[enIdx].name+'の「'+esp.name+'」！'+mn(tgt3)+'に'+dmg3+'ダメージ！');if(esp.inflict&&!tgt3.status&&Math.random()<.42)ep[ti3]={...ep[ti3],status:esp.inflict,statusTurns:3};await sleep(380);}}
           else if(esp.type==='e_heal'){const ha=Math.floor(ee[enIdx].maxHp*(esp.pow||.2));ee[enIdx]={...ee[enIdx],hp:Math.min(ee[enIdx].maxHp,ee[enIdx].hp+ha)};addLog(esp.e+' '+ee[enIdx].name+'がHP回復！+'+ha);SFX.heal();await sleep(320);}
           const enDotS=processDot(ee[enIdx]);if(enDotS.hp<ee[enIdx].hp){addDmg(ee[enIdx].hp-enDotS.hp,'e',(60+enIdx*(-12))+'%','16%');SFX.poison();}ee[enIdx]=enDotS;
         } else {
         for(let ai=0;ai<attacks;ai++){
+            // ゲンガー会心：5%で10000ダメージ
+            if(ee[enIdx].gengarCrit&&Math.random()<0.05){
+              const gti=ep.findIndex(m=>m.hp>0);
+              if(gti>=0){ep[gti]={...ep[gti],hp:Math.max(0,ep[gti].hp-10000)};setPAnim(gti,'hurt');SFX.magic();addDmg(10000,'p',(gti*22+5)+'%','40%');addLog('💀💜 ゲンガーの呪い！！'+mn(ep[gti])+'に10000ダメージ！！');}
+              await sleep(500);
+            } else
             if(ee[enIdx].rageAoe){const aoeBase=Math.floor(ee[enIdx].atk*(.5+ai*.1))+(ee[enIdx].atkBonus||0);
-              for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1));const dmg=Math.max(1,aoeBase-effDef+Math.floor(Math.random()*6)-3);ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,'hurt');SFX.phit();addDmg(dmg,'p',(pi*22+5)+'%','48%');}
+              for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1));let dmg=Math.max(1,aoeBase-effDef+Math.floor(Math.random()*6)-3);if(ep[pi].defending)dmg=Math.max(1,Math.floor(dmg*0.45));ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,'hurt');SFX.phit();addDmg(dmg,'p',(pi*22+5)+'%','48%');}
               addLog('💥 '+ee[enIdx].name+'の全体攻撃！全員にダメージ！');await sleep(400);}
             else{const alive=ep.filter(m=>m.hp>0);if(alive.length===0)break;const tgt=alive.reduce((a,b)=>a.hp<b.hp?a:b);const ti=ep.indexOf(tgt);const effDef=Math.floor(tgt.def*(tgt.defBuffMult||1));const eatk=(ee[enIdx].atk||30)+(ee[enIdx].atkBonus||0);let dmg=calcDamage(eatk,effDef);
               if(tgt.reflecting){addLog('💠 魔法が反射！'+ee[enIdx].name+'にダメージ！');ee[enIdx]={...ee[enIdx],hp:Math.max(0,ee[enIdx].hp-dmg)};ep[ti]={...tgt,reflecting:false};continue;}
+              if(tgt.defending){dmg=Math.max(1,Math.floor(dmg*0.45));addLog('🛡️ '+mn(tgt)+'は防御中！ダメージ55%カット！');}
               setPAnim(ti,'hurt');setMAnim(enIdx,'atk');SFX.phit();addSpark((ti*22+5)+'%','50%');addDmg(dmg,'p',(ti*22+5)+'%','44%');addLog('💢 '+ee[enIdx].name+'が'+mn(tgt)+'に'+dmg+'ダメージ！');ep[ti]={...tgt,hp:Math.max(0,tgt.hp-dmg)};
               if(ee[enIdx].si&&!tgt.status&&Math.random()<.22){ep[ti]={...ep[ti],status:ee[enIdx].si,statusTurns:3};addLog(ee[enIdx].si==='poison'?'☠️毒！':ee[enIdx].si==='burn'?'🔥燃焼！':'💫スタン！');}
               await sleep(330);setPAnim(ti,'idle');setMAnim(enIdx,'idle');await sleep(80);}}
@@ -559,10 +589,22 @@ function App(){
     const t=setTimeout(()=>{if(autoRef.current)handleAction(act,sid);},800);return()=>clearTimeout(t);
   },[autoMode,scr,busy,phase,spellMenu,activePIdx,party,enemies,inv,getMemberSpells,handleAction]);
 
-  const doSave=()=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,clearCount,savedParty,chBattleNum,monsterRoster});SFX.save();setSaveMsg(ok?'💾 セーブ完了！':'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
-  const doLoad=()=>{const d=ld();if(!d){setSaveMsg('セーブデータなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
+  const doSave=()=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,clearCount,savedParty,clearHistory,chBattleNum,monsterRoster});SFX.save();setSaveMsg(ok?'💾 セーブ完了！':'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
+  const doLoad=()=>{const d=ld();if(!d){setSaveMsg('セーブデータなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);if(d.clearHistory)setClearHistory(d.clearHistory||[]);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
   const buyItem=item=>{if(gold<item.cost){addLog('Gold不足！');return;}SFX.buy();if(item.type==='equip'){setParty(p=>p.map(m=>{let n={...m};if(item.eff.atk)n.atk+=item.eff.atk;if(item.eff.def)n.def+=item.eff.def;if(item.eff.mat)n.mat+=item.eff.mat;if(item.eff.hpb){n.maxHp+=item.eff.hpb;n.hp=Math.min(n.hp+item.eff.hpb,n.maxHp);}if(item.eff.mpb){n.maxMp+=item.eff.mpb;n.mp=Math.min(n.mp+item.eff.mpb,n.maxMp);}return n;}));addLog('🛒 '+item.emoji+item.name+'購入！全員に効果！');}else{if(inv.filter(i=>i.id===item.id).length>=5){addLog('これ以上持てない！');return;}setInv(p=>[...p,{...item}]);addLog('🛒 '+item.emoji+item.name+'購入！');}setGold(g=>g-item.cost);};
   const summonDragon=()=>{if(dragonBalls<3||dragonSummoned)return;SFX.dragon();const ally={...initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4)setParty(p=>[...p,ally]);setDragonBalls(b=>b-3);setDragonSummoned(true);addLog('🐉 神龍シェンロンがなかまになった！ドラゴンボール3個消費！');};
+  const useItemOn=(item,tgtIdx)=>{
+    const m=party[tgtIdx];if(!m)return;
+    const ni=[...inv];const ii=ni.findIndex(x=>x.id===item.id);if(ii<0)return;
+    ni.splice(ii,1);setInv(ni);SFX.heal();
+    const np=[...party];const tgt={...np[tgtIdx]};
+    if(item.eff.allHeal){setParty(np.map(m2=>m2.hp<=0?m2:{...m2,hp:m2.maxHp,mp:m2.maxMp,status:null,statusTurns:0}));addLog(item.emoji+item.name+'！全員HP・MP完全回復！');}
+    else if(item.eff.cure){np[tgtIdx]={...tgt,status:null,statusTurns:0};setParty(np);addLog(item.emoji+item.name+'！'+tgt.name+'の状態異常回復！');}
+    else if(item.eff.hp){const add=Math.min(item.eff.hp,tgt.maxHp-tgt.hp);np[tgtIdx]={...tgt,hp:Math.min(tgt.maxHp,tgt.hp+item.eff.hp)};setParty(np);addLog(item.emoji+item.name+'！'+tgt.name+' HP+'+add+'！');}
+    else if(item.eff.mp){const add=Math.min(item.eff.mp,tgt.maxMp-tgt.mp);np[tgtIdx]={...tgt,mp:Math.min(tgt.maxMp,tgt.mp+item.eff.mp)};setParty(np);addLog(item.emoji+item.name+'！'+tgt.name+' MP+'+add+'！');}
+    else if(item.eff.revive&&tgt.hp<=0){np[tgtIdx]={...tgt,hp:Math.floor(tgt.maxHp*.5),status:null,statusTurns:0};setParty(np);addLog(item.emoji+item.name+'！'+tgt.name+'が復活！');}
+    setItemMenu(false);
+  };
   const startGame=useOld=>{let p;if(useOld&&savedParty){p=savedParty.map(m=>({...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0}));}else{if(selCls.length<2)return;p=[initHuman(selCls[0],'ゆうり'),initHuman(selCls[1],'そうや')];selExtra.forEach((cls,i)=>{if(cls)p.push(initHuman(cls,selNames[i]||EXTRA_NAME_OPTS[0][i]));});}setParty(p);setChIdx(0);setChBattleNum(1);setInv([]);setGold(280);setDragonBalls(0);setDragonSummoned(false);setMonsterRoster([]);setBattleResult(null);setLog(['🌟 ゆうりとそうやの大冒険、開幕！']);setStoryScreen(CHAPTERS[0]);setScr('map');bgm('field');};
 
   const bs=(col,dis)=>({background:dis?'rgba(50,50,60,.25)':`linear-gradient(135deg,${col}bb,${col}44)`,border:`1px solid ${dis?'#1e1e3a':col}`,color:dis?'#2a2a3a':'#fff',padding:'10px 14px',borderRadius:'10px',fontFamily:'inherit',fontWeight:900,fontSize:'.86rem',cursor:dis?'not-allowed':'pointer',boxShadow:dis?'none':`0 0 10px ${col}33`,transition:'all .14s',margin:'4px'});
@@ -598,19 +640,19 @@ function App(){
       {clearCount>0&&<div style={{fontSize:'.75rem',color:'#fbbf24',marginBottom:'6px',fontWeight:900}}>⭐ クリア回数: {clearCount}回</div>}
       <div style={{display:'flex',flexDirection:'column',gap:'8px',alignItems:'center',marginTop:'12px'}}>
         <button onClick={()=>{SFX.cursor();gac();setSelCls([]);setScr('select');}} style={{...bs('#d4a017'),padding:'14px 44px',fontSize:'1.05rem',width:'78%'}}>⚔️ はじめから</button>
-        {savedParty&&clearCount>0&&<button onClick={()=>{SFX.cursor();gac();setScr('ng_choice');}} style={{...bs('#f97316'),padding:'13px 44px',fontSize:'.95rem',width:'78%'}}>🌟 クリアパーティで再挑戦</button>}
+        {(clearHistory.length>0||(savedParty&&clearCount>0))&&<button onClick={()=>{SFX.cursor();gac();setScr('ng_choice');}} style={{...bs('#f97316'),padding:'13px 44px',fontSize:'.95rem',width:'78%'}}>🌟 クリアパーティで再挑戦</button>}
         {hasSave()&&<button onClick={doLoad} style={{...bs('#22c55e'),padding:'13px 44px',fontSize:'.95rem',width:'78%'}}>📂 つづきから</button>}
       </div>
     </div>)}
 
     {/* NG+ */}
-    {scr==='ng_choice'&&savedParty&&(<div style={{width:'100%',maxWidth:'460px',animation:'fadeIn .4s ease'}}>
-      <div style={{textAlign:'center',marginBottom:'10px'}}><div style={{color:'#f97316',fontWeight:900,fontSize:'1rem',marginBottom:'2px'}}>🌟 前回クリアパーティで冒険！</div><div style={{color:'#374151',fontSize:'.74rem'}}>レベルや装備を引き継いで冒険できます</div></div>
-      {savedParty.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';return(<div key={i} className="card" style={{borderColor:mc+'44',padding:'9px 12px'}}><div style={{display:'flex',justifyContent:'space-between',fontSize:'.82rem',fontWeight:900,color:mc}}><span>{m.isMonster?'👾 ':''}{mn(m)}</span><span>Lv.{m.level}</span></div><div style={{fontSize:'.67rem',color:'#374151',marginTop:'2px'}}>HP:{m.maxHp} MP:{m.maxMp} ATK:{m.atk} DEF:{m.def} MAT:{m.mat}</div></div>);})}
-      <div style={{display:'flex',justifyContent:'center',gap:'8px',marginTop:'8px',flexWrap:'wrap'}}>
-        <button style={bs('#f97316')} onClick={()=>startGame(true)}>このパーティで始める！</button>
-        <button style={bs('#374151')} onClick={()=>setScr('title')}>← もどる</button>
-      </div>
+    {scr==='ng_choice'&&(<div style={{width:'100%',maxWidth:'460px',animation:'fadeIn .4s ease'}}>
+      <div style={{textAlign:'center',marginBottom:'10px'}}><div style={{color:'#f97316',fontWeight:900,fontSize:'1rem',marginBottom:'2px'}}>🌟 クリアパーティで再挑戦！</div><div style={{color:'#374151',fontSize:'.74rem'}}>最大5つのクリアパーティから選んで冒険！</div></div>
+      {(clearHistory.length>0?clearHistory:[...(savedParty?[{party:savedParty,clearNo:clearCount,date:''}]:[])]).map((rec,ri)=>(<div key={ri} className="card" style={{borderColor:'rgba(249,115,22,.25)',padding:'8px 10px',marginBottom:'6px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'4px'}}><span style={{color:'#f97316',fontWeight:900,fontSize:'.72rem'}}>🏆 クリア {rec.clearNo}回目 {rec.date||''}</span><button style={{...bs('#f97316'),margin:0,padding:'4px 10px',fontSize:'.68rem'}} onClick={()=>{setSavedParty(rec.party);startGame(true);}}>このパーティで！</button></div>
+        <div style={{display:'flex',flexWrap:'wrap',gap:'3px'}}>{rec.party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';return(<span key={i} style={{fontSize:'.62rem',color:mc,background:`${mc}18`,padding:'1px 5px',borderRadius:'5px',fontWeight:900}}>{mn(m)} Lv{m.level}</span>);})}</div>
+      </div>))}
+      <div style={{textAlign:'center',marginTop:'4px'}}><button style={bs('#374151')} onClick={()=>setScr('title')}>← もどる</button></div>
     </div>)}
 
     {/* CLASS SELECT */}
@@ -726,6 +768,7 @@ function App(){
         <button style={bs('#d97706')} onClick={()=>{SFX.cursor();bgm('town');setScr('shop');}}>🛒 ショップ</button>
         <button style={bs('#22c55e')} onClick={doSave}>💾 セーブ</button>
         {monsterRoster.length>0&&<button style={bs('#60a5fa')} onClick={()=>{SFX.cursor();setScr('party_mgmt');}}>👥 なかま管理</button>}
+        {inv.length>0&&<button style={bs('#16a34a')} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
       </div>
     </>)}
 
@@ -842,6 +885,23 @@ function App(){
           </div>
         </div>)}
       </div>
+      {/* アイテムメニュー（戦闘中）*/}
+      {itemMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.82)',zIndex:50,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .18s ease'}}>
+        <div style={{background:'#0d0d1a',border:'1px solid #22c55e44',borderRadius:'14px',padding:'14px',width:'100%',maxWidth:'360px',maxHeight:'80vh',overflowY:'auto'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}}>
+            <span style={{fontSize:'.85rem',fontWeight:900,color:'#22c55e'}}>🌿 アイテムを使う</span>
+            <button onClick={()=>setItemMenu(false)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'3px 8px',borderRadius:'8px',fontSize:'.75rem',cursor:'pointer'}}>← とじる</button>
+          </div>
+          {/* 対象選択 */}
+          <div style={{marginBottom:'10px'}}>
+            <div style={{fontSize:'.65rem',color:'#94a3b8',marginBottom:'5px'}}>👤 使う相手</div>
+            <div style={{display:'flex',gap:'5px',flexWrap:'wrap'}}>
+              {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#94a3b8';const dead=m.hp<=0;return(<button key={i} onClick={()=>{SFX.cursor();setItemTargetIdx(i);}} style={{...bs(i===itemTargetIdx?mc:'#1e1e3a'),margin:0,padding:'5px 8px',fontSize:'.68rem',opacity:dead?.5:1,border:`1px solid ${i===itemTargetIdx?mc:'#2a2a4a'}`}}><span style={{fontSize:'.9rem'}}>{m.isMonster?m.base:(CHAR_VIS[m.classId]?.face||'🧑')}</span><br/><span style={{color:mc}}>{mn(m)}</span><br/><span style={{color:m.hp/m.maxHp<.25?'#ef4444':'#94a3b8'}}>{dead?'💀':m.hp+'/'+m.maxHp}</span></button>);})}            </div>
+          </div>
+          {/* アイテムリスト */}
+          {inv.length===0?<div style={{color:'#374151',textAlign:'center',padding:'12px'}}>アイテムがない</div>:[...new Set(inv.map(i=>i.id))].map(id=>{const item=inv.find(x=>x.id===id);const cnt=inv.filter(x=>x.id===id).length;return(<div key={id} onClick={()=>useItemOn(item,itemTargetIdx)} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'6px',padding:'8px 10px',background:'rgba(34,197,94,.05)',border:'1px solid rgba(34,197,94,.18)',borderRadius:'10px',cursor:'pointer',transition:'all .15s'}}><span style={{fontSize:'1.4rem'}}>{item.emoji}</span><div style={{flex:1}}><div style={{fontSize:'.78rem',fontWeight:900,color:'#d1fae5'}}>{item.name} <span style={{color:'#4ade80',fontSize:'.68rem'}}>×{cnt}</span></div><div style={{fontSize:'.62rem',color:'#374151'}}>{item.desc}</div></div><span style={{fontSize:'.72rem',color:'#22c55e',fontWeight:900}}>使う ▶</span></div>);})}
+        </div>
+      </div>)}
     </>)}
 
     {/* SHOP */}
