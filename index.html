@@ -101,36 +101,36 @@ const CLASSES={
   priest:{id:'priest',name:'僧侶',color:'#22c55e',bg:'rgba(34,197,94,.1)',hp:130,mp:60,atk:14,def:16,mat:26,
     baseSkill:{id:'bs_priest',name:'ベホマラー',e:'✨',desc:'全員HP全回復',mp:22,type:'heal_all',color:'#22c55e'}},
   mage:{id:'mage',name:'魔法使い',color:'#a855f7',bg:'rgba(168,85,247,.1)',hp:110,mp:70,atk:11,def:7,mat:48,
-    baseSkill:{id:'bs_mage',name:'メラゾーマ',e:'🔥',desc:'全敵灼熱+燃焼',mp:18,type:'atk_all',pow:c=>Math.floor(c.mat*4.2+35),inflict:'burn',color:'#dc2626'}},
+    baseSkill:{id:'bs_mage',name:'メラゾーマ',e:'🔥',desc:'全敵灼熱+燃焼',mp:18,type:'atk_all',pow:c=>Math.floor(c.mat*2.4+15),inflict:'burn',color:'#dc2626'}},
 };
 const CLASS_SPELLS={
   hero:[
     {level:5,id:'gira',name:'ギラ',e:'🔥',mp:6,type:'atk_one',pow:c=>Math.floor(c.mat*2.0+15),desc:'炎で1体攻撃',color:'#f97316'},
     {level:10,id:'bikiru',name:'バイキルト',e:'⬆️',mp:8,type:'buff_atk',desc:'ATK 3ターン2倍',color:'#fbbf24'},
     {level:15,id:'dragcut',name:'竜殺し',e:'🐲',mp:12,type:'atk_one',pow:c=>Math.floor(c.atk*3.8),desc:'竜族特効！',color:'#dc2626'},
-    {level:20,id:'holyblade',name:'聖剣光波',e:'🌟',mp:18,type:'atk_all',pow:c=>Math.floor(c.mat*2.5+c.atk*1.8),desc:'全敵に聖属性',color:'#fde68a'},
-    {level:25,id:'swordstorm',name:'剣嵐',e:'⚡',mp:25,type:'atk_all',pow:c=>Math.floor(c.atk*3.5+c.mat*1.5),desc:'物理+魔法複合',color:'#818cf8'},
+    {level:20,id:'holyblade',name:'聖剣光波',e:'🌟',mp:18,type:'atk_all',pow:c=>Math.floor(c.mat*1.6+c.atk*1.2),desc:'全敵に聖属性',color:'#fde68a'},
+    {level:25,id:'swordstorm',name:'剣嵐',e:'⚡',mp:25,type:'atk_all',pow:c=>Math.floor(c.atk*2.2+c.mat*1.0),desc:'物理+魔法複合',color:'#818cf8'},
   ],
   warrior:[
     {level:5,id:'tackle',name:'タックル',e:'💢',mp:5,type:'atk_one',pow:c=>Math.floor(c.atk*1.8),desc:'スタン付与',inflict:'stun',color:'#f87171'},
     {level:10,id:'teppeki',name:'鉄壁',e:'🛡️',mp:6,type:'buff_def_all',desc:'全員DEF UP',color:'#38bdf8'},
     {level:15,id:'renzan',name:'連続斬り',e:'⚔️',mp:10,type:'atk_double',pow:c=>Math.floor(c.atk*1.7),desc:'2回攻撃',color:'#fca5a5'},
-    {level:20,id:'earthcrush',name:'大地砕き',e:'💢',mp:15,type:'atk_all',pow:c=>Math.floor(c.atk*3.0+20),desc:'全敵 地震',color:'#a16207'},
+    {level:20,id:'earthcrush',name:'大地砕き',e:'💢',mp:15,type:'atk_all',pow:c=>Math.floor(c.atk*2.0+12),desc:'全敵 地震',color:'#a16207'},
     {level:25,id:'berserk',name:'超戦士化',e:'😤',mp:20,type:'buff_both',desc:'ATK&DEF 4ターン2倍',color:'#dc2626'},
   ],
   priest:[
     {level:5,id:'sukuru',name:'スクルト',e:'🔵',mp:7,type:'buff_def_all',desc:'全員DEF UP',color:'#38bdf8'},
-    {level:10,id:'bagikuro',name:'バギクロス',e:'🌪️',mp:12,type:'atk_all',pow:c=>Math.floor(c.mat*2.4+20),desc:'竜巻全敵',color:'#67e8f9'},
+    {level:10,id:'bagikuro',name:'バギクロス',e:'🌪️',mp:12,type:'atk_all',pow:c=>Math.floor(c.mat*1.6+10),desc:'竜巻全敵',color:'#67e8f9'},
     {level:15,id:'zao',name:'ザオラル',e:'💫',mp:16,type:'revive',desc:'HP50%で復活',color:'#4ade80'},
-    {level:20,id:'sacred',name:'聖なる光',e:'🌟',mp:22,type:'atk_all',pow:c=>Math.floor(c.mat*3.8+30),desc:'全敵に聖光',color:'#fef08a'},
+    {level:20,id:'sacred',name:'聖なる光',e:'🌟',mp:22,type:'atk_all',pow:c=>Math.floor(c.mat*2.2+15),desc:'全敵に聖光',color:'#fef08a'},
     {level:25,id:'megaheal',name:'メガヒール',e:'💖',mp:28,type:'heal_all_mp',desc:'全員HP・MP全回復',color:'#86efac'},
   ],
   mage:[
     {level:5,id:'hyado',name:'ヒャダルコ',e:'❄️',mp:10,type:'atk_one',pow:c=>Math.floor(c.mat*2.6+20),desc:'氷大ダメージ',color:'#7dd3fc'},
     {level:10,id:'mahoka',name:'マホカンタ',e:'🔮',mp:9,type:'reflect',desc:'魔法反射！',color:'#818cf8'},
-    {level:15,id:'ionazun',name:'イオナズン',e:'💥',mp:24,type:'atk_all',pow:c=>Math.floor(c.mat*5.0+50),desc:'最強爆発魔法',color:'#fca5a5'},
+    {level:15,id:'ionazun',name:'イオナズン',e:'💥',mp:24,type:'atk_all',pow:c=>Math.floor(c.mat*2.6+20),desc:'最強爆発魔法',color:'#fca5a5'},
     {level:20,id:'force',name:'フォース',e:'⚡',mp:18,type:'atk_all',pow:c=>Math.floor(c.mat*3.0+c.atk*1.2),desc:'電撃全敵',color:'#fde68a'},
-    {level:25,id:'darkstar',name:'暗黒星',e:'🌑',mp:30,type:'atk_one',pow:c=>Math.floor(c.mat*7.0+80),desc:'超巨大魔法！',color:'#a855f7'},
+    {level:25,id:'darkstar',name:'暗黒星',e:'🌑',mp:30,type:'atk_one',pow:c=>Math.floor(c.mat*3.8+35),desc:'超巨大魔法！',color:'#a855f7'},
   ],
 };
 const FIELD_SPELL_TYPES=['heal_all','heal_all_mp','revive'];
@@ -206,7 +206,7 @@ const ENC=[
   [{id:'satan',name:'悪魔サタン',base:'😈',ov:'👑',flt:'hue-rotate(345deg) saturate(4) brightness(.78)',gc:'#dc2626',hp:6000,maxHp:6000,atk:180,def:95,mat:140,exp:2000,gold:1500,si:'burn',big:true,boss:true,final:true,doubleAttack:true,spellImmune:false,phases:[{hp:.75,msg:'サタンが闇の力を解放！',atkBonus:25},{hp:.5,msg:'サタンの邪眼が開いた！',atkBonus:40,aoe:true},{hp:.25,msg:'サタンが真の魔王形態に！',atkBonus:65,aoe:true},{hp:.05,msg:'⚠️「滅亡の咆哮」！！残りわずか！',atkBonus:100,aoe:true,tripleAttack:true}]},{id:'angel1',name:'堕天使アゼル',base:'👼',ov:'😈',flt:'hue-rotate(350deg) saturate(3.5) brightness(.7) contrast(1.5)',gc:'#dc2626',hp:600,maxHp:600,atk:110,def:55,mat:85,exp:300,gold:200,si:'burn'},{id:'angel2',name:'堕天使ベリアル',base:'👼',ov:'🔥',flt:'hue-rotate(340deg) saturate(3) brightness(.65) contrast(1.4)',gc:'#b91c1c',hp:550,maxHp:550,atk:100,def:50,mat:78,exp:270,gold:180,si:'burn'}],
 ];
 
-const SHENLONG_TPL={id:'shenlong',name:'神龍シェンロン',base:'🐉',ov:'✨',flt:'hue-rotate(120deg) saturate(3) brightness(1.2)',gc:'#4ade80',maxHp:1200,atk:100,def:70,mat:90,allySkill:{id:'dragon_fire',name:'龍炎爆発',e:'🐉',mp:40,type:'atk_all',pow:c=>Math.floor(c.mat*6.0+c.atk*2.5),desc:'全敵に超強力な龍炎！',color:'#4ade80'}};
+const SHENLONG_TPL={id:'shenlong',name:'神龍シェンロン',base:'🐉',ov:'✨',flt:'hue-rotate(120deg) saturate(3) brightness(1.2)',gc:'#4ade80',maxHp:1200,atk:100,def:70,mat:90,allySkill:{id:'dragon_fire',name:'龍炎爆発',e:'🐉',mp:40,type:'atk_all',pow:c=>Math.floor(c.mat*3.5+c.atk*1.5),desc:'全敵に龍炎！',color:'#4ade80'}};
 
 const ITEMS=[
   {id:'herb',name:'やくそう',emoji:'🌿',cost:40,type:'con',eff:{hp:100},desc:'HP+100'},
@@ -272,9 +272,13 @@ const scaleEnemy=(tpl,avgLv,partySize)=>{
   // 4人=2.5x, 3人=1.8x, 2人=1.2x, 1人=1.0x
   const ps=partySize>=4?2.5:partySize===3?1.8:partySize===2?1.2:1.0;
   const lv=Math.max(1,avgLv);
-  const s=(1+(lv-1)*0.18)*ps;
+  // ボスは追加1.8倍 + 魔法耐性付与
+  const bm=tpl.boss?1.8:1.0;
+  const s=(1+(lv-1)*0.18)*ps*bm;
   const gs=1+(lv-1)*0.08;
-  return{...tpl,hp:Math.round(tpl.maxHp*s),maxHp:Math.round(tpl.maxHp*s),atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*s),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*gs)};
+  const base={...tpl,hp:Math.round(tpl.maxHp*s),maxHp:Math.round(tpl.maxHp*s),atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*s),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*gs)};
+  if(tpl.boss)base.magicResist=0.55; // ボスは魔法55%カット
+  return base;
 };
 const SK='ysd_v5';
 const sv=d=>{try{localStorage.setItem(SK,JSON.stringify(d));return true;}catch(e){return false;}};
@@ -412,7 +416,7 @@ function App(){
     if(spell.type==='atk_one'){
       const ti=nE.findIndex(e=>e.hp>0);if(ti<0)return{party:nP,enemies:nE};
       const en=nE[ti];
-      let dmg=Math.max(1,(spell.pow||((c)=>0))(nP[pIdx])-(en.def||0)*.5);
+      let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(en.magicResist||0)))-(en.def||0)*1.2);
       if(en.spellImmune){dmg=Math.max(1,Math.floor(dmg*.08));addLog('🔰 呪文がほとんど効かない！');}
       setMAnim(ti,'hurt');SFX.hit();addSpark('65%','30%');addDmg(Math.round(dmg),'e','65%','18%');
       addLog(spell.e+' '+spell.name+'！'+Math.round(dmg)+'ダメージ！');
@@ -421,7 +425,7 @@ function App(){
     }else if(spell.type==='atk_all'||spell.type==='atk_double'){
       const live=nE.map((_,i)=>i).filter(i=>nE[i].hp>0);const hits=spell.type==='atk_double'?2:1;
       for(let h=0;h<hits;h++)for(const ti of live){if(nE[ti].hp<=0)continue;
-        let dmg=Math.max(1,(spell.pow||((c)=>0))(nP[pIdx])-(nE[ti].def||0)*.4);if(spell.type==='atk_double'&&h===0)dmg=Math.floor(dmg*.85);
+        let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(nE[ti].magicResist||0)))-(nE[ti].def||0)*1.0);if(spell.type==='atk_double'&&h===0)dmg=Math.floor(dmg*.85);
         if(nE[ti].spellImmune){dmg=Math.max(1,Math.floor(dmg*.08));addLog('🔰 '+nE[ti].name+'に呪文がほとんど効かない！');}
         const xp=60+ti*(-12);setMAnim(ti,'hurt');SFX.hit();addSpark(xp+'%','28%');addDmg(Math.round(dmg),'e',xp+'%','16%');
         let nen={...nE[ti],hp:Math.max(0,nE[ti].hp-dmg)};if(spell.inflict)nen=tryInflict(nen,spell.inflict,.38);nE[ti]=nen;await sleep(160);setMAnim(ti,'idle');}
@@ -450,7 +454,7 @@ function App(){
     setParty(p2);setGold(g=>g+tGold);await sleep(500);
     let newDB=dragonBalls,gotDB=false;
     const isBoss=fe.some(e=>e.boss);
-    if(isBoss&&Math.random()<.80&&dragonBalls<3){newDB=dragonBalls+1;setDragonBalls(newDB);SFX.dragonball();gotDB=true;setDbPopup(true);setTimeout(()=>setDbPopup(false),3000);}
+    if(isBoss&&Math.random()<.40&&dragonBalls<3){newDB=dragonBalls+1;setDragonBalls(newDB);SFX.dragonball();gotDB=true;setDbPopup(true);setTimeout(()=>setDbPopup(false),3000);}
     // 仲間加入判定(30%) ボス戦以外 - 全候補を表示して選ばせる
     let recruitTpls=[];
     if(!isBoss&&monsterRoster.length<5){
@@ -754,7 +758,7 @@ function App(){
       <div style={{fontSize:'.7rem',color:'#374151',textAlign:'center',marginBottom:'8px'}}>タップで編成を切り替え。アクティブは最大4人まで</div>
       <div style={{marginBottom:'8px'}}>
         <div style={{fontSize:'.72rem',color:'#94a3b8',fontWeight:900,marginBottom:'4px'}}>⚔️ 現在のパーティ</div>
-        {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const canRemove=m.isMonster;return(<div key={i} style={{display:'flex',alignItems:'center',gap:'6px',background:'rgba(255,255,255,.04)',border:`1px solid ${mc}33`,borderRadius:'8px',padding:'6px 10px',marginBottom:'4px'}}>
+        {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const canRemove=party.length>2;return(<div key={i} style={{display:'flex',alignItems:'center',gap:'6px',background:'rgba(255,255,255,.04)',border:`1px solid ${mc}33`,borderRadius:'8px',padding:'6px 10px',marginBottom:'4px'}}>
           <span style={{fontSize:'1.4rem'}}>{m.isMonster?m.base:(CHAR_VIS[m.classId]?.face||'🧑')}</span>
           <div style={{flex:1}}><div style={{fontSize:'.78rem',color:mc,fontWeight:900}}>{mn(m)} Lv.{m.level}</div><div style={{fontSize:'.62rem',color:'#374151'}}>HP:{m.hp}/{m.maxHp} MP:{m.mp}/{m.maxMp}</div></div>
           {canRemove&&<button onClick={()=>{SFX.cursor();const nm=party.filter((_,j)=>j!==i);setParty(nm);}} style={{...bs('#ef4444'),margin:0,padding:'4px 8px',fontSize:'.65rem'}}>外す</button>}
