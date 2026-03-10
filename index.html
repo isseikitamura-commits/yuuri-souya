@@ -300,9 +300,11 @@ const scaleEnemy=(tpl,avgLv,partySize)=>{
   return base;
 };
 const SK='ysd_v5';
-const sv=d=>{try{localStorage.setItem(SK,JSON.stringify(d));return true;}catch(e){return false;}};
-const ld=()=>{try{const d=localStorage.getItem(SK);return d?JSON.parse(d):null;}catch(e){return null;}};
-const hasSave=()=>!!localStorage.getItem(SK);
+const slotKey=n=>`${SK}_s${n}`;
+const sv=(d,n=1)=>{try{const payload={...d,_savedAt:new Date().toLocaleString('ja'),_slot:n};localStorage.setItem(slotKey(n),JSON.stringify(payload));return true;}catch(e){return false;}};
+const ld=(n=1)=>{try{const d=localStorage.getItem(slotKey(n));return d?JSON.parse(d):null;}catch(e){return null;}};
+const hasSave=()=>[1,2,3,4,5].some(n=>!!localStorage.getItem(slotKey(n)));
+const loadSlotMeta=()=>[1,2,3,4,5].map(n=>{try{const d=localStorage.getItem(slotKey(n));if(!d)return null;const p=JSON.parse(d);return{slot:n,savedAt:p._savedAt||'',chIdx:p.chIdx||0,party:p.party||[],gold:p.gold||0};}catch(e){return null;}});
 const mn=m=>m.isMonster?m.name:(m.name||'？');
 
 // ======= COMPONENTS =======
@@ -378,7 +380,7 @@ const initHuman=(classId,name)=>{const c=CLASSES[classId];return{isMonster:false
 const initMonsterAlly=tpl=>({isMonster:true,id:tpl.id,name:tpl.name,base:tpl.base,ov:tpl.ov||'',flt:tpl.flt||'none',gc:tpl.gc||'#888',hp:Math.floor(tpl.maxHp*.65),maxHp:Math.floor(tpl.maxHp*.65),mp:30,maxMp:30,atk:Math.floor(tpl.atk*.88),def:Math.floor(tpl.def*.85),mat:Math.floor((tpl.mat||10)*.8),exp:0,level:1,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0,allySkill:tpl.allySkill});
 const initEnemy=tpl=>({...tpl,hp:tpl.maxHp,status:null,statusTurns:0,currentPhase:0,atkBonus:0,rageAoe:false,tripleAtk:false});
 const checkLearn=(member,lv)=>{if(member.isMonster)return{member,newSpells:[]};const spells=CLASS_SPELLS[member.classId]||[];const newSpells=[];let lsp=[...(member.learnedSpells||[])];spells.forEach(sp=>{if(lv>=sp.level&&!lsp.includes(sp.id)){lsp.push(sp.id);newSpells.push(sp);}});return{member:{...member,learnedSpells:lsp},newSpells};};
-const doLevelUp=(member,gainExp,addLog)=>{let m={...member,exp:(member.exp||0)+gainExp};while(m.exp>=calcNext(m.level)){const lv=m.level+1;const newMaxHp=m.maxHp+28,newMaxMp=m.maxMp+10;m={...m,level:lv,maxHp:newMaxHp,hp:Math.min(m.hp+14,newMaxHp),maxMp:newMaxMp,mp:Math.min(m.mp+5,newMaxMp),atk:m.atk+(m.isMonster?4:5),def:m.def+3,mat:m.mat+(m.isMonster?2:5)};const{member:mm,newSpells}=checkLearn(m,lv);m=mm;SFX.lvup();addLog('🌟 '+mn(m)+'がLv.'+lv+'に！');newSpells.forEach(sp=>addLog('✨ 新呪文「'+sp.name+'」を覚えた！'));}return m;};
+const doLevelUp=(member,gainExp,addLog)=>{let m={...member,exp:(member.exp||0)+gainExp};while(m.exp>=calcNext(m.level)){const lv=m.level+1;const newMaxHp=m.maxHp+28,newMaxMp=m.maxMp+10;m={...m,level:lv,maxHp:newMaxHp,hp:newMaxHp,maxMp:newMaxMp,mp:newMaxMp,atk:m.atk+(m.isMonster?4:5),def:m.def+3,mat:m.mat+(m.isMonster?2:5)};const{member:mm,newSpells}=checkLearn(m,lv);m=mm;SFX.lvup();addLog('🌟 '+mn(m)+'がLv.'+lv+'に！');newSpells.forEach(sp=>addLog('✨ 新呪文「'+sp.name+'」を覚えた！'));}return m;};
 const calcDamage=(atk,def)=>Math.max(1,atk-def+Math.floor(Math.random()*8)-4);
 const processDot=e=>{if(!e.status||e.statusTurns<=0)return{...e,status:null,statusTurns:0};let hp=e.hp;if(e.status==='poison')hp=Math.max(1,hp-Math.floor(e.maxHp*.09));if(e.status==='burn')hp=Math.max(1,hp-Math.floor(e.maxHp*.07));const turns=e.statusTurns-1;return{...e,hp,statusTurns:turns,status:turns<=0?null:e.status};};
 const tryInflict=(e,si,rate)=>{if(!si||e.status||Math.random()>rate)return e;return{...e,status:si,statusTurns:3};};
@@ -405,6 +407,9 @@ function App(){
   const [isMuted,setIsMuted]=useState(false);
   const [saveMsg,setSaveMsg]=useState('');
   const [spellMenu,setSpellMenu]=useState(false);
+  const [itemMenu,setItemMenu]=useState(false);
+  const [itemTargetIdx,setItemTargetIdx]=useState(0);
+  const [saveMenu,setSaveMenu]=useState(null);
   const [recruitOffer,setRecruitOffer]=useState(null);
   const [storyScreen,setStoryScreen]=useState(null);
   const [dragonBalls,setDragonBalls]=useState(0);
@@ -513,7 +518,7 @@ function App(){
       addLog('🤝 '+chosenTpl.name+'がなかまになった！（ロスター:'+newRoster.length+'/5）');
     }
     setBattleResult(null);
-    if(isFinal){const cc=clearCount+1;setClearCount(cc);setSavedParty(party);const newHist=[{party:[...party],clearNo:cc,date:new Date().toLocaleDateString('ja')},...clearHistory].slice(0,5);setClearHistory(newHist);sv({clearCount:cc,savedParty:party,clearHistory:newHist});stopBgm();setScr('ending');return;}
+    if(isFinal){const cc=clearCount+1;setClearCount(cc);setSavedParty(party);const newHist=[{party:[...party],clearNo:cc,date:new Date().toLocaleDateString('ja')},...clearHistory].slice(0,5);setClearHistory(newHist);sv({clearCount:cc,savedParty:party,clearHistory:newHist},1);stopBgm();setScr('ending');return;}
     if(isChClear){const next=chIdx+1;setChIdx(next);setChBattleNum(1);setScr('map');bgm('field');setStoryScreen(CHAPTERS[next]);}
     else if(doSwap){setScr('party_mgmt');}
     else{setChBattleNum(n=>n+1);setScr('map');bgm('field');}
@@ -589,8 +594,10 @@ function App(){
     const t=setTimeout(()=>{if(autoRef.current)handleAction(act,sid);},800);return()=>clearTimeout(t);
   },[autoMode,scr,busy,phase,spellMenu,activePIdx,party,enemies,inv,getMemberSpells,handleAction]);
 
-  const doSave=()=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,clearCount,savedParty,clearHistory,chBattleNum,monsterRoster});SFX.save();setSaveMsg(ok?'💾 セーブ完了！':'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
-  const doLoad=()=>{const d=ld();if(!d){setSaveMsg('セーブデータなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);if(d.clearHistory)setClearHistory(d.clearHistory||[]);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
+  const doSaveSlot=(n)=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,clearCount,savedParty,clearHistory,chBattleNum,monsterRoster},n);SFX.save();setSaveMenu(null);setSaveMsg(ok?`💾 スロット${n}にセーブ！`:'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
+  const doSave=()=>setSaveMenu('save');
+  const doLoadSlot=(n)=>{const d=ld(n);if(!d){setSaveMsg('データなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);if(d.clearHistory)setClearHistory(d.clearHistory||[]);setSaveMenu(null);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
+  const doLoad=()=>setSaveMenu('load');
   const buyItem=item=>{if(gold<item.cost){addLog('Gold不足！');return;}SFX.buy();if(item.type==='equip'){setParty(p=>p.map(m=>{let n={...m};if(item.eff.atk)n.atk+=item.eff.atk;if(item.eff.def)n.def+=item.eff.def;if(item.eff.mat)n.mat+=item.eff.mat;if(item.eff.hpb){n.maxHp+=item.eff.hpb;n.hp=Math.min(n.hp+item.eff.hpb,n.maxHp);}if(item.eff.mpb){n.maxMp+=item.eff.mpb;n.mp=Math.min(n.mp+item.eff.mpb,n.maxMp);}return n;}));addLog('🛒 '+item.emoji+item.name+'購入！全員に効果！');}else{if(inv.filter(i=>i.id===item.id).length>=5){addLog('これ以上持てない！');return;}setInv(p=>[...p,{...item}]);addLog('🛒 '+item.emoji+item.name+'購入！');}setGold(g=>g-item.cost);};
   const summonDragon=()=>{if(dragonBalls<3||dragonSummoned)return;SFX.dragon();const ally={...initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4)setParty(p=>[...p,ally]);setDragonBalls(b=>b-3);setDragonSummoned(true);addLog('🐉 神龍シェンロンがなかまになった！ドラゴンボール3個消費！');};
   const useItemOn=(item,tgtIdx)=>{
@@ -767,6 +774,7 @@ function App(){
         }}>⚔️ {chBattleNum>=10?'⚡ BOSS戦！':'第'+chBattleNum+'戦へ ▸'}</button>
         <button style={bs('#d97706')} onClick={()=>{SFX.cursor();bgm('town');setScr('shop');}}>🛒 ショップ</button>
         <button style={bs('#22c55e')} onClick={doSave}>💾 セーブ</button>
+        {inv.length>0&&<button style={bs('#16a34a')} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
         {monsterRoster.length>0&&<button style={bs('#60a5fa')} onClick={()=>{SFX.cursor();setScr('party_mgmt');}}>👥 なかま管理</button>}
         {inv.length>0&&<button style={bs('#16a34a')} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
       </div>
@@ -808,7 +816,7 @@ function App(){
         <div style={{textAlign:'center'}}><button style={{...bs('#374151'),margin:0,padding:'7px 20px',fontSize:'.78rem'}} onClick={()=>closeResult(null,false)}>今回は断る</button></div>
       </div>)}
       {(!battleResult.recruitTpls||battleResult.recruitTpls.length===0)&&(<div style={{display:'flex',justifyContent:'center',gap:'6px',flexWrap:'wrap'}}>
-        {monsterRoster.length>0&&party.length>=2&&<button style={{...bs('#60a5fa'),margin:0,padding:'9px 14px',fontSize:'.82rem'}} onClick={()=>closeResult(null,true)}>👥 パーティ管理</button>}
+        {monsterRoster.length>0&&party.length>=2&&<button style={{...bs('#60a5fa'),margin:0,padding:'9px 14px',fontSize:'.82rem'}} onClick={()=>closeResult(null,true)}>👥 パーティ管理</button>}{inv.length>0&&<button style={{...bs('#16a34a'),margin:0,padding:'9px 14px',fontSize:'.82rem'}} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
         <button style={{...bs('#d4a017'),margin:0,padding:'9px 20px',fontSize:'.88rem'}} onClick={()=>closeResult(null,false)}>{battleResult.isChClear?'次の章へ →':'次の戦いへ →'}</button>
       </div>)}
     </div>)}
@@ -833,8 +841,9 @@ function App(){
           <button disabled={!canAdd} onClick={()=>{SFX.cursor();if(canAdd)setParty(p=>[...p,m]);}} style={{...bs('#4ade80',!canAdd),margin:0,padding:'4px 8px',fontSize:'.65rem'}}>参加</button>
         </div>);})}
       </div>)}
-      <div style={{textAlign:'center',marginTop:'6px'}}>
-        <button style={bs('#374151')} onClick={()=>{setScr('map');bgm('field');}}>← マップへもどる</button>
+      <div style={{display:'flex',justifyContent:'center',gap:'6px',marginTop:'6px',flexWrap:'wrap'}}>
+  {inv.length>0&&<button style={{...bs('#16a34a'),margin:0}} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
+        <button style={{...bs('#374151'),margin:0}} onClick={()=>{setScr('map');bgm('field');}}>← マップへ</button>
       </div>
     </div>)}
 
@@ -902,13 +911,33 @@ function App(){
           {inv.length===0?<div style={{color:'#374151',textAlign:'center',padding:'12px'}}>アイテムがない</div>:[...new Set(inv.map(i=>i.id))].map(id=>{const item=inv.find(x=>x.id===id);const cnt=inv.filter(x=>x.id===id).length;return(<div key={id} onClick={()=>useItemOn(item,itemTargetIdx)} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'6px',padding:'8px 10px',background:'rgba(34,197,94,.05)',border:'1px solid rgba(34,197,94,.18)',borderRadius:'10px',cursor:'pointer',transition:'all .15s'}}><span style={{fontSize:'1.4rem'}}>{item.emoji}</span><div style={{flex:1}}><div style={{fontSize:'.78rem',fontWeight:900,color:'#d1fae5'}}>{item.name} <span style={{color:'#4ade80',fontSize:'.68rem'}}>×{cnt}</span></div><div style={{fontSize:'.62rem',color:'#374151'}}>{item.desc}</div></div><span style={{fontSize:'.72rem',color:'#22c55e',fontWeight:900}}>使う ▶</span></div>);})}
         </div>
       </div>)}
+      {/* セーブスロットモーダル */}
+      {saveMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.88)',zIndex:60,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .18s ease'}}>
+        <div style={{background:'#0d0d1a',border:'1px solid #22c55e44',borderRadius:'14px',padding:'16px',width:'100%',maxWidth:'360px'}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+            <span style={{fontSize:'.9rem',fontWeight:900,color:saveMenu==='save'?'#22c55e':'#60a5fa'}}>{saveMenu==='save'?'💾 セーブ先を選んで':'📂 ロードするデータを選んで'}</span>
+            <button onClick={()=>setSaveMenu(null)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'3px 8px',borderRadius:'8px',fontSize:'.75rem',cursor:'pointer'}}>✕</button>
+          </div>
+          {loadSlotMeta().map((meta,i)=>{const n=i+1;const empty=!meta;return(<div key={n} onClick={()=>{SFX.cursor();if(saveMenu==='save')doSaveSlot(n);else if(!empty)doLoadSlot(n);}} style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'7px',padding:'10px 12px',background:empty?'rgba(255,255,255,.02)':'rgba(34,197,94,.05)',border:`1px solid ${empty?'#1e1e3a':'rgba(34,197,94,.25)'}`,borderRadius:'10px',cursor:saveMenu==='load'&&empty?'not-allowed':'pointer',opacity:saveMenu==='load'&&empty?.4:1,transition:'all .15s'}}>
+            <div style={{width:'24px',height:'24px',borderRadius:'50%',background:empty?'#1e1e3a':'#22c55e22',border:`1px solid ${empty?'#2a2a4a':'#22c55e'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.75rem',fontWeight:900,color:empty?'#374151':'#22c55e',flexShrink:0}}>{n}</div>
+            {empty?<span style={{fontSize:'.75rem',color:'#374151'}}>― 空き ―</span>:<div style={{flex:1}}>
+              <div style={{fontSize:'.72rem',color:'#d1fae5',fontWeight:900}}>{CHAPTERS[meta.chIdx]?.n||''} / Gold {meta.gold}G</div>
+              <div style={{fontSize:'.62rem',color:'#4ade80',marginTop:'1px'}}>{meta.party.map(m=>mn(m)+' Lv'+m.level).join(' · ')}</div>
+              <div style={{fontSize:'.58rem',color:'#374151',marginTop:'1px'}}>{meta.savedAt}</div>
+            </div>}
+            <span style={{fontSize:'.8rem',color:saveMenu==='save'?'#22c55e':'#60a5fa'}}>{saveMenu==='save'?'保存▶':'読込▶'}</span>
+          </div>);})}
+        </div>
+      </div>)}
     </>)}
 
     {/* SHOP */}
     {scr==='shop'&&(<div className="card" style={{animation:'fadeIn .3s ease',borderColor:'rgba(212,160,23,.16)'}}>
       <div style={{color:'#d4a017',fontWeight:900,textAlign:'center',marginBottom:'8px'}}>🛒 ショップ　Gold: {gold}</div>
       {ITEMS.map(item=>(<div key={item.id} style={{display:'flex',alignItems:'center',gap:'7px',marginBottom:'6px',padding:'8px',background:'rgba(255,255,255,.025)',borderRadius:'9px'}}><span style={{fontSize:'1.3rem'}}>{item.emoji}</span><div style={{flex:1}}><div style={{fontSize:'.82rem',fontWeight:'bold'}}>{item.name}</div><div style={{fontSize:'.68rem',color:'#4b5563'}}>{item.desc}</div></div><button onClick={()=>buyItem(item)} disabled={gold<item.cost} style={{...bs('#d97706',gold<item.cost),margin:0,padding:'7px 10px',fontSize:'.78rem'}}>{item.cost}G</button></div>))}
-      <div style={{textAlign:'center',marginTop:'8px'}}><button style={bs('#374151')} onClick={()=>{SFX.cursor();setScr('map');bgm('field');}}>🔙 もどる</button></div>
+      <div style={{display:'flex',justifyContent:'center',gap:'6px',marginTop:'8px',flexWrap:'wrap'}}>
+        {inv.length>0&&<button style={{...bs('#16a34a'),margin:0}} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
+        <button style={{...bs('#374151'),margin:0}} onClick={()=>{SFX.cursor();setScr('map');bgm('field');}}>🔙 もどる</button></div>
     </div>)}
 
     {/* GAME OVER */}
@@ -934,6 +963,7 @@ function App(){
       <div style={{fontSize:'.78rem',color:'#4b5563',marginBottom:'10px'}}>{party.map(m=>mn(m)+' Lv.'+m.level).join(' / ')}<br/>クリア回数: {clearCount}回</div>
       <div style={{display:'flex',justifyContent:'center',gap:'8px',flexWrap:'wrap'}}>
         <button style={bs('#22c55e')} onClick={doSave}>💾 セーブ</button>
+        {inv.length>0&&<button style={bs('#16a34a')} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
         {monsterRoster.length>0&&<button style={bs('#60a5fa')} onClick={()=>{SFX.cursor();setScr('party_mgmt');}}>👥 なかま管理</button>}
         <button style={bs('#d4a017')} onClick={()=>{setParty([]);setEnemies([]);setLog([]);stopBgm();setScr('title');}}>🔄 タイトルへ</button>
       </div>
