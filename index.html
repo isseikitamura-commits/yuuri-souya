@@ -183,6 +183,13 @@ const MOB_ENC_POOL=[
 const MOB_ENC=MOB_ENC_POOL.map(pool=>pool[0]);
 
 
+const RARE_ENCOUNTERS=[
+  // ゴールドスライム: 逃げ足が速く攻撃は弱いがGold大量
+  [{id:'gslime',name:'ゴールドスライム',base:'🟡',ov:'💰',flt:'hue-rotate(40deg) saturate(5) brightness(1.4) contrast(1.3)',gc:'#fbbf24',hp:30,maxHp:30,atk:2,def:2,mat:1,exp:5,gold:1000,si:null,rare:true}],
+  // シルバースライム: 少し硬い、アイテムドロップ用（EXPを多めに）
+  [{id:'sslime',name:'シルバースライム',base:'⚪',ov:'✨',flt:'grayscale(.2) saturate(2) brightness(1.5)',gc:'#e2e8f0',hp:50,maxHp:50,atk:5,def:10,mat:3,exp:200,gold:300,si:null,rare:true}],
+];
+
 const ENC=[
   // Ch0: 骸骨狼×3
   [{id:'sw1',name:'骸骨狼',base:'🐺',ov:'💀',flt:'grayscale(.8) contrast(2) brightness(.55)',gc:'#6b7280',hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:'poison',recruitable:true,allySkill:{id:'bonecr',name:'骨砕き',e:'💀',mp:4,type:'atk_one',pow:c=>Math.floor(c.atk*2.2),desc:'強撃',color:'#6b7280'}},{id:'sw2',name:'骸骨狼β',base:'🐺',ov:'💀',flt:'grayscale(.8) contrast(2) brightness(.5)',gc:'#4b5563',hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:'poison'},{id:'sw3',name:'骸骨狼γ',base:'🐺',ov:'☠️',flt:'grayscale(.9) contrast(2.5) brightness(.4)',gc:'#374151',hp:48,maxHp:48,atk:16,def:5,mat:7,exp:18,gold:14,si:'poison'}],
@@ -227,7 +234,7 @@ const ITEMS=[
   {id:'diamond_armor',name:'ダイアモンドの鎧',emoji:'💎',cost:10000,type:'equip',eff:{def:70,hpb:300,mpb:80},desc:'🏆最強！全員DEF+70,HP+300,MP+80'},
 ];
 
-const calcNext=lv=>Math.floor(60*lv*1.38);
+const calcNext=lv=>Math.floor(120*Math.pow(lv,1.5));
 
 // 敵の呪文データベース
 const ENEMY_SPELL_DB={
@@ -275,7 +282,7 @@ const scaleEnemy=(tpl,avgLv,partySize)=>{
   // ボスは追加1.8倍 + 魔法耐性付与
   const bm=tpl.boss?1.8:1.0;
   const s=(1+(lv-1)*0.18)*ps*bm;
-  const gs=1+(lv-1)*0.08;
+  const gs=1.0; // EXPは固定（インフレ防止）
   const base={...tpl,hp:Math.round(tpl.maxHp*s),maxHp:Math.round(tpl.maxHp*s),atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*s),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*gs)};
   if(tpl.boss)base.magicResist=0.55; // ボスは魔法55%カット
   return base;
@@ -344,7 +351,7 @@ const initHuman=(classId,name)=>{const c=CLASSES[classId];return{isMonster:false
 const initMonsterAlly=tpl=>({isMonster:true,id:tpl.id,name:tpl.name,base:tpl.base,ov:tpl.ov||'',flt:tpl.flt||'none',gc:tpl.gc||'#888',hp:Math.floor(tpl.maxHp*.65),maxHp:Math.floor(tpl.maxHp*.65),mp:30,maxMp:30,atk:Math.floor(tpl.atk*.88),def:Math.floor(tpl.def*.85),mat:Math.floor((tpl.mat||10)*.8),exp:0,level:1,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0,allySkill:tpl.allySkill});
 const initEnemy=tpl=>({...tpl,hp:tpl.maxHp,status:null,statusTurns:0,currentPhase:0,atkBonus:0,rageAoe:false,tripleAtk:false});
 const checkLearn=(member,lv)=>{if(member.isMonster)return{member,newSpells:[]};const spells=CLASS_SPELLS[member.classId]||[];const newSpells=[];let lsp=[...(member.learnedSpells||[])];spells.forEach(sp=>{if(lv>=sp.level&&!lsp.includes(sp.id)){lsp.push(sp.id);newSpells.push(sp);}});return{member:{...member,learnedSpells:lsp},newSpells};};
-const doLevelUp=(member,gainExp,addLog)=>{let m={...member,exp:(member.exp||0)+gainExp};while(m.exp>=calcNext(m.level)){const lv=m.level+1;m={...m,level:lv,maxHp:m.maxHp+28,hp:m.maxHp+28,maxMp:m.maxMp+10,mp:m.maxMp+10,atk:m.atk+(m.isMonster?4:5),def:m.def+3,mat:m.mat+(m.isMonster?2:5)};const{member:mm,newSpells}=checkLearn(m,lv);m=mm;SFX.lvup();addLog('🌟 '+mn(m)+'がLv.'+lv+'に！HP・MP全回復！');newSpells.forEach(sp=>addLog('✨ 新呪文「'+sp.name+'」を覚えた！'));}return m;};
+const doLevelUp=(member,gainExp,addLog)=>{let m={...member,exp:(member.exp||0)+gainExp};while(m.exp>=calcNext(m.level)){const lv=m.level+1;const newMaxHp=m.maxHp+28,newMaxMp=m.maxMp+10;m={...m,level:lv,maxHp:newMaxHp,hp:Math.min(m.hp+14,newMaxHp),maxMp:newMaxMp,mp:Math.min(m.mp+5,newMaxMp),atk:m.atk+(m.isMonster?4:5),def:m.def+3,mat:m.mat+(m.isMonster?2:5)};const{member:mm,newSpells}=checkLearn(m,lv);m=mm;SFX.lvup();addLog('🌟 '+mn(m)+'がLv.'+lv+'に！');newSpells.forEach(sp=>addLog('✨ 新呪文「'+sp.name+'」を覚えた！'));}return m;};
 const calcDamage=(atk,def)=>Math.max(1,atk-def+Math.floor(Math.random()*8)-4);
 const processDot=e=>{if(!e.status||e.statusTurns<=0)return{...e,status:null,statusTurns:0};let hp=e.hp;if(e.status==='poison')hp=Math.max(1,hp-Math.floor(e.maxHp*.09));if(e.status==='burn')hp=Math.max(1,hp-Math.floor(e.maxHp*.07));const turns=e.statusTurns-1;return{...e,hp,statusTurns:turns,status:turns<=0?null:e.status};};
 const tryInflict=(e,si,rate)=>{if(!si||e.status||Math.random()>rate)return e;return{...e,status:si,statusTurns:3};};
@@ -694,7 +701,7 @@ function App(){
           const partySize=party.filter(m=>m.hp>0).length;
           let encData;
           if(isBossBattle){encData=ENC[chIdx]||ENC[0];}
-          else{const pool=MOB_ENC_POOL[chIdx]||MOB_ENC_POOL[0];encData=pool[Math.floor(Math.random()*pool.length)];}
+          else{const rr=Math.random();if(rr<0.05){encData=RARE_ENCOUNTERS[Math.floor(Math.random()*RARE_ENCOUNTERS.length)];}else{const pool=MOB_ENC_POOL[chIdx]||MOB_ENC_POOL[0];encData=pool[Math.floor(Math.random()*pool.length)];}}
           const ens=encData.map(t=>initEnemy(scaleEnemy(t,avgLv,partySize)));
           setEnemies(ens);setMAnims(new Array(ens.length).fill('idle'));
           const fi=party.findIndex(m=>m.hp>0);
