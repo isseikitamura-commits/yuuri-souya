@@ -92,7 +92,7 @@ const SFX={
 };
 
 // ====== GAME DATA ======
-const CHAR_VIS={hero:{face:'🤺',wpn:'⚔️'},warrior:{face:'💂',wpn:'🛡️'},priest:{face:'👼',wpn:'✨'},mage:{face:'🧙',wpn:'🔮'}};
+const CHAR_VIS={hero:{face:'🦸',wpn:'⚡',aura:'👑'},warrior:{face:'🪖',wpn:'🗡️',aura:'🛡️'},priest:{face:'🧎',wpn:'📿',aura:'💫'},mage:{face:'🧙',wpn:'🔮',aura:'🌑'}};
 const CLASSES={
   hero:{id:'hero',name:'勇者',color:'#d4a017',bg:'rgba(212,160,23,.1)',hp:155,mp:30,atk:24,def:13,mat:18,
     baseSkill:{id:'bs_hero',name:'会心の一撃',e:'💥',desc:'ATK×3.2 クリティカル',mp:8,type:'atk_one',pow:c=>Math.floor(c.atk*3.2),color:'#f97316'}},
@@ -134,6 +134,7 @@ const CLASS_SPELLS={
   ],
 };
 const FIELD_SPELL_TYPES=['heal_all','heal_all_mp','revive'];
+const EXTRA_NAME_OPTS=[['リン','カイ','レイ','アオ','ミコ','ルナ','サキ','ナナ'],['ケン','ソラ','タケル','ヒカル','コウ','ルイ','ジン','リク']];
 
 const CHAPTERS=[
   {n:'第1章',title:'旅立ちの朝',emoji:'🌅',bgm:'field',story:'カシミール地方の青年「ゆうり」と「そうや」。\nある朝、隣国ドゴールから使者が駆け込んできた。\n「大変だ！悪魔サタンが現れ\nフィリア姫を攫っていったのです！」\nゆうりとそうやは顔を見合わせた。\n「行こう、そうや。姫様を助けにいくんだ！」\n二人の大冒険が、今始まった——。'},
@@ -213,7 +214,7 @@ const ENC=[
   [{id:'satan',name:'悪魔サタン',base:'😈',ov:'👑',flt:'hue-rotate(345deg) saturate(4) brightness(.78)',gc:'#dc2626',hp:6000,maxHp:6000,atk:180,def:95,mat:140,exp:2000,gold:1500,si:'burn',big:true,boss:true,final:true,doubleAttack:true,spellImmune:false,phases:[{hp:.75,msg:'サタンが闇の力を解放！',atkBonus:25},{hp:.5,msg:'サタンの邪眼が開いた！',atkBonus:40,aoe:true},{hp:.25,msg:'サタンが真の魔王形態に！',atkBonus:65,aoe:true},{hp:.05,msg:'⚠️「滅亡の咆哮」！！残りわずか！',atkBonus:100,aoe:true,tripleAttack:true}]},{id:'angel1',name:'堕天使アゼル',base:'👼',ov:'😈',flt:'hue-rotate(350deg) saturate(3.5) brightness(.7) contrast(1.5)',gc:'#dc2626',hp:600,maxHp:600,atk:110,def:55,mat:85,exp:300,gold:200,si:'burn'},{id:'angel2',name:'堕天使ベリアル',base:'👼',ov:'🔥',flt:'hue-rotate(340deg) saturate(3) brightness(.65) contrast(1.4)',gc:'#b91c1c',hp:550,maxHp:550,atk:100,def:50,mat:78,exp:270,gold:180,si:'burn'}],
 ];
 
-const SHENLONG_TPL={id:'shenlong',name:'神龍シェンロン',base:'🐉',ov:'✨',flt:'hue-rotate(120deg) saturate(3) brightness(1.2)',gc:'#4ade80',maxHp:1200,atk:100,def:70,mat:90,allySkill:{id:'dragon_fire',name:'龍炎爆発',e:'🐉',mp:40,type:'atk_all',pow:c=>Math.floor(c.mat*3.5+c.atk*1.5),desc:'全敵に龍炎！',color:'#4ade80'}};
+const SHENLONG_TPL={id:'shenlong',name:'神龍シェンロン',base:'🐉',ov:'✨',flt:'hue-rotate(120deg) saturate(3) brightness(1.2)',gc:'#4ade80',maxHp:2800,atk:420,def:180,mat:360,allySkill:{id:'dragon_fire',name:'龍炎神撃',e:'🐉',mp:40,type:'atk_all',pow:c=>Math.floor(c.mat*9.0+c.atk*5.0),desc:'全敵に超強力な龍炎神撃！',color:'#4ade80'}};
 
 const ITEMS=[
   {id:'herb',name:'やくそう',emoji:'🌿',cost:40,type:'con',eff:{hp:100},desc:'HP+100'},
@@ -310,18 +311,22 @@ function ExpBar({exp,level}){
 }
 function CharSprite({member,anim}){
   const cls=CLASSES[member.classId],alive=member.hp>0,v=CHAR_VIS[member.classId],st=member.status;
-  let flt=`drop-shadow(0 0 10px ${cls.color}77)`;
-  if(!alive)flt='grayscale(1)';else if(st==='poison')flt='drop-shadow(0 0 12px #a855f7) hue-rotate(70deg)';else if(st==='burn')flt='drop-shadow(0 0 14px #ef4444)';else if(st==='stun')flt='drop-shadow(0 0 12px #fbbf24)';
+  let flt=`drop-shadow(0 0 18px ${cls.color}cc) drop-shadow(0 0 8px ${cls.color}88)`;
+  if(!alive)flt='grayscale(1)';else if(st==='poison')flt='drop-shadow(0 0 16px #a855f7) hue-rotate(70deg)';else if(st==='burn')flt='drop-shadow(0 0 18px #ef4444) saturate(1.4)';else if(st==='stun')flt='drop-shadow(0 0 16px #fbbf24) brightness(1.2)';
   let an='floatB 3.2s ease-in-out infinite';
   if(!alive)an='none';else if(anim==='atk')an='charAtk .42s ease';else if(anim==='hurt')an='shakeX .38s ease';
   const stIcon=st==='poison'?'☠️':st==='burn'?'🔥':st==='stun'?'💫':null;
   return(<div style={{display:'flex',flexDirection:'column',alignItems:'center',position:'relative',animation:an,opacity:alive?1:.22,transformOrigin:'bottom center',transition:'opacity .4s'}}>
-    {stIcon&&<div style={{position:'absolute',top:'-12px',right:'-2px',fontSize:'.7rem',zIndex:10}}>{stIcon}</div>}
-    <div style={{position:'relative',filter:flt}}>
-      <span style={{fontSize:'3.4rem',lineHeight:1,display:'block'}}>{v.face}</span>
-      <span style={{position:'absolute',bottom:'-4px',right:'-10px',fontSize:'1.1rem'}}>{v.wpn}</span>
+    {stIcon&&<div style={{position:'absolute',top:'-14px',right:'-2px',fontSize:'.75rem',zIndex:10}}>{stIcon}</div>}
+    <div style={{position:'relative'}}>
+      <div style={{position:'absolute',inset:'-6px',borderRadius:'50%',background:`radial-gradient(circle,${cls.color}44 0%,${cls.color}11 55%,transparent 75%)`,animation:'pulse 2.2s ease-in-out infinite',pointerEvents:'none',zIndex:0}}/>
+      <div style={{position:'relative',filter:flt,zIndex:1}}>
+        <span style={{fontSize:'4rem',lineHeight:1,display:'block'}}>{v.face}</span>
+        <span style={{position:'absolute',bottom:'-2px',right:'-13px',fontSize:'1.4rem',filter:`drop-shadow(0 0 5px ${cls.color})`}}>{v.wpn}</span>
+        <span style={{position:'absolute',top:'-8px',left:'-8px',fontSize:'1rem',filter:`drop-shadow(0 0 4px ${cls.color}cc)`}}>{v.aura}</span>
+      </div>
     </div>
-    <div style={{fontSize:'.56rem',color:cls.color,fontWeight:900,marginTop:'3px'}}>{member.name}</div>
+    <div style={{fontSize:'.58rem',color:cls.color,fontWeight:900,marginTop:'5px',textShadow:`0 0 10px ${cls.color}99`,letterSpacing:'.04em'}}>{member.name}</div>
   </div>);
 }
 function MonSprite({mon,anim,size}){
@@ -389,6 +394,7 @@ function App(){
   const [battleResult,setBattleResult]=useState(null); // 戦闘結果表示
   const [monsterRoster,setMonsterRoster]=useState([]); // 仲間モンスター全員(最大5)
   const [selExtra,setSelExtra]=useState([]); // 追加人間キャラ(3,4人目)
+  const [selNames,setSelNames]=useState(['リン','カイ']); // 3,4人目の名前
 
   useEffect(()=>{const d=ld();if(!d)return;if(d.clearCount)setClearCount(d.clearCount);if(d.savedParty)setSavedParty(d.savedParty);},[]);
 
@@ -464,7 +470,7 @@ function App(){
     if(isBoss&&Math.random()<.40&&dragonBalls<3){newDB=dragonBalls+1;setDragonBalls(newDB);SFX.dragonball();gotDB=true;setDbPopup(true);setTimeout(()=>setDbPopup(false),3000);}
     // 仲間加入判定(30%) ボス戦以外 - 全候補を表示して選ばせる
     let recruitTpls=[];
-    if(!isBoss&&monsterRoster.length<5){
+    if(!isBoss&&monsterRoster.length<10){
       const recs=fe.filter(e=>e.recruitable&&e.hp<=0);
       recs.forEach(e=>{if(Math.random()<.30)recruitTpls.push(e);});
     }
@@ -553,12 +559,11 @@ function App(){
     const t=setTimeout(()=>{if(autoRef.current)handleAction(act,sid);},800);return()=>clearTimeout(t);
   },[autoMode,scr,busy,phase,spellMenu,activePIdx,party,enemies,inv,getMemberSpells,handleAction]);
 
-  const doSave=()=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,dragonBalls,dragonSummoned,clearCount,savedParty,chBattleNum,monsterRoster});SFX.save();setSaveMsg(ok?'💾 セーブ完了！':'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
-  const doLoad=()=>{const d=ld();if(!d){setSaveMsg('セーブデータなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);if(d.selExtra)setSelExtra(d.selExtra);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
+  const doSave=()=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,clearCount,savedParty,chBattleNum,monsterRoster});SFX.save();setSaveMsg(ok?'💾 セーブ完了！':'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
+  const doLoad=()=>{const d=ld();if(!d){setSaveMsg('セーブデータなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
   const buyItem=item=>{if(gold<item.cost){addLog('Gold不足！');return;}SFX.buy();if(item.type==='equip'){setParty(p=>p.map(m=>{let n={...m};if(item.eff.atk)n.atk+=item.eff.atk;if(item.eff.def)n.def+=item.eff.def;if(item.eff.mat)n.mat+=item.eff.mat;if(item.eff.hpb){n.maxHp+=item.eff.hpb;n.hp=Math.min(n.hp+item.eff.hpb,n.maxHp);}if(item.eff.mpb){n.maxMp+=item.eff.mpb;n.mp=Math.min(n.mp+item.eff.mpb,n.maxMp);}return n;}));addLog('🛒 '+item.emoji+item.name+'購入！全員に効果！');}else{if(inv.filter(i=>i.id===item.id).length>=5){addLog('これ以上持てない！');return;}setInv(p=>[...p,{...item}]);addLog('🛒 '+item.emoji+item.name+'購入！');}setGold(g=>g-item.cost);};
   const summonDragon=()=>{if(dragonBalls<3||dragonSummoned)return;SFX.dragon();const ally={...initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4)setParty(p=>[...p,ally]);setDragonBalls(b=>b-3);setDragonSummoned(true);addLog('🐉 神龍シェンロンがなかまになった！ドラゴンボール3個消費！');};
-  const EXTRA_NAMES=['リン','カイ'];
-  const startGame=useOld=>{let p;if(useOld&&savedParty){p=savedParty.map(m=>({...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0}));}else{if(selCls.length<2)return;p=[initHuman(selCls[0],'ゆうり'),initHuman(selCls[1],'そうや')];selExtra.forEach((cls,i)=>{if(cls)p.push(initHuman(cls,EXTRA_NAMES[i]));});}setParty(p);setChIdx(0);setChBattleNum(1);setInv([]);setGold(280);setDragonBalls(0);setDragonSummoned(false);setMonsterRoster([]);setBattleResult(null);setLog(['🌟 ゆうりとそうやの大冒険、開幕！']);setStoryScreen(CHAPTERS[0]);setScr('map');bgm('field');};
+  const startGame=useOld=>{let p;if(useOld&&savedParty){p=savedParty.map(m=>({...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0}));}else{if(selCls.length<2)return;p=[initHuman(selCls[0],'ゆうり'),initHuman(selCls[1],'そうや')];selExtra.forEach((cls,i)=>{if(cls)p.push(initHuman(cls,selNames[i]||EXTRA_NAME_OPTS[0][i]));});}setParty(p);setChIdx(0);setChBattleNum(1);setInv([]);setGold(280);setDragonBalls(0);setDragonSummoned(false);setMonsterRoster([]);setBattleResult(null);setLog(['🌟 ゆうりとそうやの大冒険、開幕！']);setStoryScreen(CHAPTERS[0]);setScr('map');bgm('field');};
 
   const bs=(col,dis)=>({background:dis?'rgba(50,50,60,.25)':`linear-gradient(135deg,${col}bb,${col}44)`,border:`1px solid ${dis?'#1e1e3a':col}`,color:dis?'#2a2a3a':'#fff',padding:'10px 14px',borderRadius:'10px',fontFamily:'inherit',fontWeight:900,fontSize:'.86rem',cursor:dis?'not-allowed':'pointer',boxShadow:dis?'none':`0 0 10px ${col}33`,transition:'all .14s',margin:'4px'});
   const activeMemberSpells=activeM?getMemberSpells(activeM):[];
@@ -615,32 +620,38 @@ function App(){
         <div style={{fontSize:'.72rem',color:'#94a3b8',marginBottom:'6px',lineHeight:1.8}}>
           ゆうり:<span style={{color:selCls[0]?CLASSES[selCls[0]]?.color:'#374151',fontWeight:900}}>{selCls[0]?CLASSES[selCls[0]]?.name:'？'}</span>　
           そうや:<span style={{color:selCls[1]?CLASSES[selCls[1]]?.color:'#374151',fontWeight:900}}>{selCls[1]?CLASSES[selCls[1]]?.name:'？'}</span><br/>
-          リン:<span style={{color:selExtra[0]?CLASSES[selExtra[0]]?.color:'#374151',fontWeight:900}}>{selExtra[0]?CLASSES[selExtra[0]]?.name:'なし'}</span>　
-          カイ:<span style={{color:selExtra[1]?CLASSES[selExtra[1]]?.color:'#374151',fontWeight:900}}>{selExtra[1]?CLASSES[selExtra[1]]?.name:'なし'}</span>
+          {selNames[0]}:<span style={{color:selExtra[0]?CLASSES[selExtra[0]]?.color:'#374151',fontWeight:900}}>{selExtra[0]?CLASSES[selExtra[0]]?.name:'なし'}</span>　
+          {selNames[1]}:<span style={{color:selExtra[1]?CLASSES[selExtra[1]]?.color:'#374151',fontWeight:900}}>{selExtra[1]?CLASSES[selExtra[1]]?.name:'なし'}</span>
         </div>
         <div style={{fontSize:'.62rem',color:'#4b5563'}}>※ 最初にゆうり・そうやのクラスを選ぼう（必須）<br/>リン・カイは任意。モンスター仲間は冒険中に加わる</div>
       </div>
-      {['ゆうり（必須）','そうや（必須）','リン（任意）','カイ（任意）'].map((label,charIdx)=>(<div key={charIdx} style={{marginBottom:'8px'}}>
+      {['ゆうり（必須）','そうや（必須）','3人目（任意）','4人目（任意）'].map((label,charIdx)=>(<div key={charIdx} style={{marginBottom:'8px'}}>
         <div style={{fontSize:'.72rem',color:'#d4a017',fontWeight:900,marginBottom:'4px',padding:'2px 6px',background:'rgba(212,160,23,.08)',borderRadius:'5px',display:'inline-block'}}>{label}</div>
+        {charIdx>=2&&(<div style={{marginBottom:'4px'}}>
+          <div style={{fontSize:'.6rem',color:'#94a3b8',marginBottom:'3px'}}>✏️ 名前を選ぶ</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:'3px'}}>
+            {EXTRA_NAME_OPTS[charIdx-2].map(nm=>{const isSel=selNames[charIdx-2]===nm;return(<span key={nm} onClick={()=>{SFX.cursor();const ns=[...selNames];ns[charIdx-2]=nm;setSelNames(ns);}} style={{padding:'2px 7px',borderRadius:'8px',fontSize:'.65rem',cursor:'pointer',fontWeight:900,background:isSel?'rgba(212,160,23,.25)':'rgba(255,255,255,.04)',border:`1px solid ${isSel?'#d4a017':'#1e1e3a'}`,color:isSel?'#d4a017':'#94a3b8',transition:'all .15s'}}>{nm}</span>);})}
+          </div>
+        </div>)}
         <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'5px'}}>
           {Object.values(CLASSES).map(c=>{
-            const isYuuri=charIdx===0,isSouya=charIdx===1;
             const curVal=charIdx<2?selCls[charIdx]:selExtra[charIdx-2];
             const isSel=curVal===c.id;
             const cv=CHAR_VIS[c.id];
             const onClick=()=>{SFX.cursor();if(charIdx<2){const ns=[...selCls];ns[charIdx]=isSel?undefined:c.id;setSelCls(ns.filter(Boolean).length>=charIdx+1?ns:ns.slice(0,charIdx).concat(isSel?[]:[c.id]));}else{const ns=[...selExtra];ns[charIdx-2]=isSel?undefined:c.id;setSelExtra(ns);}};
             return(<div key={c.id} onClick={onClick} style={{background:isSel?c.bg:'rgba(255,255,255,.02)',border:`2px solid ${isSel?c.color:'#141428'}`,borderRadius:'10px',padding:'7px 4px',cursor:'pointer',textAlign:'center',transition:'all .2s',position:'relative'}}>
               {isSel&&<div style={{position:'absolute',top:'2px',right:'3px',color:c.color,fontSize:'.6rem',fontWeight:900}}>✓</div>}
-              <div style={{filter:`drop-shadow(0 0 6px ${c.color}55)`,marginBottom:'3px'}}>
-                <span style={{fontSize:'1.8rem',lineHeight:1,display:'block'}}>{cv.face}</span>
+              <div style={{filter:`drop-shadow(0 0 8px ${c.color}88)`,marginBottom:'3px'}}>
+                <span style={{fontSize:'2.2rem',lineHeight:1,display:'block'}}>{cv.face}</span>
               </div>
               <div style={{color:c.color,fontWeight:900,fontSize:'.68rem'}}>{c.name}</div>
+              <div style={{fontSize:'.55rem',color:cv.aura?'#94a3b8':'transparent'}}>{cv.aura||'　'}</div>
             </div>);})}
         </div>
       </div>))}
       {selCls.length>=2&&selCls[0]&&selCls[1]&&(<div style={{textAlign:'center',marginTop:'10px'}}>
         <button onClick={()=>startGame(false)} style={{...bs('#d4a017'),padding:'13px 36px',fontSize:'.95rem'}}>
-          ⚔️ {[`ゆうり(${CLASSES[selCls[0]]?.name})`,`そうや(${CLASSES[selCls[1]]?.name})`,...(selExtra[0]?[`リン(${CLASSES[selExtra[0]]?.name})`]:[]),...(selExtra[1]?[`カイ(${CLASSES[selExtra[1]]?.name})`]:[])].join('+')} で冒険へ！
+          ⚔️ {[`ゆうり(${CLASSES[selCls[0]]?.name})`,`そうや(${CLASSES[selCls[1]]?.name})`,...(selExtra[0]?[`${selNames[0]||'3人目'}(${CLASSES[selExtra[0]]?.name})`]:[]),...(selExtra[1]?[`${selNames[1]||'4人目'}(${CLASSES[selExtra[1]]?.name})`]:[])].join('+')} で冒険へ！
         </button>
       </div>)}
       <div style={{textAlign:'center',marginTop:'4px'}}><button style={bs('#374151')} onClick={()=>setScr('title')}>← もどる</button></div>
@@ -765,14 +776,14 @@ function App(){
       <div style={{fontSize:'.7rem',color:'#374151',textAlign:'center',marginBottom:'8px'}}>タップで編成を切り替え。アクティブは最大4人まで</div>
       <div style={{marginBottom:'8px'}}>
         <div style={{fontSize:'.72rem',color:'#94a3b8',fontWeight:900,marginBottom:'4px'}}>⚔️ 現在のパーティ</div>
-        {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const canRemove=party.length>2;return(<div key={i} style={{display:'flex',alignItems:'center',gap:'6px',background:'rgba(255,255,255,.04)',border:`1px solid ${mc}33`,borderRadius:'8px',padding:'6px 10px',marginBottom:'4px'}}>
+        {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const canRemove=m.isMonster&&party.length>2;return(<div key={i} style={{display:'flex',alignItems:'center',gap:'6px',background:'rgba(255,255,255,.04)',border:`1px solid ${mc}33`,borderRadius:'8px',padding:'6px 10px',marginBottom:'4px'}}>
           <span style={{fontSize:'1.4rem'}}>{m.isMonster?m.base:(CHAR_VIS[m.classId]?.face||'🧑')}</span>
           <div style={{flex:1}}><div style={{fontSize:'.78rem',color:mc,fontWeight:900}}>{mn(m)} Lv.{m.level}</div><div style={{fontSize:'.62rem',color:'#374151'}}>HP:{m.hp}/{m.maxHp} MP:{m.mp}/{m.maxMp}</div></div>
           {canRemove&&<button onClick={()=>{SFX.cursor();const nm=party.filter((_,j)=>j!==i);setParty(nm);}} style={{...bs('#ef4444'),margin:0,padding:'4px 8px',fontSize:'.65rem'}}>外す</button>}
         </div>);})}
       </div>
       {monsterRoster.filter(r=>!party.find(p=>p.id===r.id)).length>0&&(<div style={{marginBottom:'8px'}}>
-        <div style={{fontSize:'.72rem',color:'#94a3b8',fontWeight:900,marginBottom:'4px'}}>🏕️ 控え（モンスターロスター {monsterRoster.length}/5）</div>
+        <div style={{fontSize:'.72rem',color:'#94a3b8',fontWeight:900,marginBottom:'4px'}}>🏕️ 控え（モンスターロスター {monsterRoster.length}/10）</div>
         {monsterRoster.filter(r=>!party.find(p=>p.id===r.id)).map((m,i)=>{const canAdd=party.length<4;return(<div key={i} style={{display:'flex',alignItems:'center',gap:'6px',background:'rgba(74,222,128,.05)',border:'1px solid rgba(74,222,128,.2)',borderRadius:'8px',padding:'6px 10px',marginBottom:'4px'}}>
           <span style={{fontSize:'1.4rem'}}>{m.base}</span>
           <div style={{flex:1}}><div style={{fontSize:'.78rem',color:'#4ade80',fontWeight:900}}>{m.name} Lv.{m.level}</div><div style={{fontSize:'.62rem',color:'#374151'}}>HP:{m.maxHp} ATK:{m.atk} DEF:{m.def}</div></div>
