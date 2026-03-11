@@ -339,20 +339,28 @@ const ENEMY_SPELL_DB={
 
 // パーティレベルに合わせて敵を強化（動的難易度調整）
 const CHAPTER_BASE_LV=[1,3,6,9,12,15,18,21,24,28]; // 各章の基準Lv
+// 章ごとのボスHP上限（どれだけ高レベルでも超えない）
+const BOSS_HP_CAPS=[700,1100,1800,2400,3200,4200,5500,7000,8500,12000];
+// 章ごとの通常敵HP上限
+const MOB_HP_CAPS=[200,350,500,700,900,1200,1600,2000,2500,3000];
 const scaleEnemy=(tpl,avgLv,partySize,chIdx=0)=>{
-  const ps=partySize>=4?2.5:partySize===3?1.8:partySize===2?1.2:1.0;
-  // 動的難易度: パーティLvと章基準Lvのブレンド（70%:30%）
-  // パーティが突出して高レベルになっても急激に強くなりすぎない
+  // パーティ人数倍率を緩和（4人=1.8x, 3人=1.4x, 2人=1.2x）
+  const ps=partySize>=4?1.8:partySize===3?1.4:partySize===2?1.2:1.0;
   const chBaseLv=CHAPTER_BASE_LV[Math.min(chIdx,9)];
-  const blended=Math.round(avgLv*0.7+chBaseLv*0.3);
-  // さらに上限: パーティLv + 4 を超えない（追い越しすぎ防止）
-  const lv=Math.max(chBaseLv,Math.min(blended,avgLv+4));
-  const bm=tpl.boss?1.4:1.0;
-  const s=(1+(lv-1)*0.18)*ps*bm;
+  // 動的難易度: パーティLvと章基準Lvのブレンド（60%:40%）
+  const blended=Math.round(avgLv*0.6+chBaseLv*0.4);
+  // 上限: チャプター基準Lv+8 を超えない
+  const lv=Math.max(chBaseLv,Math.min(blended,chBaseLv+8));
+  const bm=tpl.boss?1.2:1.0;
+  const s=(1+(lv-1)*0.15)*ps*bm;
   const gs=2.5; // EXP倍率
-  const defScale=1+(lv-1)*0.12;
-  const base={...tpl,hp:Math.round(tpl.maxHp*s),maxHp:Math.round(tpl.maxHp*s),atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*defScale),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*3.5)};
-  if(tpl.boss)base.magicResist=tpl.magicResist!==undefined?tpl.magicResist:0.25; // ボスはテンプレ値優先、デフォ25%カット
+  const defScale=1+(lv-1)*0.10;
+  const rawHp=Math.round(tpl.maxHp*s);
+  // HPキャップを適用
+  const hpCap=tpl.boss?BOSS_HP_CAPS[Math.min(chIdx,9)]:MOB_HP_CAPS[Math.min(chIdx,9)];
+  const finalHp=Math.min(rawHp,hpCap);
+  const base={...tpl,hp:finalHp,maxHp:finalHp,atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*defScale),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*3.5)};
+  if(tpl.boss)base.magicResist=tpl.magicResist!==undefined?tpl.magicResist:0.25;
   return base;
 };
 const SK='ysd_v5';
@@ -769,7 +777,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.9.0 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.10.0 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
