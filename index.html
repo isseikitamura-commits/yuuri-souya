@@ -270,6 +270,7 @@ const BOSS_ENC=[
     {id:'fallen_b1',name:'大堕天使ベリアル',base:'👼',ov:'🔥',flt:'hue-rotate(340deg) saturate(3.5) brightness(.6) contrast(1.8)',gc:'#b91c1c',hp:500,maxHp:500,atk:90,def:50,mat:70,exp:400,gold:290,si:'burn'}],
 ];
 
+const ZACIAN_TPL={id:'zacian',name:'覇剣獣ザシアン',base:'🐺',ov:'⚔️',flt:'hue-rotate(200deg) saturate(3.5) brightness(1.1) contrast(1.2)',gc:'#38bdf8',maxHp:3200,atk:520,def:160,mat:180,allySkill:{id:'zacian_slash',name:'きょじゅうざん',e:'⚔️',mp:35,type:'atk_one',pow:c=>Math.floor(c.atk*12.0+c.mat*2.0),desc:'単体に超強力な一撃！',color:'#38bdf8'}};
 const SHENLONG_TPL={id:'shenlong',name:'神龍シェンロン',base:'🐉',ov:'✨',flt:'hue-rotate(120deg) saturate(3) brightness(1.2)',gc:'#4ade80',maxHp:2800,atk:420,def:180,mat:360,allySkill:{id:'dragon_fire',name:'龍炎神撃',e:'🐉',mp:40,type:'atk_all',pow:c=>Math.floor(c.mat*9.0+c.atk*5.0),desc:'全敵に超強力な龍炎神撃！',color:'#4ade80'}};
 
 const ITEMS=[
@@ -503,6 +504,8 @@ function App(){
   const [storyScreen,setStoryScreen]=useState(null);
   const [dragonBalls,setDragonBalls]=useState(0);
   const [dragonSummoned,setDragonSummoned]=useState(false);
+  const [zacianSummoned,setZacianSummoned]=useState(false);
+  const [showZacianSummon,setShowZacianSummon]=useState(false);
   const [showDragonSummon,setShowDragonSummon]=useState(false);
   const [boughtEquips,setBoughtEquips]=useState([]);
   const [dbPopup,setDbPopup]=useState(false);
@@ -748,11 +751,12 @@ function App(){
     return()=>clearTimeout(t);
   },[autoMode,scr,busy,phase,spellMenu,activePIdx,party,enemies,inv,getMemberSpells,handleAction,useItemOn]);
 
-  const doSaveSlot=(n)=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,clearCount,savedParty,clearHistory,chBattleNum,monsterRoster,humanRoster,boughtEquips},n);SFX.save();setSaveMenu(null);setSaveMsg(ok?`💾 スロット${n}にセーブ！`:'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
+  const doSaveSlot=(n)=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,zacianSummoned,clearCount,savedParty,clearHistory,chBattleNum,monsterRoster,humanRoster,boughtEquips},n);SFX.save();setSaveMenu(null);setSaveMsg(ok?`💾 スロット${n}にセーブ！`:'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
   const doSave=()=>setSaveMenu('save');
-  const doLoadSlot=(n)=>{const d=ld(n);if(!d){setSaveMsg('データなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);setHumanRoster(d.humanRoster||[]);setBoughtEquips(d.boughtEquips||[]);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);if(d.clearHistory)setClearHistory(d.clearHistory||[]);setSaveMenu(null);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
+  const doLoadSlot=(n)=>{const d=ld(n);if(!d){setSaveMsg('データなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);setHumanRoster(d.humanRoster||[]);setBoughtEquips(d.boughtEquips||[]);setZacianSummoned(d.zacianSummoned||false);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);if(d.clearHistory)setClearHistory(d.clearHistory||[]);setSaveMenu(null);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
   const doLoad=()=>setSaveMenu('load');
   const buyItem=item=>{if(gold<item.cost){addLog('Gold不足！');return;}SFX.buy();if(item.type==='equip'){setParty(p=>p.map(m=>{let n={...m};if(item.eff.atk)n.atk+=item.eff.atk;if(item.eff.def)n.def+=item.eff.def;if(item.eff.mat)n.mat+=item.eff.mat;if(item.eff.hpb){n.maxHp+=item.eff.hpb;n.hp=Math.min(n.hp+item.eff.hpb,n.maxHp);}if(item.eff.mpb){n.maxMp+=item.eff.mpb;n.mp=Math.min(n.mp+item.eff.mpb,n.maxMp);}return n;}));setBoughtEquips(prev=>[...prev,item.id]);addLog('🛒 '+item.emoji+item.name+'購入！全員に効果！');}else{if(inv.filter(i=>i.id===item.id).length>=5){addLog('これ以上持てない！');return;}setInv(p=>[...p,{...item}]);addLog('🛒 '+item.emoji+item.name+'購入！');}setGold(g=>g-item.cost);};
+  const summonZacian=()=>{if(dragonBalls<3||zacianSummoned||!dragonSummoned)return;SFX.dragon();const ally={...initMonsterAlly(ZACIAN_TPL),hp:ZACIAN_TPL.maxHp,maxHp:ZACIAN_TPL.maxHp,mp:70,maxMp:70,atk:ZACIAN_TPL.atk,def:ZACIAN_TPL.def,mat:ZACIAN_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setZacianSummoned(true);setShowZacianSummon(true);setTimeout(()=>setShowZacianSummon(false),4500);addLog('⚔️ 覇剣獣ザシアンがなかまになった！ドラゴンボール3個消費！');};
   const summonDragon=()=>{if(dragonBalls<3||dragonSummoned)return;SFX.dragon();const ally={...initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setDragonSummoned(true);setShowDragonSummon(true);setTimeout(()=>setShowDragonSummon(false),4500);addLog('🐉 神龍シェンロンがなかまになった！ドラゴンボール3個消費！');};
   const useItemOn=(item,tgtIdx)=>{
     const m=party[tgtIdx];if(!m)return;
@@ -785,7 +789,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.12.0 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.13.0 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -878,7 +882,7 @@ function App(){
         </div>
       </div>
       <div className="card" style={{borderColor:'rgba(251,191,36,.18)',padding:'9px 12px'}}>
-        {dbPopup&&<div style={{background:'rgba(251,191,36,.22)',border:'2px solid #fbbf24',borderRadius:'12px',padding:'10px 16px',textAlign:'center',marginBottom:'8px',animation:'popIn .3s ease',fontSize:'1rem',fontWeight:900,color:'#fde68a'}}>🔮✨ ドラゴンボールゲット！ {dragonBalls}個目！ ✨🔮<br/><span style={{fontSize:'.84rem',color:'#fbbf24'}}>あと{Math.max(0,3-dragonBalls)}個で神龍召喚！</span></div>}
+        {dbPopup&&<div style={{background:'rgba(251,191,36,.22)',border:'2px solid #fbbf24',borderRadius:'12px',padding:'10px 16px',textAlign:'center',marginBottom:'8px',animation:'popIn .3s ease',fontSize:'1rem',fontWeight:900,color:'#fde68a'}}>🔮✨ ドラゴンボールゲット！ {dragonBalls}個目！ ✨🔮<br/><span style={{fontSize:'.84rem',color:'#fbbf24'}}>{dragonSummoned&&!zacianSummoned?'あと'+(Math.max(0,3-dragonBalls))+'個でザシアン召喚！':'あと'+(Math.max(0,3-dragonBalls))+'個で神龍召喚！'}</span></div>}
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'4px'}}>
           <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
             <span style={{color:'#fbbf24',fontWeight:900,fontSize:'1.0rem'}}>🔮 ドラゴンボール:</span>
@@ -886,7 +890,9 @@ function App(){
             <span style={{fontSize:'.84rem',color:dragonBalls>=3?'#4ade80':'#fbbf24',fontWeight:900}}>{dragonBalls}/3</span>
           </div>
           {dragonBalls>=3&&!dragonSummoned&&<button onClick={summonDragon} style={{...bs('#4ade80'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>🐉 神龍召喚！{party.length>=4?' (控えに追加)':''}</button>}
-          {dragonSummoned&&<span style={{fontSize:'.94rem',color:'#4ade80',fontWeight:900}}>🐉 龍召喚済み</span>}
+          {dragonSummoned&&!zacianSummoned&&dragonBalls<3&&<span style={{fontSize:'.84rem',color:'#4ade80',fontWeight:900}}>🐉 龍召喚済み　<span style={{color:'#38bdf8',fontSize:'.78rem'}}>⚔️ あと{3-dragonBalls}個でザシアン召喚！</span></span>}
+          {dragonBalls>=3&&dragonSummoned&&!zacianSummoned&&<button onClick={summonZacian} style={{...bs('#38bdf8'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>⚔️ ザシアン召喚！{party.length>=4?' (控えに追加)':''}</button>}
+          {zacianSummoned&&<span style={{fontSize:'.94rem',color:'#38bdf8',fontWeight:900}}>⚔️ ザシアン召喚済み</span>}
         </div>
       </div>
       <div className="card" style={{borderColor:'rgba(255,255,255,.04)',padding:'12px 14px'}}>
@@ -1194,6 +1200,18 @@ function App(){
       </div>
       <div style={{fontSize:'.88rem',color:'#4ade80',opacity:.7}}>ドラゴンボール3個消費</div>
       <div style={{fontSize:'.75rem',color:'#4ade80',opacity:.4,marginTop:'20px'}}>タップで閉じる</div>
+    </div>)}
+    {/* ザシアン召喚演出 */}
+    {showZacianSummon&&(<div onClick={()=>setShowZacianSummon(false)} style={{position:'fixed',inset:0,zIndex:300,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'radial-gradient(ellipse at center,rgba(0,10,30,.95) 0%,rgba(0,0,20,.99) 100%)',animation:'fadeIn .4s ease',cursor:'pointer'}}>
+      <div style={{fontSize:'9rem',animation:'dragonPulse 1s ease-in-out infinite',filter:'drop-shadow(0 0 40px #38bdf8) drop-shadow(0 0 80px #0ea5e9)',marginBottom:'16px'}}>🐺</div>
+      <div style={{fontSize:'1.8rem',fontWeight:900,color:'#38bdf8',textShadow:'0 0 30px #38bdf8,0 0 60px #0ea5e9',animation:'popIn .5s ease',marginBottom:'8px',letterSpacing:'.1em'}}>覇 剣 獣 降 臨 ！！</div>
+      <div style={{fontSize:'1.1rem',color:'#7dd3fc',fontWeight:700,marginBottom:'8px',animation:'fadeIn .8s .3s ease both'}}>ザシアンがなかまになった！</div>
+      <div style={{fontSize:'.88rem',color:'#38bdf8',fontWeight:600,marginBottom:'20px',animation:'fadeIn .8s .5s ease both'}}>⚔️ きょじゅうざん で敵を一撃！</div>
+      <div style={{display:'flex',gap:'12px',marginBottom:'20px'}}>
+        {[...Array(3)].map((_,i)=>(<div key={i} style={{fontSize:'2rem',filter:'drop-shadow(0 0 12px #38bdf8)',animation:`popIn .4s ${i*.15}s ease both`}}>🔮</div>))}
+      </div>
+      <div style={{fontSize:'.88rem',color:'#38bdf8',opacity:.7}}>ドラゴンボール3個消費</div>
+      <div style={{fontSize:'.75rem',color:'#38bdf8',opacity:.4,marginTop:'20px'}}>タップで閉じる</div>
     </div>)}
     {/* グローバルアイテムモーダル */}
     {itemMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.82)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .18s ease'}}>
