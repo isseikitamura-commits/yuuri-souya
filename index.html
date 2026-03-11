@@ -277,21 +277,27 @@ const ITEMS=[
   {id:'mherb',name:'まんねんぐさ',emoji:'🌸',cost:60,type:'con',eff:{mp:30},desc:'MP+30'},
   {id:'anti',name:'どくけし草',emoji:'🍃',cost:45,type:'con',eff:{cure:true},desc:'状態異常回復'},
   {id:'elix',name:'エリクサー',emoji:'🧪',cost:140,type:'con',eff:{hp:9999,mp:9999},desc:'HP・MP完全回復'},
-  {id:'sword',name:'はがねの剣',emoji:'⚔️',cost:250,type:'equip',eff:{atk:16},desc:'全員ATK+16'},
-  {id:'shield',name:'はがねの盾',emoji:'🛡️',cost:220,type:'equip',eff:{def:14},desc:'全員DEF+14'},
-  {id:'staff',name:'魔法のつえ',emoji:'🪄',cost:230,type:'equip',eff:{mat:18},desc:'全員MAT+18'},
-  {id:'armor',name:'はがねの鎧',emoji:'🥋',cost:320,type:'equip',eff:{def:16,hpb:40},desc:'全員DEF+16,HP+40'},
-  {id:'grimoire',name:'魔導書',emoji:'📖',cost:380,type:'equip',eff:{mat:25,mpb:20},desc:'全員MAT+25,MP+20'},
   {id:'fullherb',name:'めぐみのしずく',emoji:'💧',cost:600,type:'con',eff:{hp:500},desc:'HP+500（大回復）'},
   {id:'allheal',name:'せかいじゅのしずく',emoji:'🌳',cost:1200,type:'con',eff:{allHeal:true,hp:9999,mp:9999},desc:'全員HP・MP完全回復！'},
-  {id:'hero_sword',name:'勇者のつるぎ',emoji:'⚔️',cost:2000,type:'equip',eff:{atk:40,hpb:60},desc:'全員ATK+40,HP+60'},
-  {id:'magic_armor',name:'魔法の鎧',emoji:'🛡️',cost:2800,type:'equip',eff:{def:28,hpb:100},desc:'全員DEF+28,HP+100'},
-  {id:'sage_staff',name:'けんじゃのつえ',emoji:'🔱',cost:3500,type:'equip',eff:{mat:45,mpb:50},desc:'全員MAT+45,MP+50'},
-  {id:'dragon_armor',name:'りゅうのよろい',emoji:'🐉',cost:5500,type:'equip',eff:{def:45,hpb:180,mpb:30},desc:'全員DEF+45,HP+180,MP+30'},
-  {id:'diamond_armor',name:'ダイアモンドの鎧',emoji:'💎',cost:10000,type:'equip',eff:{def:70,hpb:300,mpb:80},desc:'🏆最強！全員DEF+70,HP+300,MP+80'},
+  // 装備品: tier1（初期）
+  {id:'sword',name:'はがねの剣',emoji:'⚔️',cost:250,type:'equip',tier:1,eff:{atk:16},desc:'全員ATK+16'},
+  {id:'shield',name:'はがねの盾',emoji:'🛡️',cost:220,type:'equip',tier:1,eff:{def:14},desc:'全員DEF+14'},
+  {id:'staff',name:'魔法のつえ',emoji:'🪄',cost:230,type:'equip',tier:1,eff:{mat:18},desc:'全員MAT+18'},
+  {id:'armor',name:'はがねの鎧',emoji:'🥋',cost:320,type:'equip',tier:1,eff:{def:16,hpb:40},desc:'全員DEF+16,HP+40'},
+  {id:'grimoire',name:'魔導書',emoji:'📖',cost:380,type:'equip',tier:1,eff:{mat:25,mpb:20},desc:'全員MAT+25,MP+20'},
+  // tier2（tier1が全部揃ったら解禁）
+  {id:'hero_sword',name:'勇者のつるぎ',emoji:'⚔️',cost:2000,type:'equip',tier:2,eff:{atk:40,hpb:60},desc:'全員ATK+40,HP+60'},
+  {id:'magic_armor',name:'魔法の鎧',emoji:'🛡️',cost:2800,type:'equip',tier:2,eff:{def:28,hpb:100},desc:'全員DEF+28,HP+100'},
+  {id:'sage_staff',name:'けんじゃのつえ',emoji:'🔱',cost:3500,type:'equip',tier:2,eff:{mat:45,mpb:50},desc:'全員MAT+45,MP+50'},
+  // tier3（tier2が全部揃ったら解禁）
+  {id:'dragon_armor',name:'りゅうのよろい',emoji:'🐉',cost:5500,type:'equip',tier:3,eff:{def:45,hpb:180,mpb:30},desc:'全員DEF+45,HP+180,MP+30'},
+  {id:'dragon_sword',name:'りゅうのつるぎ',emoji:'🗡️',cost:6000,type:'equip',tier:3,eff:{atk:65,hpb:80},desc:'全員ATK+65,HP+80'},
+  {id:'holy_staff',name:'せいなるつえ',emoji:'✨',cost:6500,type:'equip',tier:3,eff:{mat:70,mpb:80},desc:'全員MAT+70,MP+80'},
+  {id:'diamond_armor',name:'ダイアモンドの鎧',emoji:'💎',cost:10000,type:'equip',tier:4,eff:{def:70,hpb:300,mpb:80},desc:'🏆最強！全員DEF+70,HP+300,MP+80'},
+  {id:'divine_sword',name:'天聖剣エクスカリバー',emoji:'🌟',cost:12000,type:'equip',tier:4,eff:{atk:100,hpb:150,mpb:50},desc:'🏆最強！全員ATK+100,HP+150,MP+50'},
 ];
 
-const calcNext=lv=>Math.floor(80*Math.pow(lv,1.4));
+const calcNext=lv=>Math.floor(280*Math.pow(lv,1.45));
 
 // 敵の呪文データベース
 const ENEMY_SPELL_DB={
@@ -348,12 +354,12 @@ const scaleEnemy=(tpl,avgLv,partySize,chIdx=0)=>{
   const ps=partySize>=4?1.8:partySize===3?1.4:partySize===2?1.2:1.0;
   const chBaseLv=CHAPTER_BASE_LV[Math.min(chIdx,9)];
   // 動的難易度: パーティLvと章基準Lvのブレンド（60%:40%）
-  const blended=Math.round(avgLv*0.6+chBaseLv*0.4);
-  // 上限: チャプター基準Lv+8 を超えない
-  const lv=Math.max(chBaseLv,Math.min(blended,chBaseLv+8));
+  const blended=Math.round(avgLv*0.55+chBaseLv*0.45);
+  // 上限: チャプター基準Lv+12 を超えない
+  const lv=Math.max(chBaseLv,Math.min(blended,chBaseLv+12));
   const bm=tpl.boss?1.2:1.0;
   const s=(1+(lv-1)*0.15)*ps*bm;
-  const gs=2.5; // EXP倍率
+  const gs=1.2; // EXP倍率
   const defScale=1+(lv-1)*0.10;
   const rawHp=Math.round(tpl.maxHp*s);
   // HPキャップを適用
@@ -498,6 +504,7 @@ function App(){
   const [dragonBalls,setDragonBalls]=useState(0);
   const [dragonSummoned,setDragonSummoned]=useState(false);
   const [showDragonSummon,setShowDragonSummon]=useState(false);
+  const [boughtEquips,setBoughtEquips]=useState([]);
   const [dbPopup,setDbPopup]=useState(false);
   const [clearCount,setClearCount]=useState(0);
   const [savedParty,setSavedParty]=useState(null); // 後方互換
@@ -741,11 +748,11 @@ function App(){
     return()=>clearTimeout(t);
   },[autoMode,scr,busy,phase,spellMenu,activePIdx,party,enemies,inv,getMemberSpells,handleAction,useItemOn]);
 
-  const doSaveSlot=(n)=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,clearCount,savedParty,clearHistory,chBattleNum,monsterRoster,humanRoster},n);SFX.save();setSaveMenu(null);setSaveMsg(ok?`💾 スロット${n}にセーブ！`:'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
+  const doSaveSlot=(n)=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,clearCount,savedParty,clearHistory,chBattleNum,monsterRoster,humanRoster,boughtEquips},n);SFX.save();setSaveMenu(null);setSaveMsg(ok?`💾 スロット${n}にセーブ！`:'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
   const doSave=()=>setSaveMenu('save');
-  const doLoadSlot=(n)=>{const d=ld(n);if(!d){setSaveMsg('データなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);setHumanRoster(d.humanRoster||[]);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);if(d.clearHistory)setClearHistory(d.clearHistory||[]);setSaveMenu(null);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
+  const doLoadSlot=(n)=>{const d=ld(n);if(!d){setSaveMsg('データなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);setHumanRoster(d.humanRoster||[]);setBoughtEquips(d.boughtEquips||[]);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);if(d.clearHistory)setClearHistory(d.clearHistory||[]);setSaveMenu(null);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
   const doLoad=()=>setSaveMenu('load');
-  const buyItem=item=>{if(gold<item.cost){addLog('Gold不足！');return;}SFX.buy();if(item.type==='equip'){setParty(p=>p.map(m=>{let n={...m};if(item.eff.atk)n.atk+=item.eff.atk;if(item.eff.def)n.def+=item.eff.def;if(item.eff.mat)n.mat+=item.eff.mat;if(item.eff.hpb){n.maxHp+=item.eff.hpb;n.hp=Math.min(n.hp+item.eff.hpb,n.maxHp);}if(item.eff.mpb){n.maxMp+=item.eff.mpb;n.mp=Math.min(n.mp+item.eff.mpb,n.maxMp);}return n;}));addLog('🛒 '+item.emoji+item.name+'購入！全員に効果！');}else{if(inv.filter(i=>i.id===item.id).length>=5){addLog('これ以上持てない！');return;}setInv(p=>[...p,{...item}]);addLog('🛒 '+item.emoji+item.name+'購入！');}setGold(g=>g-item.cost);};
+  const buyItem=item=>{if(gold<item.cost){addLog('Gold不足！');return;}SFX.buy();if(item.type==='equip'){setParty(p=>p.map(m=>{let n={...m};if(item.eff.atk)n.atk+=item.eff.atk;if(item.eff.def)n.def+=item.eff.def;if(item.eff.mat)n.mat+=item.eff.mat;if(item.eff.hpb){n.maxHp+=item.eff.hpb;n.hp=Math.min(n.hp+item.eff.hpb,n.maxHp);}if(item.eff.mpb){n.maxMp+=item.eff.mpb;n.mp=Math.min(n.mp+item.eff.mpb,n.maxMp);}return n;}));setBoughtEquips(prev=>[...prev,item.id]);addLog('🛒 '+item.emoji+item.name+'購入！全員に効果！');}else{if(inv.filter(i=>i.id===item.id).length>=5){addLog('これ以上持てない！');return;}setInv(p=>[...p,{...item}]);addLog('🛒 '+item.emoji+item.name+'購入！');}setGold(g=>g-item.cost);};
   const summonDragon=()=>{if(dragonBalls<3||dragonSummoned)return;SFX.dragon();const ally={...initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setDragonSummoned(true);setShowDragonSummon(true);setTimeout(()=>setShowDragonSummon(false),4500);addLog('🐉 神龍シェンロンがなかまになった！ドラゴンボール3個消費！');};
   const useItemOn=(item,tgtIdx)=>{
     const m=party[tgtIdx];if(!m)return;
@@ -778,7 +785,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.11.0 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.12.0 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -1125,7 +1132,24 @@ function App(){
     {/* SHOP */}
     {scr==='shop'&&(<div className="card" style={{animation:'fadeIn .3s ease',borderColor:'rgba(212,160,23,.16)'}}>
       <div style={{color:'#d4a017',fontWeight:900,textAlign:'center',marginBottom:'8px'}}>🛒 ショップ　Gold: {gold}</div>
-      {ITEMS.map(item=>(<div key={item.id} style={{display:'flex',alignItems:'center',gap:'7px',marginBottom:'6px',padding:'8px',background:'rgba(255,255,255,.025)',borderRadius:'9px'}}><span style={{fontSize:'1.3rem'}}>{item.emoji}</span><div style={{flex:1}}><div style={{fontSize:'.94rem',fontWeight:'bold'}}>{item.name}</div><div style={{fontSize:'.68rem',color:'#4b5563'}}>{item.desc}</div></div><button onClick={()=>buyItem(item)} disabled={gold<item.cost} style={{...bs('#d97706',gold<item.cost),margin:0,padding:'7px 10px',fontSize:'1.0rem'}}>{item.cost}G</button></div>))}
+      {(()=>{
+  const equipTiers=ITEMS.filter(i=>i.type==='equip').map(i=>i.tier);
+  const maxTier=Math.max(...equipTiers);
+  // 現在解禁されているtier: 全tier1が買われたらtier2、全tier2が買われたらtier3...
+  let unlockedTier=1;
+  for(let t=1;t<maxTier;t++){
+    const tierItems=ITEMS.filter(i=>i.type==='equip'&&i.tier===t);
+    if(tierItems.every(i=>boughtEquips.includes(i.id)))unlockedTier=t+1;
+    else break;
+  }
+  const shopList=ITEMS.filter(i=>i.type==='con'||(i.type==='equip'&&i.tier===unlockedTier&&!boughtEquips.includes(i.id)));
+  const allBought=ITEMS.filter(i=>i.type==='equip'&&i.tier===unlockedTier).every(i=>boughtEquips.includes(i.id));
+  return(<>
+    {unlockedTier>1&&<div style={{fontSize:'.78rem',color:'#fbbf24',marginBottom:'6px',textAlign:'center'}}>🌟 強化Tier {unlockedTier} 装備が解禁されました！</div>}
+    {shopList.map(item=>(<div key={item.id} style={{display:'flex',alignItems:'center',gap:'7px',marginBottom:'6px',padding:'8px',background:item.type==='equip'?'rgba(212,160,23,.08)':'rgba(255,255,255,.025)',borderRadius:'9px',border:item.type==='equip'?'1px solid rgba(212,160,23,.2)':'none'}}><span style={{fontSize:'1.3rem'}}>{item.emoji}</span><div style={{flex:1}}><div style={{fontSize:'.94rem',fontWeight:'bold'}}>{item.name}{item.type==='equip'?<span style={{fontSize:'.68rem',color:'#fbbf24',marginLeft:'4px'}}>一回限り</span>:null}</div><div style={{fontSize:'.68rem',color:'#4b5563'}}>{item.desc}</div></div><button onClick={()=>buyItem(item)} disabled={gold<item.cost} style={{...bs('#d97706',gold<item.cost),margin:0,padding:'7px 10px',fontSize:'1.0rem'}}>{item.cost}G</button></div>))}
+    {shopList.filter(i=>i.type==='equip').length===0&&!allBought&&<div style={{fontSize:'.82rem',color:'#4ade80',textAlign:'center',padding:'8px'}}>✅ 現在の装備は全て購入済み！</div>}
+  </>);
+})()}
       <div style={{display:'flex',justifyContent:'center',gap:'6px',marginTop:'8px',flexWrap:'wrap'}}>
         {inv.length>0&&<button style={{...bs('#16a34a'),margin:0}} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
         <button style={{...bs('#374151'),margin:0}} onClick={()=>{SFX.cursor();setScr('map');bgm('field');}}>🔙 もどる</button></div>
@@ -1161,7 +1185,7 @@ function App(){
     </div>)}
 
     {/* 神龍召喚演出 */}
-    {showDragonSummon&&(<div style={{position:'fixed',inset:0,zIndex:300,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'radial-gradient(ellipse at center,rgba(0,20,0,.92) 0%,rgba(0,0,0,.98) 100%)',animation:'fadeIn .4s ease'}}>
+    {showDragonSummon&&(<div onClick={()=>setShowDragonSummon(false)} style={{position:'fixed',inset:0,zIndex:300,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'radial-gradient(ellipse at center,rgba(0,20,0,.92) 0%,rgba(0,0,0,.98) 100%)',animation:'fadeIn .4s ease',cursor:'pointer'}}>
       <div style={{fontSize:'9rem',animation:'dragonPulse 1s ease-in-out infinite',filter:'drop-shadow(0 0 40px #4ade80) drop-shadow(0 0 80px #22c55e)',marginBottom:'16px'}}>🐉</div>
       <div style={{fontSize:'1.8rem',fontWeight:900,color:'#4ade80',textShadow:'0 0 30px #4ade80,0 0 60px #22c55e',animation:'popIn .5s ease',marginBottom:'8px',letterSpacing:'.1em'}}>神 龍 降 臨 ！！</div>
       <div style={{fontSize:'1.1rem',color:'#86efac',fontWeight:700,marginBottom:'24px',animation:'fadeIn .8s .3s ease both'}}>シェンロンがなかまになった！</div>
@@ -1169,6 +1193,7 @@ function App(){
         {[...Array(3)].map((_,i)=>(<div key={i} style={{fontSize:'2rem',filter:'drop-shadow(0 0 12px #fb923c)',animation:`popIn .4s ${i*.15}s ease both`}}>🔮</div>))}
       </div>
       <div style={{fontSize:'.88rem',color:'#4ade80',opacity:.7}}>ドラゴンボール3個消費</div>
+      <div style={{fontSize:'.75rem',color:'#4ade80',opacity:.4,marginTop:'20px'}}>タップで閉じる</div>
     </div>)}
     {/* グローバルアイテムモーダル */}
     {itemMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.82)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .18s ease'}}>
