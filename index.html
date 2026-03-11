@@ -341,7 +341,7 @@ const scaleEnemy=(tpl,avgLv,partySize)=>{
   const bm=tpl.boss?1.4:1.0;
   const s=(1+(lv-1)*0.18)*ps*bm;
   const gs=2.5; // EXP倍率
-  const base={...tpl,hp:Math.round(tpl.maxHp*s),maxHp:Math.round(tpl.maxHp*s),atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*s),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*3.5)};
+  const defScale=(1+(lv-1)*0.18)*(1+(ps-1)*0.5)*bm;const base={...tpl,hp:Math.round(tpl.maxHp*s),maxHp:Math.round(tpl.maxHp*s),atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*defScale),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*3.5)};
   if(tpl.boss)base.magicResist=tpl.magicResist!==undefined?tpl.magicResist:0.25; // ボスはテンプレ値優先、デフォ25%カット
   return base;
 };
@@ -446,7 +446,7 @@ const initMonsterAlly=tpl=>({isMonster:true,id:tpl.id,name:tpl.name,base:tpl.bas
 const initEnemy=tpl=>({...tpl,hp:tpl.maxHp,status:null,statusTurns:0,currentPhase:0,atkBonus:0,rageAoe:false,tripleAtk:false});
 const checkLearn=(member,lv)=>{if(member.isMonster)return{member,newSpells:[]};const spells=CLASS_SPELLS[member.classId]||[];const newSpells=[];let lsp=[...(member.learnedSpells||[])];spells.forEach(sp=>{if(lv>=sp.level&&!lsp.includes(sp.id)){lsp.push(sp.id);newSpells.push(sp);}});return{member:{...member,learnedSpells:lsp},newSpells};};
 const doLevelUp=(member,gainExp,addLog)=>{let m={...member,exp:(member.exp||0)+gainExp};while(m.exp>=calcNext(m.level)){const lv=m.level+1;const newMaxHp=m.maxHp+28,newMaxMp=m.maxMp+10;m={...m,level:lv,maxHp:newMaxHp,hp:newMaxHp,maxMp:newMaxMp,mp:newMaxMp,atk:m.atk+(m.isMonster?4:5),def:m.def+3,mat:m.mat+(m.isMonster?2:5)};const{member:mm,newSpells}=checkLearn(m,lv);m=mm;SFX.lvup();addLog('🌟 '+mn(m)+'がLv.'+lv+'に！');newSpells.forEach(sp=>addLog('✨ 新呪文「'+sp.name+'」を覚えた！'));}return m;};
-const calcDamage=(atk,def)=>{const minDmg=Math.floor(atk*0.25);const roll=atk-Math.floor(def*0.45)+Math.floor(Math.random()*8)-4;return Math.max(minDmg,Math.max(1,roll));};
+const calcDamage=(atk,def)=>{const minDmg=Math.max(1,Math.floor(atk*0.35));const roll=Math.floor(atk*0.65)-Math.floor(def*0.25)+Math.floor(Math.random()*Math.max(4,Math.floor(atk*0.2)));return Math.max(minDmg,Math.max(1,roll));};
 const processDot=e=>{if(!e.status||e.statusTurns<=0)return{...e,status:null,statusTurns:0};let hp=e.hp;if(e.status==='poison')hp=Math.max(1,hp-Math.floor(e.maxHp*.09));if(e.status==='burn')hp=Math.max(1,hp-Math.floor(e.maxHp*.07));const turns=e.statusTurns-1;return{...e,hp,statusTurns:turns,status:turns<=0?null:e.status};};
 const tryInflict=(e,si,rate)=>{if(!si||e.status||Math.random()>rate)return e;return{...e,status:si,statusTurns:3};};
 const decBuffs=m=>{let n={...m};if(n.atkBuffTurns>0){n.atkBuffTurns--;if(n.atkBuffTurns<=0)n.atkBuffMult=1;}if(n.defBuffTurns>0){n.defBuffTurns--;if(n.defBuffTurns<=0)n.defBuffMult=1;}n.reflecting=false;n.defending=false;return n;};
@@ -523,7 +523,7 @@ function App(){
     if(spell.type==='atk_one'){
       const ti=nE.findIndex(e=>e.hp>0);if(ti<0)return{party:nP,enemies:nE};
       const en=nE[ti];
-      let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(en.magicResist||0)))-(en.def||0)*1.2);
+      let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(en.magicResist||0)))-(en.def||0)*0.2);
       if(en.spellImmune){dmg=Math.max(1,Math.floor(dmg*.08));addLog('🔰 呪文がほとんど効かない！');}
       setMAnim(ti,'hurt');SFX.hit();addSpark('65%','30%');addDmg(Math.round(dmg),'e','65%','18%');
       addLog(spell.e+' '+spell.name+'！'+Math.round(dmg)+'ダメージ！');
@@ -532,7 +532,7 @@ function App(){
     }else if(spell.type==='atk_all'||spell.type==='atk_double'){
       const live=nE.map((_,i)=>i).filter(i=>nE[i].hp>0);const hits=spell.type==='atk_double'?2:1;
       for(let h=0;h<hits;h++)for(const ti of live){if(nE[ti].hp<=0)continue;
-        let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(nE[ti].magicResist||0)))-(nE[ti].def||0)*1.0);if(spell.type==='atk_double'&&h===0)dmg=Math.floor(dmg*.85);
+        let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(nE[ti].magicResist||0)))-(nE[ti].def||0)*0.2);if(spell.type==='atk_double'&&h===0)dmg=Math.floor(dmg*.85);
         if(nE[ti].spellImmune){dmg=Math.max(1,Math.floor(dmg*.08));addLog('🔰 '+nE[ti].name+'に呪文がほとんど効かない！');}
         const xp=60+ti*(-12);setMAnim(ti,'hurt');SFX.hit();addSpark(xp+'%','28%');addDmg(Math.round(dmg),'e',xp+'%','16%');
         let nen={...nE[ti],hp:Math.max(0,nE[ti].hp-dmg)};if(spell.inflict)nen=tryInflict(nen,spell.inflict,.38);nE[ti]=nen;await sleep(160);setMAnim(ti,'idle');}
@@ -651,14 +651,60 @@ function App(){
     setBusy(false);
   },[busy,activePIdx,activeM,party,enemies,inv,phase,nextPhase,getMemberSpells,executeSpell,handleVictory,addLog,addDmg,addSpark,setPAnim,setMAnim]);
 
+
   useEffect(()=>{
     if(!autoMode||scr!=='battle'||busy||phase==='enemy'||spellMenu)return;
-    const pIdx=activePIdx,member=party[pIdx];if(!member||member.hp<=0)return;if(enemies.filter(e=>e.hp>0).length===0)return;
-    const hpR=member.hp/member.maxHp,hasCure=inv.some(i=>i.eff&&i.eff.cure)&&member.status,hasHeal=inv.some(i=>i.eff&&i.eff.hp&&!i.eff.cure);
-    let act='atk',sid=null;if(hasCure||(hpR<.22&&hasHeal))act='heal';
-    else{const off=getMemberSpells(member).filter(sp=>sp&&['atk_all','atk_one'].includes(sp.type)&&(member.mp||0)>=(sp.mp||0));if(off.length>0&&Math.random()<.55){act='spell';sid=off.reduce((a,b)=>(b.mp||0)>(a.mp||0)?b:a).id;}}
-    const t=setTimeout(()=>{if(autoRef.current)handleAction(act,sid);},800);return()=>clearTimeout(t);
-  },[autoMode,scr,busy,phase,spellMenu,activePIdx,party,enemies,inv,getMemberSpells,handleAction]);
+    const pIdx=activePIdx,member=party[pIdx];if(!member||member.hp<=0)return;
+    const aliveEn=enemies.filter(e=>e.hp>0);if(aliveEn.length===0)return;
+    const hpR=member.hp/member.maxHp,mpR=member.mp/member.maxMp;
+    const spells=getMemberSpells(member);
+    const deadAlly=party.find(m=>m.hp<=0);
+    const healSpell=spells.find(sp=>sp&&sp.type==='heal_one'&&(member.mp||0)>=(sp.mp||0));
+    const healAllSpell=spells.find(sp=>sp&&sp.type==='heal_all'&&(member.mp||0)>=(sp.mp||0));
+    const reviveSpell=spells.find(sp=>sp&&sp.type==='revive'&&(member.mp||0)>=(sp.mp||0));
+    const atkSpells=spells.filter(sp=>sp&&['atk_all','atk_one','atk_double'].includes(sp.type)&&(member.mp||0)>=(sp.mp||0));
+    const bestAtkSpell=atkSpells.length>0?atkSpells.reduce((a,b)=>(b.mp||0)>(a.mp||0)?b:a):null;
+    const buffSpell=spells.find(sp=>sp&&(sp.type==='buff_atk'||sp.type==='buff_def')&&(member.mp||0)>=(sp.mp||0)&&member.atkBuffMult<=1);
+    const cureItem=inv.find(i=>i.eff&&i.eff.cure);
+    const healItem=inv.find(i=>i.eff&&i.eff.hp&&!i.eff.allHeal);
+    const fullHealItem=inv.find(i=>i.eff&&i.eff.allHeal);
+    const mpItem=inv.find(i=>i.eff&&i.eff.mp&&!i.eff.hp);
+    const aliveParty=party.filter(m=>m.hp>0);
+    const avgHpR=aliveParty.reduce((s,m)=>s+m.hp/m.maxHp,0)/Math.max(1,aliveParty.length);
+    const injuredAlly=aliveParty.reduce((a,b)=>b.hp/b.maxHp<(a?a.hp/a.maxHp:1)?b:a,null);
+    let act='atk',sid=null,itemTgt=pIdx,useItm=null;
+    // P1: 全滅寸前→全体回復
+    if(avgHpR<0.22&&fullHealItem){useItm=fullHealItem;}
+    // P2: 自分が瀕死(25%以下)→回復
+    else if(hpR<0.25){
+      if(healSpell){act='spell';sid=healSpell.id;}
+      else if(healItem){useItm=healItem;itemTgt=pIdx;}
+      else if(hpR<0.15){act='defend';}
+    }
+    // P3: 味方が瀕死(28%以下)→回復
+    else if(injuredAlly&&injuredAlly.hp/injuredAlly.maxHp<0.28){
+      const injIdx=party.indexOf(injuredAlly);
+      if(healAllSpell){act='spell';sid=healAllSpell.id;}
+      else if(healSpell){act='spell';sid=healSpell.id;}
+      else if(healItem){useItm=healItem;itemTgt=injIdx;}
+    }
+    // P4: 死者復活
+    else if(deadAlly&&reviveSpell){act='spell';sid=reviveSpell.id;}
+    // P5: 状態異常治癒
+    else if(member.status&&cureItem){useItm=cureItem;itemTgt=pIdx;}
+    // P6: MPが十分→攻撃呪文
+    else if(bestAtkSpell&&mpR>0.18){act='spell';sid=bestAtkSpell.id;}
+    // P7: MP回復
+    else if(mpR<0.12&&mpItem){useItm=mpItem;itemTgt=pIdx;}
+    // P8: バフ
+    else if(buffSpell&&Math.random()<0.28){act='spell';sid=buffSpell.id;}
+    const t=setTimeout(()=>{
+      if(!autoRef.current)return;
+      if(useItm)useItemOn(useItm,itemTgt);
+      else handleAction(act,sid);
+    },700);
+    return()=>clearTimeout(t);
+  },[autoMode,scr,busy,phase,spellMenu,activePIdx,party,enemies,inv,getMemberSpells,handleAction,useItemOn]);
 
   const doSaveSlot=(n)=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,clearCount,savedParty,clearHistory,chBattleNum,monsterRoster,humanRoster},n);SFX.save();setSaveMenu(null);setSaveMsg(ok?`💾 スロット${n}にセーブ！`:'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
   const doSave=()=>setSaveMenu('save');
@@ -971,18 +1017,18 @@ function App(){
           </div>);})}
         </div>
       </div>
-      <div className="card" style={{borderColor:'rgba(212,160,23,.1)'}}>
-        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
-          <div style={{fontSize:'.82rem',fontWeight:900,color:activeM?(activeM.isMonster?'#4ade80':CLASSES[activeM.classId]?.color||'#fff'):'#374151'}}>{phase==='enemy'?'💢 敵のターン…':activeM?mn(activeM)+'のターン！':''}</div>
+      <div className="card" style={{borderColor:'rgba(212,160,23,.1)',padding:'8px 10px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'5px'}}>
+          <div style={{fontSize:'.72rem',fontWeight:900,color:activeM?(activeM.isMonster?'#4ade80':CLASSES[activeM.classId]?.color||'#fff'):'#374151'}}>{phase==='enemy'?'💢 敵のターン…':activeM?mn(activeM)+'のターン！':''}</div>
           <button onClick={()=>setAutoMode(v=>!v)} style={{background:autoMode?'rgba(34,197,94,.22)':'rgba(80,80,90,.18)',border:`1px solid ${autoMode?'#22c55e':'#1e1e3a'}`,color:autoMode?'#22c55e':'#374151',padding:'4px 12px',borderRadius:'16px',fontSize:'.75rem',fontWeight:900,cursor:'pointer'}}>{autoMode?'AUTO●':'AUTO○'}</button>
         </div>
-        {!spellMenu&&(<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'6px'}}>
+        {!spellMenu&&(<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'4px'}}>
           {[{l:'⚔️ こうげき',s:'通常攻撃',c:'#dc2626',dis:busy||autoMode||phase==='enemy',fn:()=>handleAction('atk',null)},
             {l:'✨ 呪文',s:activeMemberSpells.length+'個使用可',c:'#8b5cf6',dis:busy||autoMode||phase==='enemy'||activeMemberSpells.length===0,fn:()=>setSpellMenu(true)},
             {l:'🌿 アイテム',s:inv.length+'個所持',c:'#16a34a',dis:busy||autoMode||inv.length===0||phase==='enemy',fn:()=>handleAction('heal',null)},
             {l:'🛡️ 防御',s:'ダメージ55%減',c:'#0ea5e9',dis:busy||autoMode||phase==='enemy',fn:()=>handleAction('defend',null)},
             {l:'🏃 にげる',s:'60%成功',c:'#4b5563',dis:busy||autoMode||phase==='enemy',fn:()=>handleAction('flee',null)},
-          ].map(b=>(<button key={b.l} disabled={b.dis} onClick={b.fn} style={{...bs(b.c,b.dis),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'2px',padding:'11px 6px',gridColumn:b.l==='🏃 にげる'?'1/-1':undefined}}><span style={{fontSize:'.9rem'}}>{b.l}</span><span style={{fontSize:'.62rem',opacity:.72,fontWeight:'normal'}}>{b.s}</span></button>))}
+          ].map(b=>(<button key={b.l} disabled={b.dis} onClick={b.fn} style={{...bs(b.c,b.dis),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'1px',padding:'7px 4px',gridColumn:b.l==='🏃 にげる'?'1/-1':undefined}}><span style={{fontSize:'.78rem'}}>{b.l}</span><span style={{fontSize:'.56rem',opacity:.68,fontWeight:'normal'}}>{b.s}</span></button>))}
         </div>)}
         {spellMenu&&activeM&&(<div>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'7px'}}>
