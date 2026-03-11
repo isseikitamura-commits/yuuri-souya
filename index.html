@@ -789,7 +789,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.13.0 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.13.1 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -1089,12 +1089,12 @@ function App(){
           ].map(b=>(<button key={b.l} disabled={b.dis} onClick={b.fn} style={{...bs(b.c,b.dis),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'1px',padding:'6px 4px',gridColumn:b.l==='🏃 にげる'?'1/-1':undefined}}><span style={{fontSize:'1.0rem'}}>{b.l}</span><span style={{fontSize:'.56rem',opacity:.65,fontWeight:'normal'}}>{b.s}</span></button>))}
         </div>)}
         {spellMenu&&activeM&&(<div>
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'7px'}}>
-            <span style={{fontSize:'.92rem',fontWeight:900,color:'#a78bfa'}}>✨ 呪文を選べ — {mn(activeM)}</span>
-            <button onClick={()=>setSpellMenu(false)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'3px 8px',borderRadius:'8px',fontSize:'.87rem',cursor:'pointer'}}>← もどる</button>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'4px'}}>
+            <span style={{fontSize:'.78rem',fontWeight:900,color:'#a78bfa'}}>✨ {mn(activeM)}の呪文</span>
+            <button onClick={()=>setSpellMenu(false)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'2px 6px',borderRadius:'6px',fontSize:'.74rem',cursor:'pointer'}}>← もどる</button>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'5px',maxHeight:'240px',overflowY:'auto'}}>
-            {activeMemberSpells.map((sp,i)=>{const noMp=(activeM.mp||0)<(sp.mp||0);return(<button key={sp.id||i} disabled={busy||noMp} onClick={()=>{setSpellMenu(false);handleAction('spell',sp.id);}} style={{...bs(sp.color||'#8b5cf6',busy||noMp),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'2px',padding:'10px 5px',fontSize:'1.0rem'}}><span style={{fontSize:'1.1rem'}}>{sp.e}</span><span style={{fontWeight:900}}>{sp.name}</span><span style={{fontSize:'.84rem',opacity:.75,textAlign:'center'}}>{sp.desc}</span><span style={{fontSize:'.77rem',color:noMp?'#ef4444':'#38bdf8'}}>MP:{sp.mp}</span></button>);})}
+          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'3px',maxHeight:'200px',overflowY:'auto'}}>
+            {activeMemberSpells.map((sp,i)=>{const noMp=(activeM.mp||0)<(sp.mp||0);return(<button key={sp.id||i} disabled={busy||noMp} onClick={()=>{setSpellMenu(false);handleAction('spell',sp.id);}} style={{...bs(sp.color||'#8b5cf6',busy||noMp),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'1px',padding:'5px 3px',fontSize:'.72rem'}}><span style={{fontSize:'.95rem'}}>{sp.e}</span><span style={{fontWeight:900,fontSize:'.72rem'}}>{sp.name}</span><span style={{fontSize:'.62rem',color:noMp?'#ef4444':'#38bdf8'}}>MP{sp.mp}</span></button>);})}
           </div>
         </div>)}
       </div>
