@@ -99,42 +99,51 @@ const CLASSES={
   warrior:{id:'warrior',name:'戦士',color:'#ef4444',bg:'rgba(239,68,68,.1)',hp:210,mp:12,atk:34,def:24,mat:6,
     baseSkill:{id:'bs_warrior',name:'大剣ぶんまわし',e:'⚔️',desc:'全敵+スタン',mp:5,type:'atk_all',pow:c=>Math.floor(c.atk*2.0+12),inflict:'stun',color:'#ef4444'}},
   priest:{id:'priest',name:'僧侶',color:'#22c55e',bg:'rgba(34,197,94,.1)',hp:130,mp:60,atk:14,def:16,mat:26,
-    baseSkill:{id:'bs_priest',name:'ベホマラー',e:'✨',desc:'全員HP全回復',mp:22,type:'heal_all',color:'#22c55e'}},
+    baseSkill:{id:'hoimi',name:'ホイミ',e:'💚',desc:'1人HP小回復',mp:4,type:'heal_one',pow:c=>Math.floor(c.mat*1.4+35),color:'#22c55e'}},
   mage:{id:'mage',name:'魔法使い',color:'#a855f7',bg:'rgba(168,85,247,.1)',hp:110,mp:70,atk:11,def:7,mat:48,
-    baseSkill:{id:'bs_mage',name:'メラゾーマ',e:'🔥',desc:'全敵灼熱+燃焼',mp:18,type:'atk_all',pow:c=>Math.floor(c.mat*2.4+15),inflict:'burn',color:'#dc2626'}},
+    baseSkill:{id:'mera',name:'メラ',e:'🔥',desc:'炎で1体攻撃',mp:4,type:'atk_one',pow:c=>Math.floor(c.mat*1.2+10),color:'#f97316'}},
 };
 const CLASS_SPELLS={
   hero:[
-    {level:5,id:'gira',name:'ギラ',e:'🔥',mp:6,type:'atk_one',pow:c=>Math.floor(c.mat*2.0+15),desc:'炎で1体攻撃',color:'#f97316'},
-    {level:10,id:'bikiru',name:'バイキルト',e:'⬆️',mp:8,type:'buff_atk',desc:'ATK 3ターン2倍',color:'#fbbf24'},
-    {level:15,id:'dragcut',name:'竜殺し',e:'🐲',mp:12,type:'atk_one',pow:c=>Math.floor(c.atk*3.8),desc:'竜族特効！',color:'#dc2626'},
-    {level:20,id:'holyblade',name:'聖剣光波',e:'🌟',mp:18,type:'atk_all',pow:c=>Math.floor(c.mat*1.6+c.atk*1.2),desc:'全敵に聖属性',color:'#fde68a'},
-    {level:25,id:'swordstorm',name:'剣嵐',e:'⚡',mp:25,type:'atk_all',pow:c=>Math.floor(c.atk*2.2+c.mat*1.0),desc:'物理+魔法複合',color:'#818cf8'},
+    {level:5, id:'rukan',  name:'ルカニ',   e:'🔽',mp:5, type:'debuff_def',  desc:'敵DEF大幅ダウン',color:'#fbbf24'},
+    {level:10,id:'bikiru', name:'バイキルト',e:'⬆️',mp:8, type:'buff_atk',   desc:'ATK 3ターン2倍', color:'#fbbf24'},
+    {level:14,id:'gira2',  name:'ギラ',     e:'🔥',mp:7, type:'atk_one',pow:c=>Math.floor(c.mat*2.2+c.atk*0.8+15),desc:'炎1体攻撃',color:'#f97316'},
+    {level:18,id:'holyblade',name:'聖剣光波',e:'🌟',mp:16,type:'atk_all',pow:c=>Math.floor(c.mat*1.6+c.atk*1.2),desc:'全敵に聖光',color:'#fde68a'},
+    {level:22,id:'dragcut', name:'竜殺し',  e:'🐲',mp:14,type:'atk_one',pow:c=>Math.floor(c.atk*4.2),desc:'竜族特効！', color:'#dc2626'},
+    {level:26,id:'swordstorm',name:'剣嵐',  e:'⚡',mp:22,type:'atk_all',pow:c=>Math.floor(c.atk*2.4+c.mat*1.2),desc:'物理+魔法複合',color:'#818cf8'},
   ],
   warrior:[
-    {level:5,id:'tackle',name:'タックル',e:'💢',mp:5,type:'atk_one',pow:c=>Math.floor(c.atk*1.8),desc:'スタン付与',inflict:'stun',color:'#f87171'},
-    {level:10,id:'teppeki',name:'鉄壁',e:'🛡️',mp:6,type:'buff_def_all',desc:'全員DEF UP',color:'#38bdf8'},
-    {level:15,id:'renzan',name:'連続斬り',e:'⚔️',mp:10,type:'atk_double',pow:c=>Math.floor(c.atk*1.7),desc:'2回攻撃',color:'#fca5a5'},
+    {level:5, id:'tackle',  name:'タックル',  e:'💢',mp:5, type:'atk_one',pow:c=>Math.floor(c.atk*1.8),desc:'スタン付与',inflict:'stun',color:'#f87171'},
+    {level:10,id:'teppeki', name:'スクルト',  e:'🛡️',mp:6, type:'buff_def_all',desc:'全員DEF UP',   color:'#38bdf8'},
+    {level:15,id:'renzan',  name:'連続斬り',  e:'⚔️',mp:10,type:'atk_double',pow:c=>Math.floor(c.atk*1.7),desc:'2回攻撃',color:'#fca5a5'},
     {level:20,id:'earthcrush',name:'大地砕き',e:'💢',mp:15,type:'atk_all',pow:c=>Math.floor(c.atk*2.0+12),desc:'全敵 地震',color:'#a16207'},
-    {level:25,id:'berserk',name:'超戦士化',e:'😤',mp:20,type:'buff_both',desc:'ATK&DEF 4ターン2倍',color:'#dc2626'},
+    {level:25,id:'berserk', name:'超戦士化',  e:'😤',mp:20,type:'buff_both',  desc:'ATK&DEF 4ターン2倍',color:'#dc2626'},
   ],
   priest:[
-    {level:5,id:'sukuru',name:'スクルト',e:'🔵',mp:7,type:'buff_def_all',desc:'全員DEF UP',color:'#38bdf8'},
-    {level:8,id:'zao',name:'ザオ',e:'🌿',mp:10,type:'revive',desc:'HP25%で復活',color:'#4ade80'},
-    {level:10,id:'bagikuro',name:'バギクロス',e:'🌪️',mp:12,type:'atk_all',pow:c=>Math.floor(c.mat*1.6+10),desc:'竜巻全敵',color:'#67e8f9'},
-    {level:15,id:'zaoral',name:'ザオラル',e:'💫',mp:16,type:'revive',desc:'HP50%で復活',color:'#4ade80'},
-    {level:20,id:'sacred',name:'聖なる光',e:'🌟',mp:22,type:'atk_all',pow:c=>Math.floor(c.mat*2.2+15),desc:'全敵に聖光',color:'#fef08a'},
-    {level:25,id:'megaheal',name:'メガヒール',e:'💖',mp:28,type:'heal_all_mp',desc:'全員HP・MP全回復',color:'#86efac'},
+    // ホイミ系: 段階的に強化
+    {level:5, id:'behoimu',  name:'ベホイミ',   e:'💚',mp:8, type:'heal_one',  pow:c=>Math.floor(c.mat*2.8+80), desc:'1人HP中回復',    color:'#22c55e'},
+    {level:9, id:'kiary',    name:'キアリー',   e:'🍃',mp:4, type:'status_cure',desc:'状態異常回復',              color:'#86efac'},
+    {level:12,id:'sukuru',   name:'スクルト',   e:'🔵',mp:7, type:'buff_def_all',desc:'全員DEF UP',               color:'#38bdf8'},
+    {level:15,id:'behoma',   name:'ベホマ',     e:'💖',mp:14,type:'heal_one_full',desc:'1人HP全回復',             color:'#4ade80'},
+    {level:18,id:'zao',      name:'ザオ',       e:'🌿',mp:10,type:'revive_25',  desc:'HP25%で復活',               color:'#a3e635'},
+    {level:21,id:'behomaraa',name:'ベホマラー', e:'✨',mp:20,type:'heal_partial_all',pow:c=>Math.floor(c.mat*2.2+120),desc:'全員HP大回復',  color:'#86efac'},
+    {level:24,id:'zaoral',   name:'ザオラル',   e:'💫',mp:18,type:'revive',     desc:'HP50%で復活',               color:'#4ade80'},
+    {level:28,id:'behomaz',  name:'ベホマズン', e:'🌈',mp:30,type:'heal_all_mp',desc:'全員HP・MP全回復',          color:'#bef264'},
   ],
   mage:[
-    {level:5,id:'hyado',name:'ヒャダルコ',e:'❄️',mp:10,type:'atk_one',pow:c=>Math.floor(c.mat*2.6+20),desc:'氷大ダメージ',color:'#7dd3fc'},
-    {level:10,id:'mahoka',name:'マホカンタ',e:'🔮',mp:9,type:'reflect',desc:'魔法反射！',color:'#818cf8'},
-    {level:15,id:'ionazun',name:'イオナズン',e:'💥',mp:24,type:'atk_all',pow:c=>Math.floor(c.mat*2.6+20),desc:'最強爆発魔法',color:'#fca5a5'},
-    {level:20,id:'force',name:'フォース',e:'⚡',mp:18,type:'atk_all',pow:c=>Math.floor(c.mat*3.0+c.atk*1.2),desc:'電撃全敵',color:'#fde68a'},
-    {level:25,id:'darkstar',name:'暗黒星',e:'🌑',mp:30,type:'atk_one',pow:c=>Math.floor(c.mat*3.8+35),desc:'超巨大魔法！',color:'#a855f7'},
+    // 単体→全体、火→氷→爆発の順で解禁
+    {level:5, id:'hyado',    name:'ヒャド',     e:'❄️',mp:5, type:'atk_one',pow:c=>Math.floor(c.mat*1.5+12),desc:'氷1体攻撃',      color:'#7dd3fc'},
+    {level:8, id:'gira',     name:'ギラ',       e:'🔥',mp:7, type:'atk_one',pow:c=>Math.floor(c.mat*1.8+15),desc:'炎1体攻撃',      color:'#f97316'},
+    {level:11,id:'rarihoo',  name:'ラリホー',   e:'💤',mp:6, type:'atk_one',pow:c=>0,inflict:'stun',            desc:'眠り付与',      color:'#818cf8'},
+    {level:14,id:'merami',   name:'メラミ',     e:'🔥',mp:12,type:'atk_one',pow:c=>Math.floor(c.mat*2.8+25), desc:'炎1体大攻撃',   color:'#dc2626'},
+    {level:17,id:'mahoka',   name:'マホカンタ', e:'🔮',mp:9, type:'reflect',                                    desc:'魔法反射！',    color:'#818cf8'},
+    {level:20,id:'io',       name:'イオ',       e:'💥',mp:14,type:'atk_all', pow:c=>Math.floor(c.mat*1.6+15),  desc:'爆発全体攻撃',  color:'#fca5a5'},
+    {level:23,id:'hyadaruko',name:'ヒャダルコ', e:'❄️',mp:18,type:'atk_all', pow:c=>Math.floor(c.mat*2.0+20),  desc:'氷全体大攻撃',  color:'#38bdf8'},
+    {level:26,id:'ionazun',  name:'イオナズン', e:'💥',mp:24,type:'atk_all', pow:c=>Math.floor(c.mat*2.8+25),  desc:'最強爆発魔法！', color:'#f472b6'},
+    {level:29,id:'merazo',   name:'メラゾーマ', e:'🔥',mp:20,type:'atk_one', pow:c=>Math.floor(c.mat*4.2+40),  desc:'究極の炎！',    color:'#dc2626'},
   ],
 };
-const FIELD_SPELL_TYPES=['heal_all','heal_all_mp','revive'];
+const FIELD_SPELL_TYPES=['heal_all','heal_all_mp','revive','revive_25','heal_one','heal_one_full','heal_partial_all','status_cure'];
 const EXTRA_NAME_OPTS=[['リン','カイ','レイ','アオ','ミコ','ルナ','サキ','ナナ'],['ケン','ソラ','タケル','ヒカル','コウ','ルイ','ジン','リク']];
 
 const CHAPTERS=[
@@ -354,13 +363,14 @@ const scaleEnemy=(tpl,avgLv,partySize,chIdx=0)=>{
   // パーティ人数倍率を緩和（4人=1.8x, 3人=1.4x, 2人=1.2x）
   const ps=partySize>=4?1.8:partySize===3?1.4:partySize===2?1.2:1.0;
   const chBaseLv=CHAPTER_BASE_LV[Math.min(chIdx,9)];
-  // 動的難易度: パーティLvと章基準Lvのブレンド（60%:40%）
-  const blended=Math.round(avgLv*0.55+chBaseLv*0.45);
-  // 上限: チャプター基準Lv+12 を超えない
-  const lv=Math.max(chBaseLv,Math.min(blended,chBaseLv+12));
+  // 動的難易度: パーティLvが高くても追従（章基準+20まで）
+  const chCeiling=chBaseLv+20;
+  const blended=Math.round(avgLv*0.70+chBaseLv*0.30);
+  // 上限: 章天井 かつ パーティLv+6 以内（急追防止）
+  const lv=Math.max(chBaseLv,Math.min(blended,chCeiling,avgLv+6));
   const bm=tpl.boss?1.2:1.0;
   const s=(1+(lv-1)*0.15)*ps*bm;
-  const gs=1.2; // EXP倍率
+  const gs=2.0+Math.max(0,(lv-10)*0.06); // EXP倍率: 高Lv帯ほど多く
   const defScale=1+(lv-1)*0.10;
   const rawHp=Math.round(tpl.maxHp*s);
   // HPキャップを適用
@@ -545,7 +555,7 @@ function App(){
     if(!isField){setPAnim(pIdx,'skill');setShowSkill(spell.e);}
     if(['atk_all','atk_one','atk_double'].includes(spell.type))SFX.magic();
     else if(['buff_atk','buff_def','buff_def_all','buff_both','reflect'].includes(spell.type))SFX.buff();
-    else if(['heal_all','heal_all_mp'].includes(spell.type))SFX.heal();
+    else if(['heal_all','heal_all_mp','heal_one','heal_one_full','heal_partial_all','status_cure'].includes(spell.type))SFX.heal();
     else if(spell.type==='revive')SFX.revive();
     if(!isField){await sleep(320);setShowSkill(null);setPAnim(pIdx,'idle');}
     nP[pIdx]={...member,mp:member.mp-spell.mp};
@@ -572,7 +582,30 @@ function App(){
     }else if(spell.type==='buff_def_all'){nP=nP.map(m=>m.hp<=0?m:{...m,defBuffMult:1.8,defBuffTurns:3});addLog(spell.e+' '+spell.name+'！全員DEF UP！');
     }else if(spell.type==='buff_both'){nP[pIdx]={...nP[pIdx],atkBuffMult:2.0,atkBuffTurns:4,defBuffMult:2.0,defBuffTurns:4};addLog(spell.e+' '+spell.name+'！ATK・DEF 4ターン2倍！');
     }else if(spell.type==='reflect'){nP[pIdx]={...nP[pIdx],reflecting:true};addLog(spell.e+' '+spell.name+'！次の魔法を反射！');
-    }else if(spell.type==='revive'){const di=nP.findIndex(m=>m.hp<=0);if(di<0){addLog('戦闘不能の仲間がいない！');nP[pIdx]={...nP[pIdx],mp:member.mp};return{party:nP,enemies:nE};}nP[di]={...nP[di],hp:Math.floor(nP[di].maxHp*.5)};addLog(spell.e+' '+spell.name+'！'+mn(nP[di])+'が復活！HP50%！');}
+    }else if(spell.type==='revive'||spell.type==='revive_25'){
+      const pct=spell.type==='revive'?.5:.25;
+      const di=nP.findIndex(m=>m.hp<=0);if(di<0){addLog('戦闘不能の仲間がいない！');nP[pIdx]={...nP[pIdx],mp:member.mp};return{party:nP,enemies:nE};}
+      nP[di]={...nP[di],hp:Math.floor(nP[di].maxHp*pct)};addLog(spell.e+' '+spell.name+'！'+mn(nP[di])+'が復活！HP'+(pct*100)+'%！');
+    }else if(spell.type==='heal_one'){
+      const ti=nP.findIndex((m,i)=>i!==pIdx&&m.hp>0&&m.hp<m.maxHp);const tIdx=ti>=0?ti:pIdx;
+      const amt=Math.floor((spell.pow||((c)=>80))(nP[pIdx]));
+      nP[tIdx]={...nP[tIdx],hp:Math.min(nP[tIdx].maxHp,nP[tIdx].hp+amt)};
+      addLog(spell.e+' '+spell.name+'！'+mn(nP[tIdx])+'のHP+'+amt+'！');SFX.heal();
+    }else if(spell.type==='heal_one_full'){
+      const ti=nP.findIndex((m,i)=>i!==pIdx&&m.hp>0&&m.hp<m.maxHp);const tIdx=ti>=0?ti:pIdx;
+      nP[tIdx]={...nP[tIdx],hp:nP[tIdx].maxHp,status:null,statusTurns:0};
+      addLog(spell.e+' '+spell.name+'！'+mn(nP[tIdx])+'のHPが全回復！');SFX.heal();
+    }else if(spell.type==='heal_partial_all'){
+      const amt=Math.floor((spell.pow||((c)=>150))(nP[pIdx]));
+      nP=nP.map(m=>m.hp<=0?m:{...m,hp:Math.min(m.maxHp,m.hp+amt),status:null,statusTurns:0});
+      addLog(spell.e+' '+spell.name+'！全員HP+'+amt+'回復！');SFX.heal();
+    }else if(spell.type==='status_cure'){
+      const ti=nP.findIndex((m,i)=>i!==pIdx&&m.status);const tIdx=ti>=0?ti:pIdx;
+      nP[tIdx]={...nP[tIdx],status:null,statusTurns:0};
+      addLog(spell.e+' '+spell.name+'！'+mn(nP[tIdx])+'の状態異常回復！');SFX.heal();
+    }else if(spell.type==='debuff_def'){
+      const ti=nE.findIndex(e=>e.hp>0);if(ti>=0){const cut=0.45;nE[ti]={...nE[ti],def:Math.floor(nE[ti].def*cut)};addLog(spell.e+' '+spell.name+'！'+nE[ti].name+'のDEFが大幅ダウン！');}
+    }
     return{party:nP,enemies:nE};
   },[addLog,addDmg,addSpark,setPAnim,setMAnim]);
 
@@ -642,7 +675,7 @@ function App(){
       let ep=[...nP],ee=[...nE];const liveEns=ee.filter(e=>e.hp>0);
       for(let ei=0;ei<liveEns.length;ei++){const en=liveEns[ei],enIdx=ee.indexOf(en);
         // メタルスライムは85%で逃走
-        if(en.metalSlime&&en.hp>0){const fleeChance=en.hagure?0.95:0.85;if(Math.random()<fleeChance){addLog('💨 '+(en.hagure?'は':'メタルスライムは')+'すばやく逃げ去った！');ee[enIdx]={...en,hp:0};await sleep(400);continue;}}
+        if(en.metalSlime&&en.hp>0){const fleeChance=en.hagure?0.95:0.85;if(Math.random()<fleeChance){addLog('💨 '+(en.hagure?'はぐれメタルは':'メタルスライムは')+'すばやく逃げ去った！EXP・Goldなし！');ee[enIdx]={...en,hp:0,exp:0,gold:0};await sleep(400);continue;}}
         if(en.status==='stun'){ee[enIdx]={...en,statusTurns:Math.max(0,en.statusTurns-1),status:en.statusTurns<=1?null:en.status};addLog('💫 '+en.name+'はスタン中！');continue;}
         const pd=(en.phases||[]).find(ph=>en.hp/en.maxHp<=ph.hp);
         if(pd&&(en.currentPhase||0)<(en.phases||[]).indexOf(pd)+1){ee[enIdx]={...en,currentPhase:(en.currentPhase||0)+1,atkBonus:(en.atkBonus||0)+(pd.atkBonus||0),rageAoe:pd.aoe||false,tripleAtk:pd.tripleAttack||false};addLog('💢 '+en.name+'！'+pd.msg);SFX.rage();await sleep(500);}
@@ -690,9 +723,10 @@ function App(){
     const hpR=member.hp/member.maxHp,mpR=member.mp/member.maxMp;
     const spells=getMemberSpells(member);
     const deadAlly=party.find(m=>m.hp<=0);
-    const healSpell=spells.find(sp=>sp&&sp.type==='heal_one'&&(member.mp||0)>=(sp.mp||0));
-    const healAllSpell=spells.find(sp=>sp&&sp.type==='heal_all'&&(member.mp||0)>=(sp.mp||0));
-    const reviveSpell=spells.find(sp=>sp&&sp.type==='revive'&&(member.mp||0)>=(sp.mp||0));
+    const healSpell=spells.find(sp=>sp&&['heal_one','heal_one_full'].includes(sp.type)&&(member.mp||0)>=(sp.mp||0));
+    const healPartialAll=spells.find(sp=>sp&&sp.type==='heal_partial_all'&&(member.mp||0)>=(sp.mp||0));
+    const healAllSpell=spells.find(sp=>sp&&['heal_all','heal_all_mp','heal_partial_all'].includes(sp.type)&&(member.mp||0)>=(sp.mp||0));
+    const reviveSpell=spells.find(sp=>sp&&['revive','revive_25'].includes(sp.type)&&(member.mp||0)>=(sp.mp||0));
     const atkSpells=spells.filter(sp=>sp&&['atk_all','atk_one','atk_double'].includes(sp.type)&&(member.mp||0)>=(sp.mp||0));
     const bestAtkSpell=atkSpells.length>0?atkSpells.reduce((a,b)=>(b.mp||0)>(a.mp||0)?b:a):null;
     const buffSpell=spells.find(sp=>sp&&(sp.type==='buff_atk'||sp.type==='buff_def')&&(member.mp||0)>=(sp.mp||0)&&member.atkBuffMult<=1);
@@ -789,7 +823,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.13.1 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.15.0 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
