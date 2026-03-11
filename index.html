@@ -105,42 +105,40 @@ const CLASSES={
 };
 const CLASS_SPELLS={
   hero:[
-    {level:5, id:'rukan',  name:'ルカニ',   e:'🔽',mp:5, type:'debuff_def',  desc:'敵DEF大幅ダウン',color:'#fbbf24'},
-    {level:10,id:'bikiru', name:'バイキルト',e:'⬆️',mp:8, type:'buff_atk',   desc:'ATK 3ターン2倍', color:'#fbbf24'},
-    {level:14,id:'gira2',  name:'ギラ',     e:'🔥',mp:7, type:'atk_one',pow:c=>Math.floor(c.mat*2.2+c.atk*0.8+15),desc:'炎1体攻撃',color:'#f97316'},
+    {level:4, id:'rukan',  name:'ルカニ',   e:'🔽',mp:5, type:'debuff_def',  desc:'敵DEF大幅ダウン',color:'#fbbf24'},
+    {level:8, id:'bikiru', name:'バイキルト',e:'⬆️',mp:8, type:'buff_atk',   desc:'ATK 3ターン2倍', color:'#fbbf24'},
+    {level:12,id:'gira2',  name:'ギラ',     e:'🔥',mp:7, type:'atk_one',pow:c=>Math.floor(c.mat*2.2+c.atk*0.8+15),desc:'炎1体攻撃',color:'#f97316'},
     {level:18,id:'holyblade',name:'聖剣光波',e:'🌟',mp:16,type:'atk_all',pow:c=>Math.floor(c.mat*1.6+c.atk*1.2),desc:'全敵に聖光',color:'#fde68a'},
-    {level:22,id:'dragcut', name:'竜殺し',  e:'🐲',mp:14,type:'atk_one',pow:c=>Math.floor(c.atk*4.2),desc:'竜族特効！', color:'#dc2626'},
-    {level:26,id:'swordstorm',name:'剣嵐',  e:'⚡',mp:22,type:'atk_all',pow:c=>Math.floor(c.atk*2.4+c.mat*1.2),desc:'物理+魔法複合',color:'#818cf8'},
+    {level:24,id:'dragcut', name:'竜殺し',  e:'🐲',mp:14,type:'atk_one',pow:c=>Math.floor(c.atk*4.2),desc:'竜族特効！', color:'#dc2626'},
+    {level:32,id:'swordstorm',name:'剣嵐',  e:'⚡',mp:22,type:'atk_all',pow:c=>Math.floor(c.atk*2.4+c.mat*1.2),desc:'物理+魔法複合',color:'#818cf8'},
   ],
   warrior:[
-    {level:5, id:'tackle',  name:'タックル',  e:'💢',mp:5, type:'atk_one',pow:c=>Math.floor(c.atk*1.8),desc:'スタン付与',inflict:'stun',color:'#f87171'},
-    {level:10,id:'teppeki', name:'スクルト',  e:'🛡️',mp:6, type:'buff_def_all',desc:'全員DEF UP',   color:'#38bdf8'},
-    {level:15,id:'renzan',  name:'連続斬り',  e:'⚔️',mp:10,type:'atk_double',pow:c=>Math.floor(c.atk*1.7),desc:'2回攻撃',color:'#fca5a5'},
+    {level:4, id:'tackle',  name:'タックル',  e:'💢',mp:5, type:'atk_one',pow:c=>Math.floor(c.atk*1.8),desc:'スタン付与',inflict:'stun',color:'#f87171'},
+    {level:8, id:'teppeki', name:'スクルト',  e:'🛡️',mp:6, type:'buff_def_all',desc:'全員DEF UP',   color:'#38bdf8'},
+    {level:14,id:'renzan',  name:'連続斬り',  e:'⚔️',mp:10,type:'atk_double',pow:c=>Math.floor(c.atk*1.7),desc:'2回攻撃',color:'#fca5a5'},
     {level:20,id:'earthcrush',name:'大地砕き',e:'💢',mp:15,type:'atk_all',pow:c=>Math.floor(c.atk*2.0+12),desc:'全敵 地震',color:'#a16207'},
-    {level:25,id:'berserk', name:'超戦士化',  e:'😤',mp:20,type:'buff_both',  desc:'ATK&DEF 4ターン2倍',color:'#dc2626'},
+    {level:28,id:'berserk', name:'超戦士化',  e:'😤',mp:20,type:'buff_both',  desc:'ATK&DEF 4ターン2倍',color:'#dc2626'},
   ],
   priest:[
-    // ホイミ系: 段階的に強化
-    {level:5, id:'behoimu',  name:'ベホイミ',   e:'💚',mp:8, type:'heal_one',  pow:c=>Math.floor(c.mat*2.8+80), desc:'1人HP中回復',    color:'#22c55e'},
-    {level:9, id:'kiary',    name:'キアリー',   e:'🍃',mp:4, type:'status_cure',desc:'状態異常回復',              color:'#86efac'},
-    {level:12,id:'sukuru',   name:'スクルト',   e:'🔵',mp:7, type:'buff_def_all',desc:'全員DEF UP',               color:'#38bdf8'},
-    {level:15,id:'behoma',   name:'ベホマ',     e:'💖',mp:14,type:'heal_one_full',desc:'1人HP全回復',             color:'#4ade80'},
-    {level:18,id:'zao',      name:'ザオ',       e:'🌿',mp:10,type:'revive_25',  desc:'HP25%で復活',               color:'#a3e635'},
-    {level:21,id:'behomaraa',name:'ベホマラー', e:'✨',mp:20,type:'heal_partial_all',pow:c=>Math.floor(c.mat*2.2+120),desc:'全員HP大回復',  color:'#86efac'},
-    {level:24,id:'zaoral',   name:'ザオラル',   e:'💫',mp:18,type:'revive',     desc:'HP50%で復活',               color:'#4ade80'},
-    {level:28,id:'behomaz',  name:'ベホマズン', e:'🌈',mp:30,type:'heal_all_mp',desc:'全員HP・MP全回復',          color:'#bef264'},
+    {level:4, id:'behoimu',  name:'ベホイミ',   e:'💚',mp:8, type:'heal_one',  pow:c=>Math.floor(c.mat*2.8+80), desc:'1人HP中回復',    color:'#22c55e'},
+    {level:7, id:'kiary',    name:'キアリー',   e:'🍃',mp:4, type:'status_cure',desc:'状態異常回復',              color:'#86efac'},
+    {level:10,id:'sukuru',   name:'スクルト',   e:'🔵',mp:7, type:'buff_def_all',desc:'全員DEF UP',               color:'#38bdf8'},
+    {level:14,id:'behoma',   name:'ベホマ',     e:'💖',mp:14,type:'heal_one_full',desc:'1人HP全回復',             color:'#4ade80'},
+    {level:17,id:'zao',      name:'ザオ',       e:'🌿',mp:10,type:'revive_25',  desc:'HP25%で復活',               color:'#a3e635'},
+    {level:22,id:'behomaraa',name:'ベホマラー', e:'✨',mp:20,type:'heal_partial_all',pow:c=>Math.floor(c.mat*2.2+120),desc:'全員HP大回復',  color:'#86efac'},
+    {level:28,id:'zaoral',   name:'ザオラル',   e:'💫',mp:18,type:'revive',     desc:'HP50%で復活',               color:'#4ade80'},
+    {level:35,id:'behomaz',  name:'ベホマズン', e:'🌈',mp:30,type:'heal_all_mp',desc:'全員HP・MP全回復',          color:'#bef264'},
   ],
   mage:[
-    // 単体→全体、火→氷→爆発の順で解禁
-    {level:5, id:'hyado',    name:'ヒャド',     e:'❄️',mp:5, type:'atk_one',pow:c=>Math.floor(c.mat*1.5+12),desc:'氷1体攻撃',      color:'#7dd3fc'},
-    {level:8, id:'gira',     name:'ギラ',       e:'🔥',mp:7, type:'atk_one',pow:c=>Math.floor(c.mat*1.8+15),desc:'炎1体攻撃',      color:'#f97316'},
-    {level:11,id:'rarihoo',  name:'ラリホー',   e:'💤',mp:6, type:'atk_one',pow:c=>0,inflict:'stun',            desc:'眠り付与',      color:'#818cf8'},
-    {level:14,id:'merami',   name:'メラミ',     e:'🔥',mp:12,type:'atk_one',pow:c=>Math.floor(c.mat*2.8+25), desc:'炎1体大攻撃',   color:'#dc2626'},
-    {level:17,id:'mahoka',   name:'マホカンタ', e:'🔮',mp:9, type:'reflect',                                    desc:'魔法反射！',    color:'#818cf8'},
+    {level:4, id:'hyado',    name:'ヒャド',     e:'❄️',mp:5, type:'atk_one',pow:c=>Math.floor(c.mat*1.5+12),desc:'氷1体攻撃',      color:'#7dd3fc'},
+    {level:7, id:'gira',     name:'ギラ',       e:'🔥',mp:7, type:'atk_one',pow:c=>Math.floor(c.mat*1.8+15),desc:'炎1体攻撃',      color:'#f97316'},
+    {level:10,id:'rarihoo',  name:'ラリホー',   e:'💤',mp:6, type:'atk_one',pow:c=>0,inflict:'stun',            desc:'眠り付与',      color:'#818cf8'},
+    {level:13,id:'merami',   name:'メラミ',     e:'🔥',mp:12,type:'atk_one',pow:c=>Math.floor(c.mat*2.8+25), desc:'炎1体大攻撃',   color:'#dc2626'},
+    {level:16,id:'mahoka',   name:'マホカンタ', e:'🔮',mp:9, type:'reflect',                                    desc:'魔法反射！',    color:'#818cf8'},
     {level:20,id:'io',       name:'イオ',       e:'💥',mp:14,type:'atk_all', pow:c=>Math.floor(c.mat*1.6+15),  desc:'爆発全体攻撃',  color:'#fca5a5'},
-    {level:23,id:'hyadaruko',name:'ヒャダルコ', e:'❄️',mp:18,type:'atk_all', pow:c=>Math.floor(c.mat*2.0+20),  desc:'氷全体大攻撃',  color:'#38bdf8'},
-    {level:26,id:'ionazun',  name:'イオナズン', e:'💥',mp:24,type:'atk_all', pow:c=>Math.floor(c.mat*2.8+25),  desc:'最強爆発魔法！', color:'#f472b6'},
-    {level:29,id:'merazo',   name:'メラゾーマ', e:'🔥',mp:20,type:'atk_one', pow:c=>Math.floor(c.mat*4.2+40),  desc:'究極の炎！',    color:'#dc2626'},
+    {level:25,id:'hyadaruko',name:'ヒャダルコ', e:'❄️',mp:18,type:'atk_all', pow:c=>Math.floor(c.mat*2.0+20),  desc:'氷全体大攻撃',  color:'#38bdf8'},
+    {level:30,id:'ionazun',  name:'イオナズン', e:'💥',mp:24,type:'atk_all', pow:c=>Math.floor(c.mat*2.8+25),  desc:'最強爆発魔法！', color:'#f472b6'},
+    {level:38,id:'merazo',   name:'メラゾーマ', e:'🔥',mp:20,type:'atk_one', pow:c=>Math.floor(c.mat*4.2+40),  desc:'究極の炎！',    color:'#dc2626'},
   ],
 };
 const FIELD_SPELL_TYPES=['heal_all','heal_all_mp','revive','revive_25','heal_one','heal_one_full','heal_partial_all','status_cure'];
@@ -204,6 +202,7 @@ const RARE_ENCOUNTERS=[
   // シルバースライム
   [{id:'sslime',name:'シルバースライム',base:'⚪',ov:'✨',flt:'grayscale(.2) saturate(2) brightness(1.5)',gc:'#e2e8f0',hp:50,maxHp:50,atk:5,def:10,mat:3,exp:200,gold:300,si:null,rare:true}],
   // ゲンガー: 通常は弱いが会心で10000ダメージ
+  [{id:'gengar',name:'ゲンガー',base:'👾',ov:'😁',flt:'hue-rotate(255deg) saturate(4.5) brightness(.42) contrast(2.2) drop-shadow(0 0 8px #7c3aed)',gc:'#7c3aed',hp:80,maxHp:80,atk:8,def:5,mat:12,exp:120,gold:200,si:'stun',rare:true,gengarCrit:true}],
   [{id:'gengar',name:'ゲンガー',base:'👾',ov:'😁',flt:'hue-rotate(255deg) saturate(4.5) brightness(.42) contrast(2.2) drop-shadow(0 0 8px #7c3aed)',gc:'#7c3aed',hp:80,maxHp:80,atk:8,def:5,mat:12,exp:120,gold:200,si:'stun',rare:true,gengarCrit:true}],
   // 神獣ルギア: 最強の呪文使い
   [{id:'lugia',name:'神獣ルギア',base:'🦅',ov:'✨',flt:'hue-rotate(200deg) saturate(3.5) brightness(1.3) contrast(1.2)',gc:'#c4b5fd',hp:1800,maxHp:1800,atk:55,def:80,mat:280,exp:1500,gold:2000,si:'burn',rare:true,boss:true,big:true,spellImmune:false,magicResist:0,divineSpellCaster:true,
@@ -545,7 +544,7 @@ function App(){
   const chDef=CHAPTERS[chIdx]||CHAPTERS[9];
   const stage=STAGES[CH_STAGE[chIdx]||0];
 
-  const getMemberSpells=useCallback(m=>{if(!m)return[];if(m.isMonster)return m.allySkill?[m.allySkill]:[];const cls=CLASSES[m.classId];const spells=[cls.baseSkill];(m.learnedSpells||[]).forEach(sid=>{const sp=(CLASS_SPELLS[m.classId]||[]).find(s=>s.id===sid);if(sp)spells.push(sp);});return spells;},[]);
+  const getMemberSpells=useCallback(m=>{if(!m)return[];if(m.isMonster)return m.allySkill?[m.allySkill]:[];const cls=CLASSES[m.classId];const spells=[cls.baseSkill];(CLASS_SPELLS[m.classId]||[]).filter(sp=>m.level>=sp.level).forEach(sp=>spells.push(sp));return spells;},[]);
   const nextPhase=useCallback((cur,p)=>{const order=['p0','p1','p2','p3'];const si=order.indexOf(cur);for(let i=si+1;i<order.length;i++){if(p[i]&&p[i].hp>0)return order[i];}return 'enemy';},[]);
 
   const executeSpell=useCallback(async(spell,pIdx,curP,curE,isField)=>{
@@ -790,8 +789,8 @@ function App(){
   const doLoadSlot=(n)=>{const d=ld(n);if(!d){setSaveMsg('データなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);setHumanRoster(d.humanRoster||[]);setBoughtEquips(d.boughtEquips||[]);setZacianSummoned(d.zacianSummoned||false);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);if(d.clearHistory)setClearHistory(d.clearHistory||[]);setSaveMenu(null);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
   const doLoad=()=>setSaveMenu('load');
   const buyItem=item=>{if(gold<item.cost){addLog('Gold不足！');return;}SFX.buy();if(item.type==='equip'){setParty(p=>p.map(m=>{let n={...m};if(item.eff.atk)n.atk+=item.eff.atk;if(item.eff.def)n.def+=item.eff.def;if(item.eff.mat)n.mat+=item.eff.mat;if(item.eff.hpb){n.maxHp+=item.eff.hpb;n.hp=Math.min(n.hp+item.eff.hpb,n.maxHp);}if(item.eff.mpb){n.maxMp+=item.eff.mpb;n.mp=Math.min(n.mp+item.eff.mpb,n.maxMp);}return n;}));setBoughtEquips(prev=>[...prev,item.id]);addLog('🛒 '+item.emoji+item.name+'購入！全員に効果！');}else{if(inv.filter(i=>i.id===item.id).length>=5){addLog('これ以上持てない！');return;}setInv(p=>[...p,{...item}]);addLog('🛒 '+item.emoji+item.name+'購入！');}setGold(g=>g-item.cost);};
-  const summonZacian=()=>{if(dragonBalls<3||zacianSummoned||!dragonSummoned)return;SFX.dragon();const ally={...initMonsterAlly(ZACIAN_TPL),hp:ZACIAN_TPL.maxHp,maxHp:ZACIAN_TPL.maxHp,mp:70,maxMp:70,atk:ZACIAN_TPL.atk,def:ZACIAN_TPL.def,mat:ZACIAN_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setZacianSummoned(true);setShowZacianSummon(true);setTimeout(()=>setShowZacianSummon(false),4500);addLog('⚔️ 覇剣獣ザシアンがなかまになった！ドラゴンボール3個消費！');};
-  const summonDragon=()=>{if(dragonBalls<3||dragonSummoned)return;SFX.dragon();const ally={...initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setDragonSummoned(true);setShowDragonSummon(true);setTimeout(()=>setShowDragonSummon(false),4500);addLog('🐉 神龍シェンロンがなかまになった！ドラゴンボール3個消費！');};
+  const summonZacian=()=>{const alreadyZacian=monsterRoster.some(m=>m.id==='zacian');const shenlongExists=monsterRoster.some(m=>m.id==='shenlong')||dragonSummoned;if(dragonBalls<3||zacianSummoned||alreadyZacian||!shenlongExists)return;SFX.dragon();const ally={...initMonsterAlly(ZACIAN_TPL),hp:ZACIAN_TPL.maxHp,maxHp:ZACIAN_TPL.maxHp,mp:70,maxMp:70,atk:ZACIAN_TPL.atk,def:ZACIAN_TPL.def,mat:ZACIAN_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setZacianSummoned(true);setShowZacianSummon(true);setTimeout(()=>setShowZacianSummon(false),4500);addLog('⚔️ 覇剣獣ザシアンがなかまになった！ドラゴンボール3個消費！');};
+  const summonDragon=()=>{const alreadyShenlong=monsterRoster.some(m=>m.id==='shenlong');if(dragonBalls<3||dragonSummoned||alreadyShenlong)return;SFX.dragon();const ally={...initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setDragonSummoned(true);setShowDragonSummon(true);setTimeout(()=>setShowDragonSummon(false),4500);addLog('🐉 神龍シェンロンがなかまになった！ドラゴンボール3個消費！');};
   const useItemOn=(item,tgtIdx)=>{
     const m=party[tgtIdx];if(!m)return;
     const ni=[...inv];const ii=ni.findIndex(x=>x.id===item.id);if(ii<0)return;
@@ -804,7 +803,7 @@ function App(){
     else if(item.eff.revive&&tgt.hp<=0){np[tgtIdx]={...tgt,hp:Math.floor(tgt.maxHp*.5),status:null,statusTurns:0};setParty(np);addLog(item.emoji+item.name+'！'+tgt.name+'が復活！');}
     setItemMenu(false);
   };
-  const startGame=useOld=>{let p;if(useOld&&savedParty){p=savedParty.map(m=>({...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0}));}else{if(selCls.length<2)return;p=[initHuman(selCls[0],'ゆうり'),initHuman(selCls[1],'そうや')];selExtra.forEach((cls,i)=>{if(cls)p.push(initHuman(cls,selNames[i]||EXTRA_NAME_OPTS[0][i]));});}setParty(p);setHumanRoster([]);setChIdx(0);setChBattleNum(1);setInv([]);setGold(280);setDragonBalls(0);setDragonSummoned(false);setMonsterRoster([]);setBattleResult(null);setLog(['🌟 ゆうりとそうやの大冒険、開幕！']);setStoryScreen(CHAPTERS[0]);setScr('map');bgm('field');};
+  const startGame=useOld=>{let p;if(useOld&&savedParty){p=savedParty.map(m=>({...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0}));}else{if(selCls.length<2)return;p=[initHuman(selCls[0],'ゆうり'),initHuman(selCls[1],'そうや')];selExtra.forEach((cls,i)=>{if(cls)p.push(initHuman(cls,selNames[i]||EXTRA_NAME_OPTS[0][i]));});}setParty(p);setHumanRoster([]);setChIdx(0);setChBattleNum(1);setInv([]);setGold(280);setDragonBalls(0);setDragonSummoned(false);setZacianSummoned(false);setMonsterRoster([]);setBattleResult(null);setLog(['🌟 ゆうりとそうやの大冒険、開幕！']);setStoryScreen(CHAPTERS[0]);setScr('map');bgm('field');};
 
   const bs=(col,dis)=>({background:dis?'rgba(50,50,60,.25)':`linear-gradient(135deg,${col}bb,${col}44)`,border:`1px solid ${dis?'#1e1e3a':col}`,color:dis?'#2a2a3a':'#fff',padding:'10px 14px',borderRadius:'10px',fontFamily:'inherit',fontWeight:900,fontSize:'.86rem',cursor:dis?'not-allowed':'pointer',boxShadow:dis?'none':`0 0 10px ${col}33`,transition:'all .14s',margin:'4px'});
   const activeMemberSpells=activeM?getMemberSpells(activeM):[];
@@ -823,7 +822,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.15.0 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.16.0 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -925,7 +924,7 @@ function App(){
           </div>
           {dragonBalls>=3&&!dragonSummoned&&<button onClick={summonDragon} style={{...bs('#4ade80'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>🐉 神龍召喚！{party.length>=4?' (控えに追加)':''}</button>}
           {dragonSummoned&&!zacianSummoned&&dragonBalls<3&&<span style={{fontSize:'.84rem',color:'#4ade80',fontWeight:900}}>🐉 龍召喚済み　<span style={{color:'#38bdf8',fontSize:'.78rem'}}>⚔️ あと{3-dragonBalls}個でザシアン召喚！</span></span>}
-          {dragonBalls>=3&&dragonSummoned&&!zacianSummoned&&<button onClick={summonZacian} style={{...bs('#38bdf8'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>⚔️ ザシアン召喚！{party.length>=4?' (控えに追加)':''}</button>}
+          {dragonBalls>=3&&(dragonSummoned||monsterRoster.some(m=>m.id==='shenlong'))&&!zacianSummoned&&!monsterRoster.some(m=>m.id==='zacian')&&<button onClick={summonZacian} style={{...bs('#38bdf8'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>⚔️ ザシアン召喚！{party.length>=4?' (控えに追加)':''}</button>}
           {zacianSummoned&&<span style={{fontSize:'.94rem',color:'#38bdf8',fontWeight:900}}>⚔️ ザシアン召喚済み</span>}
         </div>
       </div>
@@ -966,7 +965,7 @@ function App(){
           const partySize=party.filter(m=>m.hp>0).length;
           let encData;
           if(isBossBattle){encData=BOSS_ENC[chIdx]||BOSS_ENC[0];}
-          else{const rr=Math.random();if(rr<0.18){encData=RARE_ENCOUNTERS[Math.floor(Math.random()*RARE_ENCOUNTERS.length)];}else{const pool=MOB_ENC_POOL[chIdx]||MOB_ENC_POOL[0];encData=pool[Math.floor(Math.random()*pool.length)];}}
+          else{const rr=Math.random();if(rr<0.28){encData=RARE_ENCOUNTERS[Math.floor(Math.random()*RARE_ENCOUNTERS.length)];}else{const pool=MOB_ENC_POOL[chIdx]||MOB_ENC_POOL[0];encData=pool[Math.floor(Math.random()*pool.length)];}}
           const ens=encData.map(t=>initEnemy(scaleEnemy(t,avgLv,partySize,chIdx)));
           setEnemies(ens);setMAnims(new Array(ens.length).fill('idle'));
           const fi=party.findIndex(m=>m.hp>0);
