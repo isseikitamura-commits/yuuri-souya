@@ -259,7 +259,7 @@ const BOSS_ENC=[
     phases:[{hp:.7,msg:'フォルセティの邪神魔法が解放！MAT×2！',atkBonus:30},{hp:.45,msg:'フォルセティが神域に入った！',atkBonus:55,aoe:true},{hp:.2,msg:'「邪神審判」！！宇宙規模の攻撃！！',atkBonus:90,aoe:true,tripleAttack:true}]},
     {id:'forseti_z1',name:'邪神の眷属',base:'👾',ov:'🌑',flt:'hue-rotate(270deg) saturate(3.5) brightness(.55)',gc:'#6d28d9',hp:220,maxHp:220,atk:88,def:50,mat:80,exp:110,gold:90,si:'burn'}],
   // Ch9: 悪魔サタン・真の魔王（最終決戦）
-  [{id:'satan_final',name:'真の魔王・悪魔サタン',base:'😈',ov:'💀',flt:'hue-rotate(345deg) saturate(5) brightness(.72) contrast(2)',gc:'#dc2626',hp:5000,maxHp:5000,atk:155,def:90,mat:125,exp:3000,gold:2500,si:'burn',big:true,boss:true,final:true,doubleAttack:true,divineSpellCaster:true,magicResist:0.55,
+  [{id:'satan_final',name:'真の魔王・悪魔サタン',base:'😈',ov:'💀',flt:'hue-rotate(345deg) saturate(5) brightness(.72) contrast(2)',gc:'#dc2626',hp:5000,maxHp:5000,atk:155,def:90,mat:125,exp:3000,gold:2500,si:'burn',big:true,boss:true,final:true,doubleAttack:true,divineSpellCaster:true,magicResist:0.3,
     phases:[{hp:.78,msg:'サタンが闇の全力を解放！ATK+MAT爆発！',atkBonus:30},{hp:.55,msg:'サタンの邪眼が全開！連続魔法攻撃！',atkBonus:55,aoe:true},{hp:.32,msg:'サタンが真の魔王形態に！！',atkBonus:90,aoe:true},{hp:.12,msg:'⚠️「宇宙滅亡の叫び」！！最終奥義！！',atkBonus:140,aoe:true,tripleAttack:true}]},
     {id:'fallen_a1',name:'大堕天使アゼル',base:'👼',ov:'😈',flt:'hue-rotate(350deg) saturate(4) brightness(.65) contrast(2)',gc:'#dc2626',hp:550,maxHp:550,atk:100,def:55,mat:80,exp:450,gold:320,si:'burn'},
     {id:'fallen_b1',name:'大堕天使ベリアル',base:'👼',ov:'🔥',flt:'hue-rotate(340deg) saturate(3.5) brightness(.6) contrast(1.8)',gc:'#b91c1c',hp:500,maxHp:500,atk:90,def:50,mat:70,exp:400,gold:290,si:'burn'}],
@@ -342,7 +342,7 @@ const scaleEnemy=(tpl,avgLv,partySize)=>{
   const s=(1+(lv-1)*0.18)*ps*bm;
   const gs=2.5; // EXP倍率
   const base={...tpl,hp:Math.round(tpl.maxHp*s),maxHp:Math.round(tpl.maxHp*s),atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*s),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*3.5)};
-  if(tpl.boss)base.magicResist=0.55; // ボスは魔法55%カット
+  if(tpl.boss)base.magicResist=tpl.magicResist!==undefined?tpl.magicResist:0.25; // ボスはテンプレ値優先、デフォ25%カット
   return base;
 };
 const SK='ysd_v5';
@@ -446,7 +446,7 @@ const initMonsterAlly=tpl=>({isMonster:true,id:tpl.id,name:tpl.name,base:tpl.bas
 const initEnemy=tpl=>({...tpl,hp:tpl.maxHp,status:null,statusTurns:0,currentPhase:0,atkBonus:0,rageAoe:false,tripleAtk:false});
 const checkLearn=(member,lv)=>{if(member.isMonster)return{member,newSpells:[]};const spells=CLASS_SPELLS[member.classId]||[];const newSpells=[];let lsp=[...(member.learnedSpells||[])];spells.forEach(sp=>{if(lv>=sp.level&&!lsp.includes(sp.id)){lsp.push(sp.id);newSpells.push(sp);}});return{member:{...member,learnedSpells:lsp},newSpells};};
 const doLevelUp=(member,gainExp,addLog)=>{let m={...member,exp:(member.exp||0)+gainExp};while(m.exp>=calcNext(m.level)){const lv=m.level+1;const newMaxHp=m.maxHp+28,newMaxMp=m.maxMp+10;m={...m,level:lv,maxHp:newMaxHp,hp:newMaxHp,maxMp:newMaxMp,mp:newMaxMp,atk:m.atk+(m.isMonster?4:5),def:m.def+3,mat:m.mat+(m.isMonster?2:5)};const{member:mm,newSpells}=checkLearn(m,lv);m=mm;SFX.lvup();addLog('🌟 '+mn(m)+'がLv.'+lv+'に！');newSpells.forEach(sp=>addLog('✨ 新呪文「'+sp.name+'」を覚えた！'));}return m;};
-const calcDamage=(atk,def)=>Math.max(1,atk-def+Math.floor(Math.random()*8)-4);
+const calcDamage=(atk,def)=>{const minDmg=Math.floor(atk*0.25);const roll=atk-Math.floor(def*0.45)+Math.floor(Math.random()*8)-4;return Math.max(minDmg,Math.max(1,roll));};
 const processDot=e=>{if(!e.status||e.statusTurns<=0)return{...e,status:null,statusTurns:0};let hp=e.hp;if(e.status==='poison')hp=Math.max(1,hp-Math.floor(e.maxHp*.09));if(e.status==='burn')hp=Math.max(1,hp-Math.floor(e.maxHp*.07));const turns=e.statusTurns-1;return{...e,hp,statusTurns:turns,status:turns<=0?null:e.status};};
 const tryInflict=(e,si,rate)=>{if(!si||e.status||Math.random()>rate)return e;return{...e,status:si,statusTurns:3};};
 const decBuffs=m=>{let n={...m};if(n.atkBuffTurns>0){n.atkBuffTurns--;if(n.atkBuffTurns<=0)n.atkBuffMult=1;}if(n.defBuffTurns>0){n.defBuffTurns--;if(n.defBuffTurns<=0)n.defBuffMult=1;}n.reflecting=false;n.defending=false;return n;};
@@ -934,8 +934,8 @@ function App(){
         <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,.65) 1px,transparent 1px)',backgroundSize:'20px 20px',animation:'starPulse 4s ease-in-out infinite'}}/>
         {enemies.some(e=>e.final)&&<div style={{position:'absolute',inset:0,animation:'rageFlash 3s ease-in-out infinite',background:'rgba(220,38,38,.04)'}}/>}
         <div style={{position:'absolute',bottom:0,left:0,right:0,height:'60px',background:`linear-gradient(transparent,${stage.gnd})`,borderTop:`1px solid ${stage.gb}`}}/>
-        {party.map((m,i)=>(<div key={i} style={{position:'absolute',bottom:'28px',left:(3+i*12)+'%',transformOrigin:'bottom center'}}>{m.isMonster?<MonPartySprite mon={m} anim={pAnims[i]}/>:<CharSprite member={m} anim={pAnims[i]}/>}</div>))}
-        {enemies.map((en,i)=>(<div key={i} style={{position:'absolute',bottom:'24px',right:(enemies.length===1?4:2+i*19)+'%',transformOrigin:'bottom center'}}><MonSprite mon={en} anim={mAnims[i]} size={en.big?5.2:enemies.length===1?5.2:4.4}/></div>))}
+        {party.map((m,i)=>(<div key={i} style={{position:'absolute',bottom:'28px',left:(1+i*11)+'%',transformOrigin:'bottom center'}}>{m.isMonster?<MonPartySprite mon={m} anim={pAnims[i]}/>:<CharSprite member={m} anim={pAnims[i]}/>}</div>))}
+        {enemies.map((en,i)=>(<div key={i} style={{position:'absolute',bottom:'24px',right:(enemies.length===1?8:1+i*18)+'%',transformOrigin:'bottom center'}}><MonSprite mon={en} anim={mAnims[i]} size={en.big?4.8:enemies.length===1?4.8:enemies.length===2?4.2:3.8}/></div>))}
         <div style={{position:'absolute',top:'8px',left:'50%',transform:'translateX(-50%)',fontSize:'.66rem',color:'rgba(255,255,255,.28)',whiteSpace:'nowrap'}}>{chDef.n}</div>
         {enemies.some(e=>e.boss)&&<div style={{position:'absolute',top:'8px',left:'8px',fontSize:'.68rem',color:'#ef4444',fontWeight:900,animation:'blink 1s ease-in-out infinite'}}>⚠️BOSS</div>}
         {autoMode&&<div style={{position:'absolute',top:'8px',right:'8px',fontSize:'.65rem',color:'#22c55e',background:'rgba(34,197,94,.18)',padding:'2px 6px',borderRadius:'5px'}}>AUTO▶</div>}
