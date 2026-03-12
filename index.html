@@ -829,7 +829,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.18.0 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.18.1 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -1046,7 +1046,12 @@ function App(){
         const np=party.filter((_,j)=>j!==i);setParty(np);
         if(m.isMonster){
           // 現在のLv・ステータスをmonsterRosterに同期して保存
-          setMonsterRoster(r=>r.map(r2=>r2.id===m.id?{...m}:r2));
+          // 存在しない場合（シェンロン等）はrosterに追加してから同期
+          setMonsterRoster(r=>{
+            const exists=r.some(r2=>r2.id===m.id);
+            if(exists) return r.map(r2=>r2.id===m.id?{...m}:r2);
+            return [...r,{...m}]; // なければ追加（消えるバグ防止）
+          });
         } else if(!humanRoster.find(h=>h.name===m.name&&h.classId===m.classId)){
           setHumanRoster(r=>[...r,m]);
         }
