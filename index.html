@@ -513,6 +513,7 @@ function App(){
   const [isMuted,setIsMuted]=useState(false);
   const [saveMsg,setSaveMsg]=useState('');
   const [spellMenu,setSpellMenu]=useState(false);
+  const [fieldSpellMenu,setFieldSpellMenu]=useState(null); // {casterIdx, targetIdx}
   const [itemMenu,setItemMenu]=useState(false);
   const [itemTargetIdx,setItemTargetIdx]=useState(0);
   const [saveMenu,setSaveMenu]=useState(null);
@@ -554,7 +555,7 @@ function App(){
   const getMemberSpells=useCallback(m=>{if(!m)return[];if(m.isMonster)return m.allySkill?[m.allySkill]:[];const cls=CLASSES[m.classId];const spells=[cls.baseSkill];(CLASS_SPELLS[m.classId]||[]).filter(sp=>m.level>=sp.level).forEach(sp=>spells.push(sp));return spells;},[]);
   const nextPhase=useCallback((cur,p)=>{const order=['p0','p1','p2','p3'];const si=order.indexOf(cur);for(let i=si+1;i<order.length;i++){if(p[i]&&p[i].hp>0)return order[i];}return 'enemy';},[]);
 
-  const executeSpell=useCallback(async(spell,pIdx,curP,curE,isField)=>{
+  const executeSpell=useCallback(async(spell,pIdx,curP,curE,isField,targetIdx=null)=>{
     let nP=[...curP],nE=curE?[...curE]:[];
     const member={...nP[pIdx]};
     if((member.mp||0)<(spell.mp||0)){addLog('MP不足！');return null;}
@@ -590,10 +591,10 @@ function App(){
     }else if(spell.type==='reflect'){nP[pIdx]={...nP[pIdx],reflecting:true};addLog(spell.e+' '+spell.name+'！次の魔法を反射！');
     }else if(spell.type==='revive'||spell.type==='revive_25'){
       const pct=spell.type==='revive'?.5:.25;
-      const di=nP.findIndex(m=>m.hp<=0);if(di<0){addLog('戦闘不能の仲間がいない！');nP[pIdx]={...nP[pIdx],mp:member.mp};return{party:nP,enemies:nE};}
+      const di=targetIdx!==null?targetIdx:nP.findIndex(m=>m.hp<=0);if(di<0||nP[di]?.hp>0){addLog('戦闘不能の仲間がいない！');nP[pIdx]={...nP[pIdx],mp:member.mp};return{party:nP,enemies:nE};}
       nP[di]={...nP[di],hp:Math.floor(nP[di].maxHp*pct)};addLog(spell.e+' '+spell.name+'！'+mn(nP[di])+'が復活！HP'+(pct*100)+'%！');
     }else if(spell.type==='heal_one'){
-      const ti=nP.findIndex((m,i)=>i!==pIdx&&m.hp>0&&m.hp<m.maxHp);const tIdx=ti>=0?ti:pIdx;
+      const _autoTi=nP.findIndex((m,i)=>i!==pIdx&&m.hp>0&&m.hp<m.maxHp);const tIdx=targetIdx!==null?targetIdx:(_autoTi>=0?_autoTi:pIdx);
       const amt=Math.floor((spell.pow||((c)=>80))(nP[pIdx]));
       nP[tIdx]={...nP[tIdx],hp:Math.min(nP[tIdx].maxHp,nP[tIdx].hp+amt)};
       addLog(spell.e+' '+spell.name+'！'+mn(nP[tIdx])+'のHP+'+amt+'！');SFX.heal();
@@ -615,9 +616,9 @@ function App(){
     return{party:nP,enemies:nE};
   },[addLog,addDmg,addSpark,setPAnim,setMAnim]);
 
-  const useFieldSpell=useCallback(async(spell,pIdx)=>{
+  const useFieldSpell=useCallback(async(spell,pIdx,targetIdx)=>{
     if(!FIELD_SPELL_TYPES.includes(spell.type)){addLog('⚔️ この呪文は戦闘中のみ使用可能！');return;}
-    const r=await executeSpell(spell,pIdx,[...party],null,true);if(r)setParty(r.party);
+    const r=await executeSpell(spell,pIdx,[...party],null,true,targetIdx);if(r)setParty(r.party);
   },[party,executeSpell,addLog]);
 
   const handleVictory=useCallback(async(fp,fe)=>{
@@ -829,7 +830,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.18.1 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.19.0 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -953,7 +954,7 @@ function App(){
                 <div style={{height:'100%',width:hpPct+'%',background:hpCol,borderRadius:'4px',transition:'width .3s'}}/>
               </div>
               {m.maxMp>0&&<div style={{height:'3px',background:'rgba(14,165,233,.12)',borderRadius:'2px',overflow:'hidden',marginTop:'3px'}}><div style={{height:'100%',width:mpPct+'%',background:'#38bdf8',borderRadius:'2px'}}/></div>}
-              {fieldSpells.length>0&&m.hp>0&&<div style={{display:'flex',gap:'4px',flexWrap:'wrap',marginTop:'5px'}}>{fieldSpells.map(sp=>(<button key={sp.id} disabled={m.mp<sp.mp} onClick={()=>useFieldSpell(sp,i)} style={{...bs(sp.color||'#22c55e',m.mp<sp.mp),margin:0,padding:'2px 8px',fontSize:'.72rem'}}>{sp.e} {sp.name} MP{sp.mp}</button>))}</div>}
+              {fieldSpells.length>0&&m.hp>0&&<button onClick={()=>setFieldSpellMenu({casterIdx:i,targetIdx:i})} style={{...bs('#7c3aed'),margin:'4px 0 0 0',padding:'3px 10px',fontSize:'.76rem'}}>🔮 呪文 ({fieldSpells.length})</button>}
             </div>
           </div>);
           })}
@@ -1079,6 +1080,39 @@ function App(){
         <div style={{display:'flex',justifyContent:'center',gap:'6px',marginTop:'6px',flexWrap:'wrap'}}>
           {inv.length>0&&<button style={{...bs('#16a34a'),margin:0}} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
           <button style={{...bs('#374151'),margin:0}} onClick={()=>{setScr('map');bgm('field');}}>← マップへ</button>
+        </div>
+      </div>);
+    })()}
+
+    {/* フィールド呪文メニュー */}
+    {fieldSpellMenu&&(()=>{
+      const caster=party[fieldSpellMenu.casterIdx];
+      const target=party[fieldSpellMenu.targetIdx];
+      if(!caster)return null;
+      const spells=getMemberSpells(caster).filter(sp=>FIELD_SPELL_TYPES.includes(sp.type));
+      const isHealTarget=['heal_one','heal_one_full','status_cure','revive','revive_25'].includes;
+      const needsTarget=sp=>['heal_one','heal_one_full','status_cure','revive','revive_25'].includes(sp.type);
+      return(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.75)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} onClick={e=>{if(e.target===e.currentTarget)setFieldSpellMenu(null);}}>
+        <div style={{background:'#1e293b',border:'2px solid #7c3aed',borderRadius:'14px',padding:'14px',width:'100%',maxWidth:'360px'}}>
+          <div style={{color:'#a78bfa',fontWeight:900,fontSize:'1.0rem',marginBottom:'8px',textAlign:'center'}}>🔮 {caster.base||'🧝'} {caster.name} の呪文</div>
+          <div style={{color:'#64748b',fontSize:'.72rem',textAlign:'center',marginBottom:'10px'}}>MP: {caster.mp}/{caster.maxMp}</div>
+          {/* ターゲット選択（単体対象呪文が選ばれた時） */}
+          {fieldSpellMenu.spell&&needsTarget(fieldSpellMenu.spell)&&(<>
+            <div style={{color:'#94a3b8',fontSize:'.8rem',textAlign:'center',marginBottom:'6px'}}>誰に使う？</div>
+            <div style={{display:'flex',flexDirection:'column',gap:'5px',marginBottom:'10px'}}>
+              {party.map((t,ti)=>{const tc=t.isMonster?'#4ade80':CLASSES[t.classId]?.color||'#fff';const canRevive=['revive','revive_25'].includes(fieldSpellMenu.spell.type);return(<button key={ti} disabled={canRevive?t.hp>0:t.hp<=0} onClick={async()=>{const r=await executeSpell(fieldSpellMenu.spell,fieldSpellMenu.casterIdx,[...party],null,true,ti);if(r)setParty(r.party);setFieldSpellMenu(null);}} style={{...bs(tc,(canRevive?t.hp>0:t.hp<=0)),margin:0,padding:'6px 10px',fontSize:'.84rem'}}>{t.isMonster?t.base:'🧝'} {t.name} HP:{t.hp}/{t.maxHp} {t.hp<=0?'💀':''}</button>);})}
+            </div>
+            <button onClick={()=>setFieldSpellMenu({casterIdx:fieldSpellMenu.casterIdx})} style={{...bs('#374151'),margin:0,width:'100%',padding:'5px',fontSize:'.78rem'}}>← 呪文一覧に戻る</button>
+          </>)}
+          {!fieldSpellMenu.spell&&(<>
+            <div style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+              {spells.map(sp=>{const disabled=caster.mp<sp.mp;return(<button key={sp.id} disabled={disabled} onClick={async()=>{if(needsTarget(sp)){setFieldSpellMenu({...fieldSpellMenu,spell:sp});}else{const r=await executeSpell(sp,fieldSpellMenu.casterIdx,[...party],null,true);if(r)setParty(r.party);setFieldSpellMenu(null);}}} style={{...bs(sp.color||'#22c55e',disabled),margin:0,padding:'8px 12px',fontSize:'.88rem',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                <span>{sp.e} {sp.name}</span>
+                <span style={{fontSize:'.75rem',opacity:.7}}>MP {sp.mp} {disabled?'(不足)':''}</span>
+              </button>);})}
+            </div>
+            <button onClick={()=>setFieldSpellMenu(null)} style={{...bs('#374151'),margin:'10px 0 0 0',width:'100%',padding:'6px',fontSize:'.8rem'}}>閉じる</button>
+          </>)}
         </div>
       </div>);
     })()}
