@@ -359,7 +359,7 @@ const ITEMS=[
   [[{id:'zeros_guard',name:'魔王直属護衛',base:'🔱',ov:'👑',flt:'brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)',gc:'#c084fc',hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:'stun'},{id:'zeros_s2',name:'魔王軍術士',base:'🌑',ov:'💫',flt:'brightness(.18) contrast(5.5) hue-rotate(285deg)',gc:'#9333ea',hp:900,maxHp:900,atk:280,def:120,mat:320,exp:420,gold:375,si:'stun'}],[{id:'zeros_guard',name:'魔王直属護衛',base:'🔱',ov:'👑',flt:'brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)',gc:'#c084fc',hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:'stun'},{id:'zeros_guard',name:'魔王直属護衛γ',base:'🔱',ov:'⭐',flt:'brightness(.1) contrast(8) hue-rotate(320deg) saturate(6)',gc:'#f0abfc',hp:1200,maxHp:1200,atk:400,def:170,mat:190,exp:450,gold:400,si:'stun'}],[{id:'zeros_guard',name:'魔王直属護衛',base:'🔱',ov:'👑',flt:'brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)',gc:'#c084fc',hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:'stun'},{id:'zeros_guard',name:'魔王直属護衛β',base:'🔱',ov:'💥',flt:'brightness(.12) contrast(7) hue-rotate(310deg) saturate(5)',gc:'#e879f9',hp:1250,maxHp:1250,atk:410,def:175,mat:195,exp:465,gold:415,si:'stun'},{id:'zeros_s2',name:'魔王軍術士',base:'🌑',ov:'💫',flt:'brightness(.18) contrast(5.5) hue-rotate(285deg)',gc:'#9333ea',hp:900,maxHp:900,atk:280,def:120,mat:320,exp:420,gold:375,si:'stun'}]],
 ];
 
-const calcNext=lv=>{if(lv<=12)return Math.floor(180*Math.pow(lv,1.35));const base=Math.floor(180*Math.pow(12,1.35));return base+Math.floor(260*Math.pow(lv-12,1.55));};
+const calcNext=lv=>{if(lv<=12)return Math.floor(500*Math.pow(lv,1.38));const base=Math.floor(500*Math.pow(12,1.38));return base+Math.floor(700*Math.pow(lv-12,1.55));};
 
 // 敵の呪文データベース
 const ENEMY_SPELL_DB={
@@ -432,7 +432,7 @@ const scaleEnemy=(tpl,avgLv,partySize,chIdx=0)=>{
   const lv=Math.max(chBaseLv,Math.min(blended,chCeiling,avgLv+6));
   const bm=tpl.boss?1.2:1.0;
   const s=(1+(lv-1)*0.15)*ps*bm;
-  const gs=Math.max(1.0,Math.min(0.5+lv*0.16,4.5)); // EXP倍率: Lv1=1.0→Lv20=3.7→上限4.5
+  const gs=tpl.rare?1.0:Math.max(0.8,Math.min(0.4+lv*0.12,2.5)); // レアはgs=1固定、通常Lv1=0.8→Lv20=2.4→上限2.5
   const defScale=1+(lv-1)*0.10;
   const rawHp=Math.round(tpl.maxHp*s);
   // HPキャップを適用
@@ -1061,7 +1061,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.1 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.2 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
