@@ -1,0 +1,1744 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="theme-color" content="#b8900a"/>
+<link rel="manifest" href="manifest.json"/>
+<link rel="apple-touch-icon" href="icons/icon-192.png"/>
+<title>ゆうりとそうやの大冒険</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#04040c;font-family:'Hiragino Maru Gothic Pro','BIZ UDPGothic',sans-serif;color:#dde4f0;overflow-x:hidden}
+@keyframes floatA{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes floatB{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes shakeX{0%,100%{transform:translateX(0)}20%{transform:translateX(-12px)}40%{transform:translateX(12px)}60%{transform:translateX(-7px)}80%{transform:translateX(7px)}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{from{opacity:0;transform:scale(0.3)}to{opacity:1;transform:scale(1)}}
+@keyframes dmgUp{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-65px) scale(1.5)}}
+@keyframes skillFlash{0%{opacity:0;transform:scale(0.2)}55%{opacity:1;transform:scale(1.8)}100%{opacity:0;transform:scale(1)}}
+@keyframes starPulse{0%,100%{opacity:.1}50%{opacity:.35}}
+@keyframes winSpin{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg) scale(1.14)}}
+@keyframes sparkFly{0%{opacity:1;transform:translate(0,0)}100%{opacity:0;transform:translate(var(--tx),var(--ty))}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.18}}
+@keyframes charAtk{0%{transform:translateX(0)}45%{transform:translateX(20px)}100%{transform:translateX(0)}}
+@keyframes monAtk{0%{transform:translateX(0)}45%{transform:translateX(-20px)}100%{transform:translateX(0)}}
+@keyframes rageFlash{0%,100%{filter:brightness(1)}50%{filter:brightness(2.2) saturate(3) hue-rotate(30deg)}}
+@keyframes dragonPulse{0%,100%{box-shadow:0 0 8px #4ade8055}50%{box-shadow:0 0 28px #4ade80cc}}
+@keyframes storyIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+button{touch-action:manipulation;cursor:pointer;font-family:inherit}
+button:active:not(:disabled){transform:scale(0.88)!important;filter:brightness(1.55)!important}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#1e1e3a}
+.card{background:rgba(255,255,255,0.037);border-radius:14px;padding:12px;margin-bottom:9px;width:100%;max-width:460px}
+.hpt{height:11px;background:rgba(0,0,0,0.55);border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,0.07)}
+.hpf{height:100%;border-radius:6px;transition:width .4s ease}
+.mpt{height:6px;background:rgba(0,0,0,0.45);border-radius:4px;overflow:hidden;border:1px solid rgba(50,170,255,.2);margin-top:2px}
+.mpf{height:100%;border-radius:4px;background:linear-gradient(90deg,#0ea5e9,#38bdf8);transition:width .4s ease}
+.expt{height:6px;background:rgba(0,0,0,0.4);border-radius:4px;overflow:hidden;border:1px solid rgba(100,100,255,.2);margin-top:2px}
+.expf{height:100%;border-radius:4px;background:linear-gradient(90deg,#5555e8,#8080f8);transition:width .4s ease}
+</style>
+</head>
+<body><div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect,useRef,useCallback}=React;
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+// ====== AUDIO ======
+let _ac=null,_muted=false,_btid=null,_bcur=null;
+const gac=()=>{if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state===‘suspended’)_ac.resume();return _ac;};
+const tn=(f,t,d,v,w)=>{if(!f||_muted)return;v=v||.18;w=w||‘square’;try{const c=gac(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.type=w;o.frequency.value=f;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d*.9);o.start(t);o.stop(t+d);}catch(e){}};
+const N={R:0,C4:262,D4:294,E4:330,F4:349,G4:392,A4:440,B4:494,C5:523,D5:587,E5:659,F5:698,G5:784,A5:880,B5:988,C6:1047,D6:1175,E6:1319,Ab4:415,Bb4:466,Eb5:622,Ab5:831,Bb5:932};
+const BGMS={
+field:{bpm:106,s:[[N.G5,.5],[N.R,.25],[N.G5,.25],[N.A5,.5],[N.G5,.5],[N.E5,.5],[N.D5,.5],[N.C5,1],[N.C5,.25],[N.D5,.5],[N.E5,.5],[N.F5,.5],[N.G5,.5],[N.A5,.5],[N.G5,.5],[N.F5,.5],[N.E5,.5],[N.D5,1.5]]},
+battle:{bpm:172,s:[[N.G4,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.Eb5,.5],[N.R,.25],[N.D5,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.D5,.5],[N.R,.25],[N.C5,.25],[N.G4,.25],[N.Ab4,.25],[N.G4,.25],[N.Eb5,.5],[N.F5,.25],[N.Eb5,.25],[N.D5,.5],[N.Bb4,.5],[N.C5,.5],[N.G5,1]]},
+boss:{bpm:148,s:[[N.D5,.25],[N.R,.125],[N.D5,.25],[N.D5,.5],[N.Eb5,.25],[N.D5,.25],[N.Bb4,.75],[N.C5,.5],[N.D5,.75],[N.E5,.25],[N.E5,.5],[N.F5,.25],[N.E5,.25],[N.C5,.75],[N.D5,.5],[N.E5,.75],[N.F5,.5],[N.G5,.5],[N.Ab5,.5],[N.G5,.5],[N.F5,.5],[N.Eb5,.5],[N.D5,1]]},
+final:{bpm:200,s:[[N.D5,.25],[N.D5,.125],[N.R,.125],[N.D5,.25],[N.Eb5,.25],[N.D5,.5],[N.R,.25],[N.Bb4,.25],[N.C5,.25],[N.D5,.5],[N.Eb5,.25],[N.F5,.25],[N.G5,.5],[N.R,.5],[N.Ab5,.5],[N.G5,.5],[N.F5,.5],[N.Eb5,.5],[N.D5,.5],[N.C5,.5],[N.Bb4,.5],[N.G5,.5],[N.Ab5,.5],[N.Bb5,.5],[N.Ab5,.5],[N.G5,.5],[N.F5,.5],[N.D5,1]]},
+victory:{bpm:180,loop:false,s:[[N.C5,.25],[N.R,.125],[N.C5,.25],[N.R,.125],[N.C5,.25],[N.G5,.75],[N.G5,.25],[N.F5,.25],[N.E5,.25],[N.D5,.25],[N.C5,1.5]]},
+town:{bpm:90,s:[[N.C5,.5],[N.E5,.5],[N.G5,.5],[N.C6,.5],[N.G5,.5],[N.E5,.5],[N.C5,1],[N.F5,.5],[N.A5,.5],[N.C6,.5],[N.G5,.5],[N.F5,.5],[N.E5,1],[N.E5,.5],[N.G5,.5],[N.C6,.5],[N.E6,.5],[N.D6,.5],[N.C6,.5],[N.C5,2]]},
+};
+const bgm=name=>{if(_bcur===name)return;stopBgm();_bcur=name;_bgmLoop(name);};
+const _bgmLoop=n=>{if(_bcur!==n||_muted)return;const b=BGMS[n];if(!b)return;
+try{const c=gac();let t=c.currentTime+.06;const bd=60/b.bpm;
+b.s.forEach(([f,beats])=>{tn(f,t,beats*bd*.88,.18,‘square’);t+=beats*bd;});
+if(b.loop===false)return;
+_btid=setTimeout(()=>_bgmLoop(n),(t-c.currentTime)*1000-100);}catch(e){}};
+const stopBgm=()=>{_bcur=null;if(_btid)clearTimeout(_btid);_btid=null;};
+const toggleMute=()=>{_muted=!_muted;if(_muted)stopBgm();return _muted;};
+const SFX={
+atk:()=>{if(_muted)return;const c=gac(),t=c.currentTime;tn(220,t,.1,.45,‘sawtooth’);tn(180,t+.05,.15,.22,‘square’);},
+magic:()=>{if(_muted)return;const c=gac(),t=c.currentTime;[523,659,784,1047].forEach((f,i)=>tn(f,t+i*.06,.22,.24,‘sine’));},
+buff:()=>{if(_muted)return;const c=gac(),t=c.currentTime;[523,659,784].forEach((f,i)=>tn(f,t+i*.08,.3,.18,‘triangle’));},
+hit:()=>{if(_muted)return;const c=gac(),t=c.currentTime;tn(150,t,.09,.55,‘sawtooth’);tn(100,t+.04,.12,.3,‘square’);},
+phit:()=>{if(_muted)return;const c=gac(),t=c.currentTime;tn(200,t,.12,.5,‘sawtooth’);tn(130,t+.06,.16,.28,‘square’);},
+heal:()=>{if(_muted)return;const c=gac(),t=c.currentTime;[523,659,784].forEach((f,i)=>tn(f,t+i*.09,.28,.22,‘sine’));},
+revive:()=>{if(_muted)return;const c=gac(),t=c.currentTime;[392,494,587,740,880,1047].forEach((f,i)=>tn(f,t+i*.1,.4,.24,‘sine’));},
+lvup:()=>{if(_muted)return;const c=gac(),t=c.currentTime;const notes=[262,330,392,523,659,784,1047];notes.forEach((f,i)=>tn(f,t+i*.09,(i<6?.15:.55),(i<6?.2:.4),‘triangle’));tn(1319,t+notes.length*.09+.05,.5,.32,‘sine’);tn(1047,t+notes.length*.09+.12,.4,.22,‘sine’);},
+victory:()=>{if(_muted)return;bgm(‘victory’);},
+dead:()=>{if(_muted)return;const c=gac(),t=c.currentTime;[440,330,220,110].forEach((f,i)=>tn(f,t+i*.16,.45,.24,‘sawtooth’));},
+cursor:()=>{if(_muted)return;tn(660,gac().currentTime,.08,.22,‘sine’);},
+flee:()=>{if(_muted)return;const c=gac(),t=c.currentTime;[300,200,150].forEach((f,i)=>tn(f,t+i*.07,.22,.22,‘sawtooth’));},
+buy:()=>{if(_muted)return;const c=gac(),t=c.currentTime;tn(880,t,.15,.3,‘sine’);tn(1100,t+.11,.15,.22,‘sine’);},
+save:()=>{if(_muted)return;const c=gac(),t=c.currentTime;[440,550,660].forEach((f,i)=>tn(f,t+i*.07,.2,.22,‘sine’));},
+rage:()=>{if(_muted)return;const c=gac(),t=c.currentTime;[110,87,69].forEach((f,i)=>tn(f,t+i*.12,.55,.35,‘sawtooth’));},
+poison:()=>{if(_muted)return;tn(300,gac().currentTime,.18,.14,‘sawtooth’);},
+stun:()=>{if(_muted)return;tn(200,gac().currentTime,.22,.16,‘square’);},
+recruit:()=>{if(_muted)return;const c=gac(),t=c.currentTime;[659,784,880,1047].forEach((f,i)=>tn(f,t+i*.09,.35,.22,‘triangle’));},
+dragonball:()=>{if(_muted)return;const c=gac(),t=c.currentTime;[880,1100,1320,1760].forEach((f,i)=>tn(f,t+i*.07,.3,.28,‘triangle’));},
+dragon:()=>{if(_muted)return;const c=gac(),t=c.currentTime;[196,246,330,392,494,659,784,1047].forEach((f,i)=>tn(f,t+i*.11,.55,.25,‘sine’));},
+};
+
+// ====== GAME DATA ======
+const CHAR_VIS={hero:{face:‘🧝’,wpn:‘⚔️’,aura:‘✨’,crown:‘👑’,trail:‘🌟’},warrior:{face:‘💪’,wpn:‘🗡️’,aura:‘🛡️’,crown:‘⚔️’,trail:‘🔥’},priest:{face:‘🙏’,wpn:‘📿’,aura:‘💫’,crown:‘🌸’,trail:‘💖’},mage:{face:‘🧙’,wpn:‘🔮’,aura:‘🌌’,crown:‘⭐’,trail:‘💜’}};
+const CLASSES={
+hero:{id:‘hero’,name:‘勇者’,color:’#d4a017’,bg:‘rgba(212,160,23,.1)’,hp:155,mp:30,atk:24,def:13,mat:18,
+baseSkill:{id:‘bs_hero’,name:‘会心の一撃’,e:‘💥’,desc:‘ATK×3.2 クリティカル’,mp:8,type:‘atk_one’,pow:c=>Math.floor(c.atk*3.2),color:’#f97316’}},
+warrior:{id:‘warrior’,name:‘戦士’,color:’#ef4444’,bg:‘rgba(239,68,68,.1)’,hp:210,mp:12,atk:34,def:24,mat:6,
+baseSkill:{id:‘bs_warrior’,name:‘大剣ぶんまわし’,e:‘⚔️’,desc:‘全敵+スタン’,mp:5,type:‘atk_all’,pow:c=>Math.floor(c.atk*2.0+12),inflict:‘stun’,color:’#ef4444’}},
+priest:{id:‘priest’,name:‘僧侶’,color:’#22c55e’,bg:‘rgba(34,197,94,.1)’,hp:130,mp:60,atk:14,def:16,mat:26,
+baseSkill:{id:‘hoimi’,name:‘ホイミ’,e:‘💚’,desc:‘1人HP小回復’,mp:4,type:‘heal_one’,pow:c=>Math.floor(c.mat*1.4+35),color:’#22c55e’}},
+mage:{id:‘mage’,name:‘魔法使い’,color:’#a855f7’,bg:‘rgba(168,85,247,.1)’,hp:110,mp:70,atk:11,def:7,mat:48,
+baseSkill:{id:‘mera’,name:‘メラ’,e:‘🔥’,desc:‘炎で1体攻撃’,mp:4,type:‘atk_one’,pow:c=>Math.floor(c.mat*1.2+10),color:’#f97316’}},
+};
+const CLASS_SPELLS={
+hero:[
+{level:4, id:‘rukan’,  name:‘ルカニ’,   e:‘🔽’,mp:5, type:‘debuff_def’,  desc:‘敵DEF大幅ダウン’,color:’#fbbf24’},
+{level:8, id:‘bikiru’, name:‘バイキルト’,e:‘⬆️’,mp:8, type:‘buff_atk’,   desc:‘ATK 3ターン2倍’, color:’#fbbf24’},
+{level:12,id:‘gira2’,  name:‘ギラ’,     e:‘🔥’,mp:7, type:‘atk_one’,pow:c=>Math.floor(c.mat*2.2+c.atk*0.8+15),desc:‘炎1体攻撃’,color:’#f97316’},
+{level:18,id:‘holyblade’,name:‘聖剣光波’,e:‘🌟’,mp:16,type:‘atk_all’,pow:c=>Math.floor(c.mat*1.6+c.atk*1.2),desc:‘全敵に聖光’,color:’#fde68a’},
+{level:24,id:‘dragcut’, name:‘竜殺し’,  e:‘🐲’,mp:14,type:‘atk_one’,pow:c=>Math.floor(c.atk*4.2),desc:‘竜族特効！’, color:’#dc2626’},
+{level:32,id:‘swordstorm’,name:‘剣嵐’,  e:‘⚡’,mp:22,type:‘atk_all’,pow:c=>Math.floor(c.atk*2.4+c.mat*1.2),desc:‘物理+魔法複合’,color:’#818cf8’},
+],
+warrior:[
+{level:4, id:‘tackle’,  name:‘タックル’,  e:‘💢’,mp:5, type:‘atk_one’,pow:c=>Math.floor(c.atk*1.8),desc:‘スタン付与’,inflict:‘stun’,color:’#f87171’},
+{level:8, id:‘teppeki’, name:‘スクルト’,  e:‘🛡️’,mp:6, type:‘buff_def_all’,desc:‘全員DEF UP’,   color:’#38bdf8’},
+{level:14,id:‘renzan’,  name:‘連続斬り’,  e:‘⚔️’,mp:10,type:‘atk_double’,pow:c=>Math.floor(c.atk*1.7),desc:‘2回攻撃’,color:’#fca5a5’},
+{level:20,id:‘earthcrush’,name:‘大地砕き’,e:‘💢’,mp:15,type:‘atk_all’,pow:c=>Math.floor(c.atk*2.0+12),desc:‘全敵 地震’,color:’#a16207’},
+{level:28,id:‘berserk’, name:‘超戦士化’,  e:‘😤’,mp:20,type:‘buff_both’,  desc:‘ATK&DEF 4ターン2倍’,color:’#dc2626’},
+],
+priest:[
+{level:4, id:‘behoimu’,  name:‘ベホイミ’,   e:‘💚’,mp:8, type:‘heal_one’,  pow:c=>Math.floor(c.mat*2.8+80), desc:‘1人HP中回復’,    color:’#22c55e’},
+{level:7, id:‘kiary’,    name:‘キアリー’,   e:‘🍃’,mp:4, type:‘status_cure’,desc:‘状態異常回復’,              color:’#86efac’},
+{level:10,id:‘sukuru’,   name:‘スクルト’,   e:‘🔵’,mp:7, type:‘buff_def_all’,desc:‘全員DEF UP’,               color:’#38bdf8’},
+{level:14,id:‘behoma’,   name:‘ベホマ’,     e:‘💖’,mp:14,type:‘heal_one_full’,desc:‘1人HP全回復’,             color:’#4ade80’},
+{level:17,id:‘zao’,      name:‘ザオ’,       e:‘🌿’,mp:10,type:‘revive_25’,  desc:‘HP25%で復活’,               color:’#a3e635’},
+{level:22,id:‘behomaraa’,name:‘ベホマラー’, e:‘✨’,mp:20,type:‘heal_partial_all’,pow:c=>Math.floor(c.mat*2.2+120),desc:‘全員HP大回復’,  color:’#86efac’},
+{level:28,id:‘zaoral’,   name:‘ザオラル’,   e:‘💫’,mp:18,type:‘revive’,     desc:‘HP50%で復活’,               color:’#4ade80’},
+{level:35,id:‘behomaz’,  name:‘ベホマズン’, e:‘🌈’,mp:30,type:‘heal_all_mp’,desc:‘全員HP・MP全回復’,          color:’#bef264’},
+],
+mage:[
+{level:4, id:‘hyado’,    name:‘ヒャド’,     e:‘❄️’,mp:5, type:‘atk_one’,pow:c=>Math.floor(c.mat*1.5+12),desc:‘氷1体攻撃’,      color:’#7dd3fc’},
+{level:7, id:‘gira’,     name:‘ギラ’,       e:‘🔥’,mp:7, type:‘atk_one’,pow:c=>Math.floor(c.mat*1.8+15),desc:‘炎1体攻撃’,      color:’#f97316’},
+{level:10,id:‘rarihoo’,  name:‘ラリホー’,   e:‘💤’,mp:6, type:‘atk_one’,pow:c=>0,inflict:‘stun’,            desc:‘眠り付与’,      color:’#818cf8’},
+{level:13,id:‘merami’,   name:‘メラミ’,     e:‘🔥’,mp:12,type:‘atk_one’,pow:c=>Math.floor(c.mat*2.8+25), desc:‘炎1体大攻撃’,   color:’#dc2626’},
+{level:16,id:‘mahoka’,   name:‘マホカンタ’, e:‘🔮’,mp:9, type:‘reflect’,                                    desc:‘魔法反射！’,    color:’#818cf8’},
+{level:20,id:‘io’,       name:‘イオ’,       e:‘💥’,mp:14,type:‘atk_all’, pow:c=>Math.floor(c.mat*1.6+15),  desc:‘爆発全体攻撃’,  color:’#fca5a5’},
+{level:25,id:‘hyadaruko’,name:‘ヒャダルコ’, e:‘❄️’,mp:18,type:‘atk_all’, pow:c=>Math.floor(c.mat*2.0+20),  desc:‘氷全体大攻撃’,  color:’#38bdf8’},
+{level:30,id:‘ionazun’,  name:‘イオナズン’, e:‘💥’,mp:24,type:‘atk_all’, pow:c=>Math.floor(c.mat*2.8+25),  desc:‘最強爆発魔法！’, color:’#f472b6’},
+{level:38,id:‘merazo’,   name:‘メラゾーマ’, e:‘🔥’,mp:20,type:‘atk_one’, pow:c=>Math.floor(c.mat*4.2+40),  desc:‘究極の炎！’,    color:’#dc2626’},
+],
+};
+const FIELD_SPELL_TYPES=[‘heal_all’,‘heal_all_mp’,‘revive’,‘revive_25’,‘heal_one’,‘heal_one_full’,‘heal_partial_all’,‘status_cure’];
+const EXTRA_NAME_OPTS=[[‘リン’,‘カイ’,‘レイ’,‘アオ’,‘ミコ’,‘ルナ’,‘サキ’,‘ナナ’],[‘ケン’,‘ソラ’,‘タケル’,‘ヒカル’,‘コウ’,‘ルイ’,‘ジン’,‘リク’]];
+
+const CHAPTERS=[
+{n:‘第1章’,title:‘旅立ちの朝’,emoji:‘🌅’,bgm:‘field’,story:‘カシミール地方の青年「ゆうり」と「そうや」。\nある朝、隣国ドゴールから使者が駆け込んできた。\n「大変だ！悪魔サタンが現れ\nフィリア姫を攫っていったのです！」\nゆうりとそうやは顔を見合わせた。\n「行こう、そうや。姫様を助けにいくんだ！」\n二人の大冒険が、今始まった——。’},
+{n:‘第2章’,title:‘呪われた荒野’,emoji:‘🌑’,bgm:‘battle’,story:‘カシミールを出発した二人は\n魔物が跋扈する暗黒の荒野に踏み込んだ。\n「ゆうり、こんなにも魔物が…」\n「全部サタンのせいだ。急がないと」\n骸骨狼の遠吠えが荒野に響き渡る。\n二人は剣を構え、前へと進んだ。’},
+{n:‘第3章’,title:‘悪夢の迷宮’,emoji:‘💀’,bgm:‘battle’,story:‘荒野を抜けると、骨でできた迷宮が現れた。\n無数の亡者が徘徊し、毒の霧が立ち込めている。\n「こんな場所にフィリア姫が…」\n「絶対に助け出す！くじけるな、そうや！」\n迷宮の奥から低い唸り声が聞こえてくる——。’},
+{n:‘第4章’,title:‘大砂漠の試練’,emoji:‘🏜️’,bgm:‘battle’,story:‘迷宮を抜けた先は灼熱の大砂漠だった。\n猛毒の蜘蛛と幽霊騎士が行く手を阻む。\n水も底をつきかけ、体力も限界に近い。\n「そうや、倒れるな！ドゴールはもうすぐだ！」\nそうやは歯を食いしばり、砂漠を歩き続けた。’},
+{n:‘第5章’,title:‘廃墟の城下町’,emoji:‘🏚️’,bgm:‘battle’,story:‘大砂漠を越えると、ドゴールの城下町が見えた。\nしかしそこは魔物に占領された廃墟だった。\n生き残った市民が地下に隠れているという。\n「必ず解放してみせる！」\nゆうりは固く誓い、魔物の巣窟へ飛び込んだ。’},
+{n:‘第6章’,title:‘冥界公爵の野望’,emoji:‘⛓️’,bgm:‘boss’,story:‘城下町の最深部——。\n冥界公爵ルシファスが二人の前に立ちはだかった！\n「カシミールの小僧どもが。\nサタン様の城へ近づける者などおらん！」\n圧倒的な魔力が空間を歪ませる。\n本物の壁が、今ここに立ちはだかった。’},
+{n:‘第7章’,title:‘天空の要塞’,emoji:‘🏯’,bgm:‘battle’,story:‘ルシファスを倒し、遂にドゴール王城が見えた！\nしかし城は天空に浮かぶ要塞と化していた。\n血翼の翼竜と嵐の騎士が守りを固めている。\n「フィリア姫は必ずあの城に！」\nゆうりとそうやは嵐の中、要塞へと踏み込んだ。’},
+{n:‘第8章’,title:‘天魔将軍の猛攻’,emoji:‘⛈️’,bgm:‘boss’,story:‘天空要塞の中枢——。\n天魔将軍ガルムが玉座を守っていた！\n「この城を侵した罪、この私が裁こう！\n嵐よ！奴らを葬れ！」\n稲妻が要塞を引き裂き、嵐が吠え狂う。\n二人最大の危機が訪れた！’},
+{n:‘第9章’,title:‘サタンの玉座’,emoji:‘👑’,bgm:‘battle’,story:‘ガルムを倒し、遂に最奥の玉座の間へ！\n鎖に繋がれたフィリア姫がいた。\n「ゆうりさん！そうやさん！来てくれたんですね！」\nしかし——闇が凝縮され、玉座が震える。\n「ふふふ……よくぞここまで来たものだ」\n堕天使たちが立ちふさがる。姫はまだ遠い。’},
+{n:‘第10章’,title:‘最終決戦・悪魔サタン’,emoji:‘😈’,bgm:‘final’,story:‘堕天使を倒し、フィリア姫の鎖を解いた！\nその瞬間——天地が割れ、闇が爆発する！\n「よくぞここまで来た……だが、これで終わりだ！\n世界よ、全て無に帰せ！」\n悪魔サタンが真の姿を現した。\nゆうりとそうや、最後の戦いが今始まる！！’},
+// ══ 天空編（第11〜20章）══
+{n:‘第11章’,title:‘平和の終焉’,emoji:‘☁️’,bgm:‘field’,story:‘サタンを倒して10年——。\n世界に平和が戻り、ゆうりとそうやは大人になった。\nある日、天空から黒雲が広がり始める。\n「また魔王が……」\nゆうりは剣を握り直した。「俺たちが行くしかない」\n第二の冒険が、天空の彼方で幕を開ける——。’},
+{n:‘第12章’,title:‘天空の門番’,emoji:‘🌤️’,bgm:‘battle’,story:‘天空への道は巨大な結界で封じられていた。\n空中要塞から無数の天空騎士が降り注ぐ。\n「大人になっても、お前たちは通さん！」\nゆうりは笑う。「10年前と同じ台詞だな」\nそうやは魔法を構えた。「行こう、ゆうり！」’},
+{n:‘第13章’,title:‘雲海の迷宮’,emoji:‘🌫️’,bgm:‘battle’,story:‘結界を突破した二人の前に白い迷宮が現れた。\n雲でできた通路は絶えず形を変え、幻の敵が彷徨う。\n「ゆうり、左か右か分からないよ…」\n「感覚で進め！俺たちの勘を信じろ！」\n迷宮の奥から強大な魔力が呼んでいた。’},
+{n:‘第14章’,title:‘雷霆の神殿’,emoji:‘⚡’,bgm:‘boss’,story:‘雲海を抜けると、雷に包まれた巨大な神殿がそびえた。\n新魔王の先遣隊——雷霆将軍テンペストが待ち受ける。\n「10年ぶりに鍛えた力、見せてやろう！」\nゆうりは新しい職業の力を解放した。\n「俺たちも進化している。かかってこい！」’},
+{n:‘第15章’,title:‘天空城の陰謀’,emoji:‘🏰’,bgm:‘battle’,story:‘テンペストを倒すと、天空城の内部が見えてきた。\n城内では異形の兵士たちが量産されていた。\n「これは……新しい魔王が作った軍勢だ」\nそうやは顔を曇らせる。「スケールが全然違う」\nゆうりは前を向いた。「でも止めるのは俺たちだ」’},
+{n:‘第16章’,title:‘滅界の呪術師’,emoji:‘🌀’,bgm:‘boss’,story:‘天空城の中枢で呪術師ヴォイドが待ち受けていた。\n次元を操る力で現実そのものを歪める。\n「お前たちの世界も、じきに”無”になる」\nゆうりは叫ぶ。「世界は渡さない！」\n呪術師と勇者の力が激突した！’},
+{n:‘第17章’,title:‘魔王軍四天王’,emoji:‘💀’,bgm:‘battle’,story:‘ヴォイドを倒すと、魔王の玉座が近づいた。\nしかし四天王が最後の関門として立ちはだかる。\n炎・氷・雷・闇——四属性の覇者たちだ。\n「ここを越えなければ魔王には届かない」\n二人は全力を振り絞り、最強の壁に挑む！’},
+{n:‘第18章’,title:‘魔王ゼロスの覚醒’,emoji:‘🔱’,bgm:‘boss’,story:‘四天王を倒し、遂に玉座の間へ。\n新魔王ゼロスが玉座から立ち上がった。\n「よく来た、ゆうり。そうや。\n貴様らのような英雄が欲しかったのだ——力を尽くしてみせろ」\nゼロスの眼が紅く輝く。大気が震えた。’},
+{n:‘第19章’,title:‘ゼロスの真の姿’,emoji:‘🌑’,bgm:‘final’,story:‘ゼロスが仮面を脱ぎ捨てた。\n「これが私の本当の力……宇宙の終焉そのものだ！」\n無限の暗黒が広がり、星々が消えていく。\nゆうりの手が震えた。それでも前に進む。\n「そうや、俺たちなら絶対に勝てる！信じてくれ！」’},
+{n:‘第20章’,title:‘宇宙最終決戦・魔王ゼロス完全体’,emoji:‘⭐’,bgm:‘final’,story:‘ゼロスの完全体が解放された。\n天地が崩壊し、世界の終わりが迫る。\nゆうりとそうや、10年の旅の全てをここに懸ける。\n「ゼロス、お前の野望はここで終わりだ！」\n「我を倒せるものなら……やってみよ！」\n最後の戦いが始まった——！！’},
+];
+
+const STAGES=[
+{sky:‘linear-gradient(180deg,#0c0602,#1a0902)’,gnd:‘rgba(90,40,8,.45)’,gb:‘rgba(160,70,15,.55)’},
+{sky:‘linear-gradient(180deg,#03030d,#070416)’,gnd:‘rgba(55,15,95,.45)’,gb:‘rgba(100,35,175,.55)’},
+{sky:‘linear-gradient(180deg,#030813,#060e2c)’,gnd:‘rgba(8,55,150,.35)’,gb:‘rgba(25,90,240,.5)’},
+{sky:‘linear-gradient(180deg,#010106,#03030f)’,gnd:‘rgba(60,10,100,.4)’,gb:‘rgba(110,30,180,.55)’},
+// 天空ステージ
+{sky:‘linear-gradient(180deg,#0a1628,#1e3a5f)’,gnd:‘rgba(200,220,255,.25)’,gb:‘rgba(150,200,255,.6)’},
+{sky:‘linear-gradient(180deg,#0d0a20,#1a1040)’,gnd:‘rgba(180,150,255,.2)’,gb:‘rgba(200,180,255,.55)’},
+{sky:‘linear-gradient(180deg,#1a0a0a,#3d0f0f)’,gnd:‘rgba(255,100,80,.2)’,gb:‘rgba(255,60,60,.5)’},
+];
+const CH_STAGE=[0,0,0,1,1,1,2,2,2,3,4,4,4,5,5,5,5,6,6,6];
+
+// 通常戦闘用エンカウンター(1-4戦目、ボスなし)
+// 通常戦闘エンカウンタープール（各章2〜3パターンをランダム選択）
+const MOB_ENC_POOL=[
+// Ch0
+[[{id:‘sw1’,name:‘骸骨狼’,base:‘🐺’,ov:‘💀’,flt:‘grayscale(.8) contrast(2) brightness(.55)’,gc:’#6b7280’,hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:‘poison’,recruitable:true,allySkill:{id:‘bonecr’,name:‘骨砕き’,e:‘💀’,mp:4,type:‘atk_one’,pow:c=>Math.floor(c.atk*4.5+(c.level||1)*8),desc:‘強撃(Lv連動)’,color:’#6b7280’}},{id:‘sw2’,name:‘骸骨狼β’,base:‘🐺’,ov:‘💀’,flt:‘grayscale(.8) contrast(2) brightness(.5)’,gc:’#4b5563’,hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:‘poison’}],[{id:‘sw1’,name:‘骸骨狼’,base:‘🐺’,ov:‘💀’,flt:‘grayscale(.8) contrast(2) brightness(.55)’,gc:’#6b7280’,hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:‘poison’},{id:‘sw3’,name:‘骸骨狼γ’,base:‘🐺’,ov:‘☠️’,flt:‘grayscale(.9) contrast(2.5) brightness(.4)’,gc:’#374151’,hp:48,maxHp:48,atk:16,def:5,mat:7,exp:18,gold:14,si:‘poison’},{id:‘cng_z1’,name:‘鎖ゾンビ’,base:‘🧟’,ov:‘⛓️’,flt:‘grayscale(.5) contrast(1.8) brightness(.5)’,gc:’#4b5563’,hp:60,maxHp:60,atk:20,def:8,mat:5,exp:28,gold:20,si:‘stun’}],[{id:‘sw2’,name:‘骸骨狼β’,base:‘🐺’,ov:‘💀’,flt:‘grayscale(.8) contrast(2) brightness(.5)’,gc:’#4b5563’,hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:‘poison’},{id:‘sw3’,name:‘骸骨狼γ’,base:‘🐺’,ov:‘☠️’,flt:‘grayscale(.9) contrast(2.5) brightness(.4)’,gc:’#374151’,hp:48,maxHp:48,atk:16,def:5,mat:7,exp:18,gold:14,si:‘poison’},{id:‘sw2b’,name:‘骸骨狼δ’,base:‘🐺’,ov:‘💀’,flt:‘grayscale(.7) contrast(2.2) brightness(.45)’,gc:’#374151’,hp:52,maxHp:52,atk:17,def:6,mat:7,exp:19,gold:15,si:‘poison’}]],
+// Ch1
+[[{id:‘rkn’,name:‘腐乱騎士’,base:‘🧟’,ov:‘🗡️’,flt:‘hue-rotate(95deg) saturate(.5) brightness(.65)’,gc:’#84cc16’,hp:90,maxHp:90,atk:25,def:13,mat:10,exp:36,gold:30,si:‘poison’,recruitable:true,allySkill:{id:‘darkswd’,name:‘暗黒剣’,e:‘🗡️’,mp:6,type:‘atk_one’,pow:c=>Math.floor(c.atk*4.8+(c.level||1)*10),desc:‘暗黒の一撃(Lv連動)’,color:’#84cc16’}},{id:‘vsp’,name:‘怨念兵士’,base:‘👻’,ov:‘⚔️’,flt:‘hue-rotate(240deg) brightness(.75) saturate(1.8)’,gc:’#a78bfa’,hp:64,maxHp:64,atk:20,def:9,mat:12,exp:28,gold:22,si:‘stun’}],[{id:‘vsp’,name:‘怨念兵士’,base:‘👻’,ov:‘⚔️’,flt:‘hue-rotate(240deg) brightness(.75) saturate(1.8)’,gc:’#a78bfa’,hp:64,maxHp:64,atk:20,def:9,mat:12,exp:28,gold:22,si:‘stun’},{id:‘vsp2’,name:‘怨念兵士β’,base:‘👻’,ov:‘💀’,flt:‘hue-rotate(220deg) brightness(.7) saturate(1.6)’,gc:’#8b5cf6’,hp:58,maxHp:58,atk:18,def:8,mat:10,exp:24,gold:18,si:‘stun’},{id:‘sw1’,name:‘骸骨狼’,base:‘🐺’,ov:‘💀’,flt:‘grayscale(.8) contrast(2) brightness(.55)’,gc:’#6b7280’,hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:‘poison’}],[{id:‘rkn’,name:‘腐乱騎士’,base:‘🧟’,ov:‘🗡️’,flt:‘hue-rotate(95deg) saturate(.5) brightness(.65)’,gc:’#84cc16’,hp:90,maxHp:90,atk:25,def:13,mat:10,exp:36,gold:30,si:‘poison’},{id:‘rkn2’,name:‘腐乱騎士β’,base:‘🧟’,ov:‘⚔️’,flt:‘hue-rotate(80deg) saturate(.4) brightness(.6)’,gc:’#65a30d’,hp:85,maxHp:85,atk:23,def:12,mat:9,exp:32,gold:26,si:‘poison’},{id:‘vsp2’,name:‘怨念兵士β’,base:‘👻’,ov:‘💀’,flt:‘hue-rotate(220deg) brightness(.7) saturate(1.6)’,gc:’#8b5cf6’,hp:58,maxHp:58,atk:18,def:8,mat:10,exp:24,gold:18,si:‘stun’}]],
+// Ch2
+[[{id:‘cng_z1’,name:‘鎖ゾンビ’,base:‘🧟’,ov:‘⛓️’,flt:‘grayscale(.5) contrast(1.8) brightness(.5)’,gc:’#4b5563’,hp:75,maxHp:75,atk:26,def:12,mat:8,exp:38,gold:28,si:‘stun’},{id:‘cng_z2’,name:‘骨の亡霊’,base:‘💀’,ov:‘⛓️’,flt:‘grayscale(.7) brightness(.55)’,gc:’#374151’,hp:65,maxHp:65,atk:22,def:10,mat:10,exp:32,gold:24,si:‘stun’}],[{id:‘cng_z1’,name:‘鎖ゾンビ’,base:‘🧟’,ov:‘⛓️’,flt:‘grayscale(.5) contrast(1.8) brightness(.5)’,gc:’#4b5563’,hp:75,maxHp:75,atk:26,def:12,mat:8,exp:38,gold:28,si:‘stun’},{id:‘vsp1’,name:‘猛毒蜘蛛’,base:‘🕷️’,ov:‘☠️’,flt:‘hue-rotate(255deg) saturate(2.5) brightness(.65)’,gc:’#a855f7’,hp:80,maxHp:80,atk:28,def:12,mat:18,exp:44,gold:36,si:‘poison’},{id:‘cng_z2’,name:‘骨の亡霊’,base:‘💀’,ov:‘⛓️’,flt:‘grayscale(.7) brightness(.55)’,gc:’#374151’,hp:65,maxHp:65,atk:22,def:10,mat:10,exp:32,gold:24,si:‘stun’}],[{id:‘cng_z2’,name:‘骨の亡霊’,base:‘💀’,ov:‘⛓️’,flt:‘grayscale(.7) brightness(.55)’,gc:’#374151’,hp:65,maxHp:65,atk:22,def:10,mat:10,exp:32,gold:24,si:‘stun’},{id:‘cng_z2b’,name:‘骨の亡霊β’,base:‘💀’,ov:‘💀’,flt:‘grayscale(.9) brightness(.45)’,gc:’#1f2937’,hp:60,maxHp:60,atk:20,def:9,mat:9,exp:28,gold:20,si:‘stun’},{id:‘sw2’,name:‘骸骨狼β’,base:‘🐺’,ov:‘💀’,flt:‘grayscale(.8) contrast(2) brightness(.5)’,gc:’#4b5563’,hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:‘poison’},{id:‘vsp2’,name:‘怨念兵士β’,base:‘👻’,ov:‘💀’,flt:‘hue-rotate(220deg) brightness(.7) saturate(1.6)’,gc:’#8b5cf6’,hp:58,maxHp:58,atk:18,def:8,mat:10,exp:24,gold:18,si:‘stun’}]],
+// Ch3
+[[{id:‘vsp1’,name:‘猛毒蜘蛛’,base:‘🕷️’,ov:‘☠️’,flt:‘hue-rotate(255deg) saturate(2.5) brightness(.65)’,gc:’#a855f7’,hp:80,maxHp:80,atk:28,def:12,mat:18,exp:44,gold:36,si:‘poison’},{id:‘vsp2’,name:‘猛毒蜘蛛β’,base:‘🕷️’,ov:‘☠️’,flt:‘hue-rotate(270deg) saturate(2.2) brightness(.68)’,gc:’#9333ea’,hp:80,maxHp:80,atk:28,def:12,mat:18,exp:44,gold:36,si:‘poison’}],[{id:‘vsp1’,name:‘猛毒蜘蛛’,base:‘🕷️’,ov:‘☠️’,flt:‘hue-rotate(255deg) saturate(2.5) brightness(.65)’,gc:’#a855f7’,hp:80,maxHp:80,atk:28,def:12,mat:18,exp:44,gold:36,si:‘poison’},{id:‘vsp3’,name:‘猛毒蜘蛛γ’,base:‘🕷️’,ov:‘💀’,flt:‘hue-rotate(285deg) saturate(2) brightness(.6)’,gc:’#7c3aed’,hp:72,maxHp:72,atk:25,def:10,mat:16,exp:38,gold:30,si:‘poison’},{id:‘cng_z1’,name:‘鎖ゾンビ’,base:‘🧟’,ov:‘⛓️’,flt:‘grayscale(.5) contrast(1.8) brightness(.5)’,gc:’#4b5563’,hp:75,maxHp:75,atk:26,def:12,mat:8,exp:38,gold:28,si:‘stun’}],[{id:‘vsp2’,name:‘猛毒蜘蛛β’,base:‘🕷️’,ov:‘☠️’,flt:‘hue-rotate(270deg) saturate(2.2) brightness(.68)’,gc:’#9333ea’,hp:80,maxHp:80,atk:28,def:12,mat:18,exp:44,gold:36,si:‘poison’},{id:‘vsp3’,name:‘猛毒蜘蛛γ’,base:‘🕷️’,ov:‘💀’,flt:‘hue-rotate(285deg) saturate(2) brightness(.6)’,gc:’#7c3aed’,hp:72,maxHp:72,atk:25,def:10,mat:16,exp:38,gold:30,si:‘poison’},{id:‘ghr’,name:‘幽霊甲冑’,base:‘👻’,ov:‘⚔️’,flt:‘hue-rotate(195deg) brightness(1.05) saturate(1.5)’,gc:’#60a5fa’,hp:90,maxHp:90,atk:32,def:24,mat:12,exp:50,gold:40,si:‘stun’}]],
+// Ch4
+[[{id:‘ghr’,name:‘幽霊甲冑’,base:‘👻’,ov:‘⚔️’,flt:‘hue-rotate(195deg) brightness(1.05) saturate(1.5)’,gc:’#60a5fa’,hp:110,maxHp:110,atk:35,def:28,mat:14,exp:58,gold:48,si:‘stun’},{id:‘hel’,name:‘地獄犬’,base:‘🐕’,ov:‘🔥’,flt:‘grayscale(.6) brightness(.45) saturate(2.5) hue-rotate(345deg)’,gc:’#dc2626’,hp:95,maxHp:95,atk:38,def:14,mat:15,exp:52,gold:44,si:‘burn’,recruitable:true,allySkill:{id:‘firebreath’,name:‘炎の咆哮’,e:‘🔥’,mp:8,type:‘atk_all’,pow:c=>Math.floor(c.atk*3.5+(c.level||1)*10),desc:‘炎全体(Lv連動)’,color:’#ef4444’}}],[{id:‘hel’,name:‘地獄犬’,base:‘🐕’,ov:‘🔥’,flt:‘grayscale(.6) brightness(.45) saturate(2.5) hue-rotate(345deg)’,gc:’#dc2626’,hp:95,maxHp:95,atk:38,def:14,mat:15,exp:52,gold:44,si:‘burn’},{id:‘hel2’,name:‘地獄犬β’,base:‘🐕’,ov:‘🔥’,flt:‘grayscale(.7) brightness(.4) saturate(2) hue-rotate(340deg)’,gc:’#b91c1c’,hp:85,maxHp:85,atk:34,def:12,mat:12,exp:46,gold:38,si:‘burn’},{id:‘vsp1’,name:‘猛毒蜘蛛’,base:‘🕷️’,ov:‘☠️’,flt:‘hue-rotate(255deg) saturate(2.5) brightness(.65)’,gc:’#a855f7’,hp:80,maxHp:80,atk:28,def:12,mat:18,exp:44,gold:36,si:‘poison’}],[{id:‘ghr’,name:‘幽霊甲冑’,base:‘👻’,ov:‘⚔️’,flt:‘hue-rotate(195deg) brightness(1.05) saturate(1.5)’,gc:’#60a5fa’,hp:110,maxHp:110,atk:35,def:28,mat:14,exp:58,gold:48,si:‘stun’},{id:‘ghr2’,name:‘幽霊甲冑β’,base:‘👻’,ov:‘⚔️’,flt:‘hue-rotate(180deg) brightness(.95) saturate(1.3)’,gc:’#3b82f6’,hp:100,maxHp:100,atk:32,def:25,mat:12,exp:52,gold:42,si:‘stun’},{id:‘hel2’,name:‘地獄犬β’,base:‘🐕’,ov:‘🔥’,flt:‘grayscale(.7) brightness(.4) saturate(2) hue-rotate(340deg)’,gc:’#b91c1c’,hp:85,maxHp:85,atk:34,def:12,mat:12,exp:46,gold:38,si:‘burn’}]],
+// Ch5
+[[{id:‘luc_z1’,name:‘魔族兵士’,base:‘👹’,ov:‘🗡️’,flt:‘hue-rotate(245deg) saturate(2) brightness(.6)’,gc:’#6366f1’,hp:105,maxHp:105,atk:44,def:20,mat:22,exp:62,gold:48,si:‘poison’},{id:‘luc_z2’,name:‘冥界魔導士’,base:‘🧙’,ov:‘💜’,flt:‘hue-rotate(250deg) saturate(2.2) brightness(.65)’,gc:’#7c3aed’,hp:88,maxHp:88,atk:32,def:14,mat:38,exp:58,gold:44,si:‘poison’}],[{id:‘luc_z1’,name:‘魔族兵士’,base:‘👹’,ov:‘🗡️’,flt:‘hue-rotate(245deg) saturate(2) brightness(.6)’,gc:’#6366f1’,hp:105,maxHp:105,atk:44,def:20,mat:22,exp:62,gold:48,si:‘poison’},{id:‘luc_z1b’,name:‘魔族兵士β’,base:‘👹’,ov:‘⚔️’,flt:‘hue-rotate(260deg) saturate(1.8) brightness(.55)’,gc:’#4f46e5’,hp:98,maxHp:98,atk:42,def:18,mat:20,exp:58,gold:44,si:‘poison’},{id:‘ghr’,name:‘幽霊甲冑’,base:‘👻’,ov:‘⚔️’,flt:‘hue-rotate(195deg) brightness(1.05) saturate(1.5)’,gc:’#60a5fa’,hp:100,maxHp:100,atk:33,def:26,mat:13,exp:54,gold:44,si:‘stun’}],[{id:‘luc_z2’,name:‘冥界魔導士’,base:‘🧙’,ov:‘💜’,flt:‘hue-rotate(250deg) saturate(2.2) brightness(.65)’,gc:’#7c3aed’,hp:88,maxHp:88,atk:32,def:14,mat:38,exp:58,gold:44,si:‘poison’},{id:‘luc_z2b’,name:‘冥界魔導士β’,base:‘🧙’,ov:‘⚡’,flt:‘hue-rotate(265deg) saturate(2) brightness(.6)’,gc:’#6d28d9’,hp:82,maxHp:82,atk:30,def:12,mat:36,exp:54,gold:40,si:‘poison’},{id:‘hel’,name:‘地獄犬’,base:‘🐕’,ov:‘🔥’,flt:‘grayscale(.6) brightness(.45) saturate(2.5) hue-rotate(345deg)’,gc:’#dc2626’,hp:95,maxHp:95,atk:38,def:14,mat:15,exp:52,gold:44,si:‘burn’}]],
+// Ch6
+[[{id:‘bb1’,name:‘血翼蝙蝠’,base:‘🦇’,ov:‘🩸’,flt:‘hue-rotate(335deg) saturate(3.2) brightness(.65)’,gc:’#dc2626’,hp:92,maxHp:92,atk:35,def:15,mat:22,exp:55,gold:46,si:‘poison’},{id:‘bb2’,name:‘血翼蝙蝠β’,base:‘🦇’,ov:‘🩸’,flt:‘hue-rotate(320deg) saturate(3) brightness(.68)’,gc:’#b91c1c’,hp:92,maxHp:92,atk:35,def:15,mat:22,exp:55,gold:46,si:‘poison’}],[{id:‘bb1’,name:‘血翼蝙蝠’,base:‘🦇’,ov:‘🩸’,flt:‘hue-rotate(335deg) saturate(3.2) brightness(.65)’,gc:’#dc2626’,hp:92,maxHp:92,atk:35,def:15,mat:22,exp:55,gold:46,si:‘poison’},{id:‘spim_knight’,name:‘呪文無効の魔鎧騎士’,base:‘⚔️’,ov:‘🔰’,flt:‘hue-rotate(230deg) saturate(2.5) brightness(.7)’,gc:’#818cf8’,hp:140,maxHp:140,atk:50,def:55,mat:5,exp:75,gold:60,spellImmune:true,si:‘stun’},{id:‘luc_z2’,name:‘冥界魔導士’,base:‘🧙’,ov:‘💜’,flt:‘hue-rotate(250deg) saturate(2.2) brightness(.65)’,gc:’#7c3aed’,hp:88,maxHp:88,atk:32,def:14,mat:38,exp:58,gold:44,si:‘poison’}],[{id:‘spim_knight’,name:‘呪文無効の魔鎧騎士’,base:‘⚔️’,ov:‘🔰’,flt:‘hue-rotate(230deg) saturate(2.5) brightness(.7)’,gc:’#818cf8’,hp:140,maxHp:140,atk:50,def:55,mat:5,exp:75,gold:60,spellImmune:true,si:‘stun’},{id:‘bb2’,name:‘血翼蝙蝠β’,base:‘🦇’,ov:‘🩸’,flt:‘hue-rotate(320deg) saturate(3) brightness(.68)’,gc:’#b91c1c’,hp:92,maxHp:92,atk:35,def:15,mat:22,exp:55,gold:46,si:‘poison’},{id:‘bb3’,name:‘血翼蝙蝠γ’,base:‘🦇’,ov:‘🩸’,flt:‘hue-rotate(310deg) saturate(2.8) brightness(.62)’,gc:’#991b1b’,hp:88,maxHp:88,atk:33,def:13,mat:20,exp:50,gold:42,si:‘poison’}]],
+// Ch7
+[[{id:‘thh’,name:‘雷鷹ライガード’,base:‘🦅’,ov:‘⚡’,flt:‘hue-rotate(45deg) saturate(2.2) brightness(1.2)’,gc:’#fbbf24’,hp:128,maxHp:128,atk:44,def:20,mat:35,exp:72,gold:60,si:‘stun’,recruitable:true,allySkill:{id:‘thunder’,name:‘雷撃’,e:‘⚡’,mp:10,type:‘atk_all’,pow:c=>Math.floor(c.mat*5.0+c.atk*1.5+(c.level||1)*12),desc:‘雷全体(Lv連動)’,color:’#fbbf24’}},{id:‘wkn’,name:‘風霊騎士’,base:‘👹’,ov:‘💨’,flt:‘hue-rotate(175deg) brightness(.78) saturate(1.8)’,gc:’#38bdf8’,hp:115,maxHp:115,atk:40,def:25,mat:28,exp:65,gold:55,si:‘stun’}],[{id:‘berserk_oni’,name:‘超戦士オーガ’,base:‘👹’,ov:‘💢’,flt:‘hue-rotate(0deg) saturate(3) brightness(.8)’,gc:’#ef4444’,hp:100,maxHp:100,atk:75,def:12,mat:5,exp:68,gold:55,si:‘stun’},{id:‘berserk_oni2’,name:‘超戦士オーガβ’,base:‘👹’,ov:‘💢’,flt:‘hue-rotate(10deg) saturate(2.8) brightness(.75)’,gc:’#dc2626’,hp:95,maxHp:95,atk:70,def:10,mat:5,exp:62,gold:50,si:‘stun’},{id:‘wkn’,name:‘風霊騎士’,base:‘👹’,ov:‘💨’,flt:‘hue-rotate(175deg) brightness(.78) saturate(1.8)’,gc:’#38bdf8’,hp:115,maxHp:115,atk:40,def:25,mat:28,exp:65,gold:55,si:‘stun’}],[{id:‘thh’,name:‘雷鷹ライガード’,base:‘🦅’,ov:‘⚡’,flt:‘hue-rotate(45deg) saturate(2.2) brightness(1.2)’,gc:’#fbbf24’,hp:128,maxHp:128,atk:44,def:20,mat:35,exp:72,gold:60,si:‘stun’},{id:‘spim_knight’,name:‘呪文無効の魔鎧騎士’,base:‘⚔️’,ov:‘🔰’,flt:‘hue-rotate(230deg) saturate(2.5) brightness(.7)’,gc:’#818cf8’,hp:140,maxHp:140,atk:50,def:55,mat:5,exp:75,gold:60,spellImmune:true,si:‘stun’},{id:‘berserk_oni’,name:‘超戦士オーガ’,base:‘👹’,ov:‘💢’,flt:‘hue-rotate(0deg) saturate(3) brightness(.8)’,gc:’#ef4444’,hp:100,maxHp:100,atk:75,def:12,mat:5,exp:68,gold:55,si:‘stun’}]],
+// Ch8
+[[{id:‘gar_z1’,name:‘天魔兵’,base:‘👿’,ov:‘⚡’,flt:‘hue-rotate(210deg) saturate(2.5) brightness(.8)’,gc:’#818cf8’,hp:150,maxHp:150,atk:60,def:30,mat:40,exp:90,gold:72,si:‘stun’},{id:‘gar_z2’,name:‘嵐の鎧武者’,base:‘⚔️’,ov:‘💨’,flt:‘hue-rotate(200deg) saturate(2.2) brightness(.75)’,gc:’#6366f1’,hp:135,maxHp:135,atk:55,def:28,mat:32,exp:82,gold:65,si:‘stun’}],[{id:‘gar_z1’,name:‘天魔兵’,base:‘👿’,ov:‘⚡’,flt:‘hue-rotate(210deg) saturate(2.5) brightness(.8)’,gc:’#818cf8’,hp:150,maxHp:150,atk:60,def:30,mat:40,exp:90,gold:72,si:‘stun’},{id:‘gar_z1b’,name:‘天魔兵β’,base:‘👿’,ov:‘⚡’,flt:‘hue-rotate(220deg) saturate(2.3) brightness(.75)’,gc:’#6366f1’,hp:140,maxHp:140,atk:58,def:28,mat:38,exp:84,gold:68,si:‘stun’},{id:‘berserk_oni’,name:‘超戦士オーガ’,base:‘👹’,ov:‘💢’,flt:‘hue-rotate(0deg) saturate(3) brightness(.8)’,gc:’#ef4444’,hp:100,maxHp:100,atk:75,def:12,mat:5,exp:68,gold:55,si:‘stun’}],[{id:‘gar_z2’,name:‘嵐の鎧武者’,base:‘⚔️’,ov:‘💨’,flt:‘hue-rotate(200deg) saturate(2.2) brightness(.75)’,gc:’#6366f1’,hp:135,maxHp:135,atk:55,def:28,mat:32,exp:82,gold:65,si:‘stun’},{id:‘gar_z2b’,name:‘嵐の鎧武者β’,base:‘⚔️’,ov:‘💨’,flt:‘hue-rotate(190deg) saturate(2) brightness(.7)’,gc:’#4f46e5’,hp:125,maxHp:125,atk:52,def:26,mat:30,exp:76,gold:60,si:‘stun’},{id:‘spim_knight’,name:‘呪文無効の魔鎧騎士’,base:‘⚔️’,ov:‘🔰’,flt:‘hue-rotate(230deg) saturate(2.5) brightness(.7)’,gc:’#818cf8’,hp:140,maxHp:140,atk:50,def:55,mat:5,exp:75,gold:60,spellImmune:true,si:‘stun’}]],
+// Ch9
+[[{id:‘angel1’,name:‘堕天使アゼル’,base:‘👼’,ov:‘😈’,flt:‘hue-rotate(350deg) saturate(3.5) brightness(.7) contrast(1.5)’,gc:’#dc2626’,hp:280,maxHp:280,atk:85,def:40,mat:60,exp:180,gold:130,si:‘burn’},{id:‘angel2’,name:‘堕天使ベリアル’,base:‘👼’,ov:‘🔥’,flt:‘hue-rotate(340deg) saturate(3) brightness(.65) contrast(1.4)’,gc:’#b91c1c’,hp:260,maxHp:260,atk:80,def:36,mat:55,exp:165,gold:115,si:‘burn’}],[{id:‘angel1’,name:‘堕天使アゼル’,base:‘👼’,ov:‘😈’,flt:‘hue-rotate(350deg) saturate(3.5) brightness(.7) contrast(1.5)’,gc:’#dc2626’,hp:280,maxHp:280,atk:85,def:40,mat:60,exp:180,gold:130,si:‘burn’},{id:‘gar_z1’,name:‘天魔兵’,base:‘👿’,ov:‘⚡’,flt:‘hue-rotate(210deg) saturate(2.5) brightness(.8)’,gc:’#818cf8’,hp:150,maxHp:150,atk:60,def:30,mat:40,exp:90,gold:72,si:‘stun’},{id:‘gar_z2’,name:‘嵐の鎧武者’,base:‘⚔️’,ov:‘💨’,flt:‘hue-rotate(200deg) saturate(2.2) brightness(.75)’,gc:’#6366f1’,hp:135,maxHp:135,atk:55,def:28,mat:32,exp:82,gold:65,si:‘stun’}],[{id:‘angel2’,name:‘堕天使ベリアル’,base:‘👼’,ov:‘🔥’,flt:‘hue-rotate(340deg) saturate(3) brightness(.65) contrast(1.4)’,gc:’#b91c1c’,hp:260,maxHp:260,atk:80,def:36,mat:55,exp:165,gold:115,si:‘burn’},{id:‘angel1b’,name:‘堕天使アゼルβ’,base:‘👼’,ov:‘😈’,flt:‘hue-rotate(355deg) saturate(3.2) brightness(.65) contrast(1.4)’,gc:’#b91c1c’,hp:250,maxHp:250,atk:82,def:38,mat:58,exp:170,gold:120,si:‘burn’},{id:‘berserk_oni’,name:‘超戦士オーガ’,base:‘👹’,ov:‘💢’,flt:‘hue-rotate(0deg) saturate(3) brightness(.8)’,gc:’#ef4444’,hp:100,maxHp:100,atk:75,def:12,mat:5,exp:68,gold:55,si:‘stun’}]],
+];
+const MOB_ENC=MOB_ENC_POOL.map(pool=>pool[0]);
+
+const RARE_ENCOUNTERS=[
+// メタルスライム（超高EXP・逃げやすい・物理1ダメ）
+[{id:‘mslime’,name:‘メタルスライム’,base:‘🫧’,ov:‘⚔️’,flt:‘grayscale(.05) saturate(.5) brightness(2.0) contrast(1.5)’,gc:’#94a3b8’,hp:4,maxHp:4,atk:5,def:999,mat:1,exp:1200,gold:250,si:null,rare:true,metalSlime:true}],
+// はぐれメタル（超超高EXP・さらに逃げやすい）
+[{id:‘hagure’,name:‘はぐれメタル’,base:‘🫧’,ov:‘👑’,flt:‘hue-rotate(180deg) saturate(.3) brightness(2.2) contrast(1.6)’,gc:’#7dd3fc’,hp:6,maxHp:6,atk:3,def:999,mat:1,exp:5000,gold:600,si:null,rare:true,metalSlime:true,hagure:true}],
+// ゴールドスライム
+[{id:‘gslime’,name:‘ゴールドスライム’,base:‘🟡’,ov:‘💰’,flt:‘hue-rotate(40deg) saturate(5) brightness(1.4) contrast(1.3)’,gc:’#fbbf24’,hp:30,maxHp:30,atk:2,def:2,mat:1,exp:5,gold:1000,si:null,rare:true}],
+// シルバースライム
+[{id:‘sslime’,name:‘シルバースライム’,base:‘⚪’,ov:‘✨’,flt:‘grayscale(.2) saturate(2) brightness(1.5)’,gc:’#e2e8f0’,hp:50,maxHp:50,atk:5,def:10,mat:3,exp:200,gold:300,si:null,rare:true}],
+// ゲンガー: 通常は弱いが会心で10000ダメージ
+[{id:‘gengar’,name:‘ゲンガー’,base:‘👾’,ov:‘😁’,flt:‘hue-rotate(255deg) saturate(4.5) brightness(.42) contrast(2.2) drop-shadow(0 0 8px #7c3aed)’,gc:’#7c3aed’,hp:80,maxHp:80,atk:8,def:5,mat:12,exp:120,gold:200,si:‘stun’,rare:true,gengarCrit:true}],
+[{id:‘gengar’,name:‘ゲンガー’,base:‘👾’,ov:‘😁’,flt:‘hue-rotate(255deg) saturate(4.5) brightness(.42) contrast(2.2) drop-shadow(0 0 8px #7c3aed)’,gc:’#7c3aed’,hp:80,maxHp:80,atk:8,def:5,mat:12,exp:120,gold:200,si:‘stun’,rare:true,gengarCrit:true}],
+[{id:‘gengar’,name:‘ゲンガー’,base:‘👾’,ov:‘😁’,flt:‘hue-rotate(255deg) saturate(4.5) brightness(.42) contrast(2.2) drop-shadow(0 0 8px #7c3aed)’,gc:’#7c3aed’,hp:80,maxHp:80,atk:8,def:5,mat:12,exp:120,gold:200,si:‘stun’,rare:true,gengarCrit:true}],
+// 謎の青い小型車（ネイビーブルーのミステリアスな車）
+[{id:‘mini_car’,name:‘謎の青い小型車’,base:‘🚗’,ov:‘💨’,flt:‘hue-rotate(215deg) saturate(4.0) brightness(.48) contrast(2.0) drop-shadow(0 0 6px #1d4ed8)’,gc:’#3b82f6’,hp:220,maxHp:220,atk:55,def:40,mat:10,exp:280,gold:350,si:‘stun’,rare:true,spellImmune:true,    phases:[{hp:.4,msg:‘謎の青い小型車がターボ全開！突進してくる！’,atkBonus:30,aoe:true}]}],
+// ソッチャンゲンガー（お子さんの絵！紫のとげとげ怪物・強敵）
+[{id:‘sotchan’,name:‘ソッチャンゲンガー’,base:‘👾’,ov:‘💜’,flt:‘hue-rotate(275deg) saturate(8) brightness(.32) contrast(3.5) drop-shadow(0 0 10px #7c3aed) drop-shadow(0 0 22px #a855f7)’,gc:’#a855f7’,hp:450,maxHp:450,atk:85,def:40,mat:95,exp:900,gold:700,si:‘stun’,rare:true,    phases:[{hp:.5,msg:‘ソッチャンゲンガーが紫のオーラを全開放！！とげとげが輝く！！’,atkBonus:50,aoe:true}]}],
+[{id:‘sotchan’,name:‘ソッチャンゲンガー’,base:‘👾’,ov:‘💜’,flt:‘hue-rotate(275deg) saturate(8) brightness(.32) contrast(3.5) drop-shadow(0 0 10px #7c3aed) drop-shadow(0 0 22px #a855f7)’,gc:’#a855f7’,hp:450,maxHp:450,atk:85,def:40,mat:95,exp:900,gold:700,si:‘stun’,rare:true,    phases:[{hp:.5,msg:‘ソッチャンゲンガーが紫のオーラを全開放！！とげとげが輝く！！’,atkBonus:50,aoe:true}]}],
+// 神獣ルギア: 最強の呪文使い
+[{id:‘lugia’,name:‘神獣ルギア’,base:‘🦅’,ov:‘✨’,flt:‘hue-rotate(200deg) saturate(3.5) brightness(1.3) contrast(1.2)’,gc:’#c4b5fd’,hp:1800,maxHp:1800,atk:55,def:80,mat:280,exp:1500,gold:2000,si:‘burn’,rare:true,boss:true,big:true,spellImmune:false,magicResist:0,divineSpellCaster:true,
+phases:[{hp:.65,msg:‘ルギアが神秘の翼を広げた！魔法力が爆発！’,atkBonus:0},{hp:.3,msg:‘ルギアが真の神力を解放！！’,atkBonus:30,aoe:true}]}],
+// Ch10（idx=10）: 天空編 第11章 雷霆将軍テンペスト
+[{id:‘tempest’,name:‘雷霆将軍テンペスト’,base:‘⚡’,ov:‘👑’,flt:‘hue-rotate(50deg) saturate(4) brightness(1.3) contrast(1.4)’,gc:’#fbbf24’,hp:2000,maxHp:2000,atk:180,def:90,mat:160,exp:3000,gold:2500,si:‘stun’,big:true,boss:true,phases:[{hp:.6,msg:‘テンペストが雷の衣をまとった！’,atkBonus:60},{hp:.3,msg:‘テンペスト最終形態！雷神解放！’,atkBonus:100,aoe:true}]}],
+// Ch11（idx=11）: 天空城 中ボス
+[{id:‘sky_knight’,name:‘天空騎士団長’,base:‘⚔️’,ov:‘☁️’,flt:‘hue-rotate(200deg) saturate(3) brightness(1.2)’,gc:’#93c5fd’,hp:2500,maxHp:2500,atk:210,def:120,mat:140,exp:3500,gold:3000,si:‘stun’,big:true,boss:true,phases:[{hp:.5,msg:‘天空騎士団長が聖剣を解放！’,atkBonus:80,aoe:true}]}],
+// Ch12（idx=12）: 雲海迷宮 ボス
+[{id:‘illusion’,name:‘幻影の魔術師’,base:‘🌀’,ov:‘💫’,flt:‘hue-rotate(270deg) saturate(5) brightness(.8)’,gc:’#c4b5fd’,hp:3000,maxHp:3000,atk:160,def:80,mat:280,exp:4000,gold:3500,si:‘stun’,big:true,boss:true,divineSpellCaster:true,phases:[{hp:.55,msg:‘幻影が現実を侵食！全体幻術攻撃！’,atkBonus:70,aoe:true},{hp:.25,msg:‘幻影の最終奥義！虚無空間！’,atkBonus:120,aoe:true,tripleAttack:true}]}],
+// Ch13（idx=13）: 雷霆神殿 ボス
+[{id:‘thunder_god’,name:‘雷霆神ベルゼクス’,base:‘🌩️’,ov:‘⚡’,flt:‘hue-rotate(40deg) saturate(6) brightness(1.4)’,gc:’#fde68a’,hp:3800,maxHp:3800,atk:250,def:110,mat:220,exp:5000,gold:4500,si:‘stun’,big:true,boss:true,phases:[{hp:.65,msg:‘ベルゼクスが天雷を解放！’,atkBonus:90},{hp:.35,msg:’「天地崩雷」！全力解放！’,atkBonus:150,aoe:true}]}],
+// Ch14（idx=14）: 天空城 中枢 ボス  
+[{id:‘void_mage’,name:‘呪術師ヴォイド’,base:‘🌑’,ov:‘💀’,flt:‘brightness(.2) contrast(4) hue-rotate(280deg)’,gc:’#7c3aed’,hp:4500,maxHp:4500,atk:200,def:100,mat:350,exp:6000,gold:5000,si:‘stun’,big:true,boss:true,spellImmune:false,divineSpellCaster:true,phases:[{hp:.7,msg:‘ヴォイドが次元を歪めた！’,atkBonus:80,aoe:true},{hp:.4,msg:’「次元崩壊」発動！存在が揺らぐ…’,atkBonus:140,aoe:true},{hp:.15,msg:‘ヴォイド最終奥義「無限虚無」！！’,atkBonus:200,aoe:true,tripleAttack:true}]}],
+// Ch15（idx=15）: 四天王 炎王
+[{id:‘flame_king’,name:‘炎の四天王 イグニス’,base:‘🔥’,ov:‘👑’,flt:‘hue-rotate(15deg) saturate(5) brightness(.9)’,gc:’#ef4444’,hp:5500,maxHp:5500,atk:300,def:130,mat:280,exp:7500,gold:6000,si:‘burn’,big:true,boss:true,phases:[{hp:.6,msg:‘イグニスが炎の王冠を解放！’,atkBonus:110,aoe:true},{hp:.3,msg:’「天焔崩滅」！世界が燃える！’,atkBonus:180,aoe:true}]}],
+// Ch16（idx=16）: 四天王 氷王
+[{id:‘ice_king’,name:‘氷の四天王 グラシア’,base:‘❄️’,ov:‘👑’,flt:‘hue-rotate(200deg) saturate(4) brightness(1.3)’,gc:’#7dd3fc’,hp:6000,maxHp:6000,atk:280,def:160,mat:300,exp:8000,gold:6500,si:‘stun’,big:true,boss:true,divineSpellCaster:true,phases:[{hp:.6,msg:‘グラシアが絶対零度を解放！’,atkBonus:100,aoe:true},{hp:.3,msg:’「凍天消滅」！時が止まる！’,atkBonus:160,aoe:true,tripleAttack:true}]}],
+// Ch17（idx=17）: 魔王ゼロス第一形態
+[{id:‘zeros’,name:‘魔王ゼロス’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.25) contrast(5) hue-rotate(300deg) saturate(3)’,gc:’#a855f7’,hp:8000,maxHp:8000,atk:380,def:180,mat:420,exp:12000,gold:9000,si:‘stun’,big:true,boss:true,divineSpellCaster:true,phases:[{hp:.7,msg:‘ゼロスが魔力の封印を解いた！’,atkBonus:120,aoe:true},{hp:.45,msg:‘ゼロス第二段階！宇宙の力が覚醒！’,atkBonus:200,aoe:true},{hp:.2,msg:’「魔王解放」！ゼロスが真の力を！！’,atkBonus:300,aoe:true,tripleAttack:true}]}],
+// Ch18（idx=18）: ゼロス真の姿
+[{id:‘zeros_true’,name:‘真魔王ゼロス’,base:‘🌑’,ov:‘⭐’,flt:‘brightness(.15) contrast(6) hue-rotate(260deg) saturate(5) drop-shadow(0 0 20px #7c3aed)’,gc:’#c084fc’,hp:12000,maxHp:12000,atk:500,def:220,mat:580,exp:18000,gold:14000,si:‘stun’,big:true,boss:true,divineSpellCaster:true,phases:[{hp:.75,msg:‘ゼロスの真の姿が解放！時空が歪む！！’,atkBonus:150,aoe:true},{hp:.5,msg:’「宇宙滅亡波」！全員に大ダメージ！’,atkBonus:250,aoe:true},{hp:.25,msg:‘ゼロス完全体への移行！無限の力！！’,atkBonus:380,aoe:true,tripleAttack:true}]}],
+// Ch19（idx=19）: 最終決戦 ゼロス完全体
+[{id:‘zeros_final’,name:‘完全体魔王ゼロス’,base:‘⭐’,ov:‘💥’,flt:‘brightness(.1) contrast(8) hue-rotate(240deg) saturate(8) drop-shadow(0 0 30px #c084fc) drop-shadow(0 0 60px #7c3aed)’,gc:’#e879f9’,hp:20000,maxHp:20000,atk:680,def:280,mat:750,exp:30000,gold:20000,si:‘stun’,big:true,boss:true,final:true,divineSpellCaster:true,phases:[{hp:.8,msg:‘ゼロス完全体！宇宙の終焉が始まる！’,atkBonus:200,aoe:true},{hp:.55,msg:’「時空崩壊」！現実が消えていく！！’,atkBonus:350,aoe:true},{hp:.3,msg:’「宇宙消滅の叫び」！！最終奥義！！’,atkBonus:500,aoe:true,tripleAttack:true},{hp:.1,msg:’「GAME OVER」！！ゼロスが限界突破！！！’,atkBonus:700,aoe:true,tripleAttack:true}]}],
+];
+
+const ENC=[
+// Ch0: 骸骨狼×3
+[{id:‘sw1’,name:‘骸骨狼’,base:‘🐺’,ov:‘💀’,flt:‘grayscale(.8) contrast(2) brightness(.55)’,gc:’#6b7280’,hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:‘poison’,recruitable:true,allySkill:{id:‘bonecr’,name:‘骨砕き’,e:‘💀’,mp:4,type:‘atk_one’,pow:c=>Math.floor(c.atk*4.5+(c.level||1)*8),desc:‘強撃(Lv連動)’,color:’#6b7280’}},{id:‘sw2’,name:‘骸骨狼β’,base:‘🐺’,ov:‘💀’,flt:‘grayscale(.8) contrast(2) brightness(.5)’,gc:’#4b5563’,hp:55,maxHp:55,atk:18,def:6,mat:8,exp:20,gold:16,si:‘poison’},{id:‘sw3’,name:‘骸骨狼γ’,base:‘🐺’,ov:‘☠️’,flt:‘grayscale(.9) contrast(2.5) brightness(.4)’,gc:’#374151’,hp:48,maxHp:48,atk:16,def:5,mat:7,exp:18,gold:14,si:‘poison’}],
+// Ch1: 腐乱騎士+怨念兵士×2
+[{id:‘rkn’,name:‘腐乱騎士’,base:‘🧟’,ov:‘🗡️’,flt:‘hue-rotate(95deg) saturate(.5) brightness(.65)’,gc:’#84cc16’,hp:90,maxHp:90,atk:25,def:13,mat:10,exp:36,gold:30,si:‘poison’,recruitable:true,allySkill:{id:‘darkswd’,name:‘暗黒剣’,e:‘🗡️’,mp:6,type:‘atk_one’,pow:c=>Math.floor(c.atk*4.8+(c.level||1)*10),desc:‘暗黒の一撃(Lv連動)’,color:’#84cc16’}},{id:‘vsp’,name:‘怨念兵士’,base:‘👻’,ov:‘⚔️’,flt:‘hue-rotate(240deg) brightness(.75) saturate(1.8)’,gc:’#a78bfa’,hp:64,maxHp:64,atk:20,def:9,mat:12,exp:28,gold:22,si:‘stun’},{id:‘vsp2’,name:‘怨念兵士β’,base:‘👻’,ov:‘💀’,flt:‘hue-rotate(220deg) brightness(.7) saturate(1.6)’,gc:’#8b5cf6’,hp:58,maxHp:58,atk:18,def:8,mat:10,exp:24,gold:18,si:‘stun’}],
+// Ch2: 鉄鎖巨人(ボス)+骸骨ザコ×2
+[{id:‘cng’,name:‘鉄鎖巨人’,base:‘🦴’,ov:‘⛓️’,flt:‘brightness(.45) contrast(2.2) saturate(.2)’,gc:’#374151’,hp:160,maxHp:160,atk:34,def:20,mat:10,exp:68,gold:55,si:‘stun’,big:true,boss:true,spellImmune:true,phases:[{hp:.5,msg:‘鉄鎖巨人の怒りが爆発！’,atkBonus:12,aoe:true}]},{id:‘cng_z1’,name:‘鎖ゾンビ’,base:‘🧟’,ov:‘⛓️’,flt:‘grayscale(.5) contrast(1.8) brightness(.5)’,gc:’#4b5563’,hp:55,maxHp:55,atk:20,def:8,mat:5,exp:25,gold:18,si:‘stun’},{id:‘cng_z2’,name:‘鎖ゾンビβ’,base:‘🧟’,ov:‘⛓️’,flt:‘grayscale(.6) contrast(1.6) brightness(.45)’,gc:’#374151’,hp:50,maxHp:50,atk:18,def:7,mat:5,exp:22,gold:16,si:‘stun’}],
+// Ch3: 猛毒蜘蛛×3
+[{id:‘vsp1’,name:‘猛毒蜘蛛’,base:‘🕷️’,ov:‘☠️’,flt:‘hue-rotate(255deg) saturate(2.5) brightness(.65)’,gc:’#a855f7’,hp:80,maxHp:80,atk:28,def:12,mat:18,exp:44,gold:36,si:‘poison’},{id:‘vsp2’,name:‘猛毒蜘蛛β’,base:‘🕷️’,ov:‘☠️’,flt:‘hue-rotate(270deg) saturate(2.2) brightness(.68)’,gc:’#9333ea’,hp:80,maxHp:80,atk:28,def:12,mat:18,exp:44,gold:36,si:‘poison’},{id:‘vsp3’,name:‘猛毒蜘蛛γ’,base:‘🕷️’,ov:‘💀’,flt:‘hue-rotate(285deg) saturate(2) brightness(.6)’,gc:’#7c3aed’,hp:72,maxHp:72,atk:25,def:10,mat:16,exp:38,gold:30,si:‘poison’}],
+// Ch4: 幽霊甲冑+地獄犬×2
+[{id:‘ghr’,name:‘幽霊甲冑’,base:‘👻’,ov:‘⚔️’,flt:‘hue-rotate(195deg) brightness(1.05) saturate(1.5)’,gc:’#60a5fa’,hp:110,maxHp:110,atk:35,def:28,mat:14,exp:58,gold:48,si:‘stun’},{id:‘hel’,name:‘地獄犬’,base:‘🐕’,ov:‘🔥’,flt:‘grayscale(.6) brightness(.45) saturate(2.5) hue-rotate(345deg)’,gc:’#dc2626’,hp:95,maxHp:95,atk:38,def:14,mat:15,exp:52,gold:44,si:‘burn’,recruitable:true,allySkill:{id:‘firebreath’,name:‘炎の咆哮’,e:‘🔥’,mp:8,type:‘atk_all’,pow:c=>Math.floor(c.atk*3.5+(c.level||1)*10),desc:‘炎全体(Lv連動)’,color:’#ef4444’}},{id:‘hel2’,name:‘地獄犬β’,base:‘🐕’,ov:‘🔥’,flt:‘grayscale(.7) brightness(.4) saturate(2) hue-rotate(340deg)’,gc:’#b91c1c’,hp:85,maxHp:85,atk:34,def:12,mat:12,exp:46,gold:38,si:‘burn’}],
+// Ch5: ルシファス(ボス)+魔族兵士×2
+[{id:‘luc’,name:‘冥界公爵ルシファス’,base:‘💀’,ov:‘👑’,flt:‘brightness(.3) contrast(3.2) hue-rotate(235deg)’,gc:’#4f46e5’,hp:650,maxHp:650,atk:58,def:30,mat:45,exp:220,gold:175,si:‘poison’,big:true,boss:true,phases:[{hp:.55,msg:‘ルシファスの冥界魔法が解放！’,atkBonus:15},{hp:.25,msg:‘ルシファスの最終形態！’,atkBonus:25,aoe:true}]},{id:‘luc_z1’,name:‘魔族兵士’,base:‘👹’,ov:‘🗡️’,flt:‘hue-rotate(245deg) saturate(2) brightness(.6)’,gc:’#6366f1’,hp:95,maxHp:95,atk:40,def:18,mat:20,exp:55,gold:42,si:‘poison’},{id:‘luc_z2’,name:‘魔族兵士β’,base:‘👹’,ov:‘⚔️’,flt:‘hue-rotate(230deg) saturate(1.8) brightness(.55)’,gc:’#4f46e5’,hp:90,maxHp:90,atk:38,def:16,mat:18,exp:50,gold:38,si:‘poison’}],
+// Ch6: 血翼蝙蝠×2 + 呪文無効の魔鎧騎士
+[{id:‘bb1’,name:‘血翼蝙蝠’,base:‘🦇’,ov:‘🩸’,flt:‘hue-rotate(335deg) saturate(3.2) brightness(.65)’,gc:’#dc2626’,hp:92,maxHp:92,atk:35,def:15,mat:22,exp:55,gold:46,si:‘poison’},{id:‘bb2’,name:‘血翼蝙蝠β’,base:‘🦇’,ov:‘🩸’,flt:‘hue-rotate(320deg) saturate(3) brightness(.68)’,gc:’#b91c1c’,hp:92,maxHp:92,atk:35,def:15,mat:22,exp:55,gold:46,si:‘poison’},{id:‘spim_knight’,name:‘呪文無効の魔鎧騎士’,base:‘⚔️’,ov:‘🔰’,flt:‘hue-rotate(230deg) saturate(2.5) brightness(.7)’,gc:’#818cf8’,hp:140,maxHp:140,atk:50,def:55,mat:5,exp:75,gold:60,spellImmune:true,si:‘stun’}],
+// Ch7: 雷鷹+超戦士（高ATK）+風霊騎士
+[{id:‘thh’,name:‘雷鷹ライガード’,base:‘🦅’,ov:‘⚡’,flt:‘hue-rotate(45deg) saturate(2.2) brightness(1.2)’,gc:’#fbbf24’,hp:128,maxHp:128,atk:44,def:20,mat:35,exp:72,gold:60,si:‘stun’,recruitable:true,allySkill:{id:‘thunder’,name:‘雷撃’,e:‘⚡’,mp:10,type:‘atk_all’,pow:c=>Math.floor(c.mat*5.0+c.atk*1.5+(c.level||1)*12),desc:‘雷全体(Lv連動)’,color:’#fbbf24’}},{id:‘berserk_oni’,name:‘超戦士オーガ’,base:‘👹’,ov:‘💢’,flt:‘hue-rotate(0deg) saturate(3) brightness(.8)’,gc:’#ef4444’,hp:100,maxHp:100,atk:75,def:12,mat:5,exp:68,gold:55,si:‘stun’},{id:‘wkn’,name:‘風霊騎士’,base:‘👹’,ov:‘💨’,flt:‘hue-rotate(175deg) brightness(.78) saturate(1.8)’,gc:’#38bdf8’,hp:115,maxHp:115,atk:40,def:25,mat:28,exp:65,gold:55,si:‘stun’}],
+// Ch8: ガルム(ボス)+天魔兵×2
+[{id:‘gar’,name:‘天魔将軍ガルム’,base:‘😈’,ov:‘⛈️’,flt:‘hue-rotate(215deg) saturate(2.8) brightness(.88)’,gc:’#6366f1’,hp:900,maxHp:900,atk:72,def:38,mat:58,exp:280,gold:220,si:‘stun’,big:true,boss:true,phases:[{hp:.6,msg:‘ガルムの嵐が解放！’,atkBonus:18},{hp:.3,msg:‘ガルムが暴走！’,atkBonus:30,aoe:true}]},{id:‘gar_z1’,name:‘天魔兵’,base:‘👿’,ov:‘⚡’,flt:‘hue-rotate(210deg) saturate(2.5) brightness(.8)’,gc:’#818cf8’,hp:130,maxHp:130,atk:55,def:28,mat:35,exp:80,gold:65,si:‘stun’},{id:‘gar_z2’,name:‘天魔兵β’,base:‘👿’,ov:‘💨’,flt:‘hue-rotate(200deg) saturate(2.2) brightness(.75)’,gc:’#6366f1’,hp:120,maxHp:120,atk:50,def:25,mat:30,exp:72,gold:58,si:‘stun’}],
+// Ch9: 悪魔サタン(ボス)+堕天使×2
+[{id:‘satan’,name:‘悪魔サタン’,base:‘😈’,ov:‘👑’,flt:‘hue-rotate(345deg) saturate(4) brightness(.78)’,gc:’#dc2626’,hp:6000,maxHp:6000,atk:180,def:95,mat:140,exp:2000,gold:1500,si:‘burn’,big:true,boss:true,final:true,doubleAttack:true,spellImmune:false,phases:[{hp:.75,msg:‘サタンが闇の力を解放！’,atkBonus:25},{hp:.5,msg:‘サタンの邪眼が開いた！’,atkBonus:40,aoe:true},{hp:.25,msg:‘サタンが真の魔王形態に！’,atkBonus:65,aoe:true},{hp:.05,msg:‘⚠️「滅亡の咆哮」！！残りわずか！’,atkBonus:100,aoe:true,tripleAttack:true}]},{id:‘angel1’,name:‘堕天使アゼル’,base:‘👼’,ov:‘😈’,flt:‘hue-rotate(350deg) saturate(3.5) brightness(.7) contrast(1.5)’,gc:’#dc2626’,hp:600,maxHp:600,atk:110,def:55,mat:85,exp:300,gold:200,si:‘burn’},{id:‘angel2’,name:‘堕天使ベリアル’,base:‘👼’,ov:‘🔥’,flt:‘hue-rotate(340deg) saturate(3) brightness(.65) contrast(1.4)’,gc:’#b91c1c’,hp:550,maxHp:550,atk:100,def:50,mat:78,exp:270,gold:180,si:‘burn’}],
+];
+
+// ═══ 各章専用ボス（レベルスケール対応）═══
+// scaleEnemy(tpl, avgLv, partySize) で倍率適用済み
+const BOSS_ENC=[
+// Ch0: 骸骨王ボーンキング
+[{id:‘boneking’,name:‘骸骨王ボーンキング’,base:‘💀’,ov:‘👑’,flt:‘grayscale(.7) contrast(2.8) brightness(.6) sepia(.3)’,gc:’#9ca3af’,hp:320,maxHp:320,atk:30,def:18,mat:20,exp:120,gold:90,si:‘stun’,big:true,boss:true,spellImmune:false,magicResist:0.3,
+phases:[{hp:.55,msg:‘ボーンキングが骨の魔法を解放！’,atkBonus:10}]},
+{id:‘boneking_z1’,name:‘骸骨剣士’,base:‘💀’,ov:‘⚔️’,flt:‘grayscale(.8) contrast(2.2) brightness(.5)’,gc:’#6b7280’,hp:60,maxHp:60,atk:22,def:10,mat:8,exp:25,gold:18,si:‘stun’}],
+// Ch1: 呪詛の魔女クルセーラ
+[{id:‘witch’,name:‘呪詛の魔女クルセーラ’,base:‘🧙’,ov:‘💜’,flt:‘hue-rotate(270deg) saturate(3.5) brightness(.6) contrast(1.8)’,gc:’#9333ea’,hp:480,maxHp:480,atk:25,def:22,mat:72,exp:180,gold:140,si:‘poison’,big:true,boss:true,divineSpellCaster:true,magicResist:0.35,
+phases:[{hp:.6,msg:‘クルセーラが禁呪を唱えた！MAT激増！’,atkBonus:18},{hp:.3,msg:‘クルセーラが最後の呪いを放つ！’,atkBonus:35}]},
+{id:‘witch_z1’,name:‘呪われた人形’,base:‘🪆’,ov:‘💀’,flt:‘hue-rotate(285deg) saturate(2.5) brightness(.55)’,gc:’#7c3aed’,hp:70,maxHp:70,atk:18,def:8,mat:28,exp:30,gold:22,si:‘stun’}],
+// Ch2: 鉄鎖巨人ゴッドアイアン（強化版）
+[{id:‘godron’,name:‘大鎖闘士ゴッドアイアン’,base:‘🦾’,ov:‘⛓️’,flt:‘brightness(.4) contrast(2.5) saturate(.15)’,gc:’#374151’,hp:700,maxHp:700,atk:52,def:20,mat:15,exp:220,gold:170,si:‘stun’,big:true,boss:true,spellImmune:true,
+phases:[{hp:.55,msg:‘ゴッドアイアンが怒りで鎖を振り回す！’,atkBonus:20,aoe:true},{hp:.25,msg:‘全力解放！全体連続攻撃！’,atkBonus:38,aoe:true}]},
+{id:‘godron_z1’,name:‘鉄牢ゾンビ’,base:‘🧟’,ov:‘⛓️’,flt:‘grayscale(.4) contrast(2) brightness(.5)’,gc:’#4b5563’,hp:80,maxHp:80,atk:32,def:16,mat:8,exp:35,gold:25,si:‘stun’}],
+// Ch3: 毒蜘蛛の女王アラクノス
+[{id:‘arachno’,name:‘猛毒女王アラクノス’,base:‘🕷️’,ov:‘💜’,flt:‘hue-rotate(260deg) saturate(4) brightness(.55) contrast(2)’,gc:’#7c3aed’,hp:850,maxHp:850,atk:50,def:28,mat:62,exp:260,gold:200,si:‘poison’,big:true,boss:true,magicResist:0.4,
+phases:[{hp:.6,msg:‘アラクノスが猛毒の霧を放つ！全員毒の危機！’,atkBonus:15,aoe:true},{hp:.3,msg:‘アラクノスが死にもの狂い！ATK+MAT爆増！’,atkBonus:35}]},
+{id:‘arachno_z1’,name:‘毒蜘蛛の眷属’,base:‘🕷️’,ov:‘☠️’,flt:‘hue-rotate(275deg) saturate(2.8) brightness(.6)’,gc:’#a855f7’,hp:95,maxHp:95,atk:36,def:15,mat:25,exp:45,gold:35,si:‘poison’}],
+// Ch4: 暗黒騎士タルタロス
+[{id:‘tartaros’,name:‘暗黒騎士タルタロス’,base:‘🪖’,ov:‘🌑’,flt:‘hue-rotate(230deg) saturate(2.2) brightness(.35) contrast(2.5)’,gc:’#1e1b4b’,hp:1050,maxHp:1050,atk:75,def:55,mat:40,exp:320,gold:260,si:‘stun’,big:true,boss:true,magicResist:0.45,doubleAttack:true,
+phases:[{hp:.65,msg:‘タルタロスの暗黒剣が発動！連続斬り！’,atkBonus:22},{hp:.35,msg:‘タルタロスが全力を解放！死の一撃！’,atkBonus:45,aoe:true}]},
+{id:‘tartaros_z1’,name:‘暗黒魔族兵’,base:‘👹’,ov:‘🌑’,flt:‘hue-rotate(235deg) saturate(2) brightness(.55)’,gc:’#3730a3’,hp:110,maxHp:110,atk:55,def:25,mat:28,exp:58,gold:45,si:‘stun’}],
+// Ch5: 冥界公爵ルシファス（強化版）
+[{id:‘luc_boss’,name:‘冥界公爵ルシファス’,base:‘💀’,ov:‘👑’,flt:‘brightness(.28) contrast(3.5) hue-rotate(235deg)’,gc:’#4f46e5’,hp:1300,maxHp:1300,atk:85,def:50,mat:90,exp:400,gold:320,si:‘poison’,big:true,boss:true,magicResist:0.5,
+phases:[{hp:.6,msg:‘ルシファスの冥界魔法・上位版解放！’,atkBonus:22},{hp:.35,msg:‘ルシファス最終形態！ATK+MAT爆発！’,atkBonus:42},{hp:.12,msg:’「冥界崩壊」！！全体攻撃連発！’,atkBonus:65,aoe:true,tripleAttack:true}]},
+{id:‘luc_z1b’,name:‘魔族将軍’,base:‘👹’,ov:‘🗡️’,flt:‘hue-rotate(245deg) saturate(2.5) brightness(.55)’,gc:’#6366f1’,hp:140,maxHp:140,atk:62,def:32,mat:38,exp:75,gold:60,si:‘poison’}],
+// Ch6: 嵐の竜王ストームドレイク
+[{id:‘stormdrake’,name:‘嵐の竜王ストームドレイク’,base:‘🐲’,ov:‘⚡’,flt:‘hue-rotate(195deg) saturate(3) brightness(.75) contrast(1.6)’,gc:’#0ea5e9’,hp:1600,maxHp:1600,atk:95,def:62,mat:78,exp:480,gold:380,si:‘stun’,big:true,boss:true,magicResist:0.5,
+phases:[{hp:.65,msg:‘ストームドレイクが嵐の翼を広げた！’,atkBonus:25,aoe:true},{hp:.35,msg:‘ストームドレイクの竜の息吹！超強烈！’,atkBonus:50,aoe:true}]},
+{id:‘stormdrake_z1’,name:‘嵐の翼蛇’,base:‘🐍’,ov:‘⚡’,flt:‘hue-rotate(185deg) saturate(2.5) brightness(.7)’,gc:’#38bdf8’,hp:145,maxHp:145,atk:65,def:28,mat:45,exp:80,gold:65,si:‘stun’}],
+// Ch7: 天魔将軍ガルム（強化版）
+[{id:‘garm_boss’,name:‘天魔将軍ガルム・真’,base:‘😈’,ov:‘⛈️’,flt:‘hue-rotate(210deg) saturate(3.2) brightness(.82)’,gc:’#4f46e5’,hp:2100,maxHp:2100,atk:115,def:68,mat:95,exp:580,gold:460,si:‘stun’,big:true,boss:true,magicResist:0.5,
+phases:[{hp:.65,msg:‘ガルム真形態・嵐魔法解放！’,atkBonus:28},{hp:.4,msg:‘ガルムが暴走！全体連続攻撃！’,atkBonus:50,aoe:true},{hp:.18,msg:’「天魔崩壊」！！ガルムの全力！’,atkBonus:80,aoe:true,tripleAttack:true}]},
+{id:‘garm_z1b’,name:‘天魔将軍の護衛’,base:‘👿’,ov:‘⚡’,flt:‘hue-rotate(205deg) saturate(2.8) brightness(.72)’,gc:’#818cf8’,hp:180,maxHp:180,atk:80,def:42,mat:55,exp:95,gold:78,si:‘stun’}],
+// Ch8: 邪神フォルセティ（超強力呪文使い）
+[{id:‘forseti’,name:‘邪神フォルセティ’,base:‘🌑’,ov:‘✨’,flt:‘hue-rotate(275deg) saturate(5) brightness(.45) contrast(2.5)’,gc:’#7c3aed’,hp:3200,maxHp:3200,atk:95,def:80,mat:200,exp:750,gold:580,si:‘burn’,big:true,boss:true,divineSpellCaster:true,magicResist:0.55,
+phases:[{hp:.7,msg:‘フォルセティの邪神魔法が解放！MAT×2！’,atkBonus:30},{hp:.45,msg:‘フォルセティが神域に入った！’,atkBonus:55,aoe:true},{hp:.2,msg:’「邪神審判」！！宇宙規模の攻撃！！’,atkBonus:90,aoe:true,tripleAttack:true}]},
+{id:‘forseti_z1’,name:‘邪神の眷属’,base:‘👾’,ov:‘🌑’,flt:‘hue-rotate(270deg) saturate(3.5) brightness(.55)’,gc:’#6d28d9’,hp:220,maxHp:220,atk:88,def:50,mat:80,exp:110,gold:90,si:‘burn’}],
+// Ch9: 悪魔サタン・真の魔王（最終決戦）
+[{id:‘satan_final’,name:‘真の魔王・悪魔サタン’,base:‘😈’,ov:‘💀’,flt:‘hue-rotate(345deg) saturate(5) brightness(.72) contrast(2)’,gc:’#dc2626’,hp:5000,maxHp:5000,atk:155,def:90,mat:125,exp:3000,gold:2500,si:‘burn’,big:true,boss:true,final:true,doubleAttack:true,divineSpellCaster:true,magicResist:0.3,
+phases:[{hp:.78,msg:‘サタンが闇の全力を解放！ATK+MAT爆発！’,atkBonus:30},{hp:.55,msg:‘サタンの邪眼が全開！連続魔法攻撃！’,atkBonus:55,aoe:true},{hp:.32,msg:‘サタンが真の魔王形態に！！’,atkBonus:90,aoe:true},{hp:.12,msg:‘⚠️「宇宙滅亡の叫び」！！最終奥義！！’,atkBonus:140,aoe:true,tripleAttack:true}]},
+{id:‘fallen_a1’,name:‘大堕天使アゼル’,base:‘👼’,ov:‘😈’,flt:‘hue-rotate(350deg) saturate(4) brightness(.65) contrast(2)’,gc:’#dc2626’,hp:550,maxHp:550,atk:100,def:55,mat:80,exp:450,gold:320,si:‘burn’},
+{id:‘fallen_b1’,name:‘大堕天使ベリアル’,base:‘👼’,ov:‘🔥’,flt:‘hue-rotate(340deg) saturate(3.5) brightness(.6) contrast(1.8)’,gc:’#b91c1c’,hp:500,maxHp:500,atk:90,def:50,mat:70,exp:400,gold:290,si:‘burn’}],
+];
+
+const SUPER_GENGAR_TPL={id:‘super_gengar’,name:‘スーパーゲンガー’,base:‘👾’,ov:‘💎’,flt:‘hue-rotate(285deg) saturate(12) brightness(.45) contrast(4) drop-shadow(0 0 15px #a855f7) drop-shadow(0 0 40px #7c3aed)’,gc:’#c084fc’,maxHp:3800,atk:480,def:120,mat:650,allySkill:{id:‘sgengar_burst’,name:‘シャドーバースト’,e:‘💜’,mp:45,type:‘atk_all’,pow:c=>Math.floor(c.mat*11.0+c.atk*3.0),desc:‘全敵に紫の爆撃！超強力！’,color:’#a855f7’}};
+const TRICKSTER_TPL={id:‘trickster’,name:‘遊び人ルーカス’,base:‘🃏’,ov:‘🎲’,flt:‘hue-rotate(30deg) saturate(5) brightness(1.2) contrast(1.4)’,gc:’#f59e0b’,maxHp:2400,atk:380,def:100,mat:380,allySkill:{id:‘trickster_all’,name:‘いたずら大爆発’,e:‘🎲’,mp:30,type:‘atk_all’,pow:c=>Math.floor((c.atk+c.mat)*6.0+Math.random()*500),desc:‘全敵にランダム超ダメージ！’,color:’#f59e0b’}};
+const ZACIAN_TPL={id:‘zacian’,name:‘覇剣獣ザシアン’,base:‘🐺’,ov:‘⚔️’,flt:‘hue-rotate(200deg) saturate(3.5) brightness(1.1) contrast(1.2)’,gc:’#38bdf8’,maxHp:3200,atk:520,def:160,mat:180,allySkill:{id:‘zacian_slash’,name:‘きょじゅうざん’,e:‘⚔️’,mp:35,type:‘atk_one’,pow:c=>Math.floor(c.atk*12.0+c.mat*2.0),desc:‘単体に超強力な一撃！’,color:’#38bdf8’}};
+const SHENLONG_TPL={id:‘shenlong’,name:‘神龍シェンロン’,base:‘🐉’,ov:‘✨’,flt:‘hue-rotate(120deg) saturate(3) brightness(1.2)’,gc:’#4ade80’,maxHp:2800,atk:420,def:180,mat:360,allySkill:{id:‘dragon_fire’,name:‘龍炎神撃’,e:‘🐉’,mp:40,type:‘atk_all’,pow:c=>Math.floor(c.mat*9.0+c.atk*5.0),desc:‘全敵に超強力な龍炎神撃！’,color:’#4ade80’}};
+
+const ITEMS=[
+{id:‘herb’,name:‘やくそう’,emoji:‘🌿’,cost:40,type:‘con’,eff:{hp:100},desc:‘HP+100’},
+{id:‘mherb’,name:‘まんねんぐさ’,emoji:‘🌸’,cost:60,type:‘con’,eff:{mp:30},desc:‘MP+30’},
+{id:‘anti’,name:‘どくけし草’,emoji:‘🍃’,cost:45,type:‘con’,eff:{cure:true},desc:‘状態異常回復’},
+{id:‘elix’,name:‘エリクサー’,emoji:‘🧪’,cost:140,type:‘con’,eff:{hp:9999,mp:9999},desc:‘HP・MP完全回復’},
+{id:‘fullherb’,name:‘めぐみのしずく’,emoji:‘💧’,cost:600,type:‘con’,eff:{hp:500},desc:‘HP+500（大回復）’},
+{id:‘allheal’,name:‘せかいじゅのしずく’,emoji:‘🌳’,cost:1200,type:‘con’,eff:{allHeal:true,hp:9999,mp:9999},desc:‘全員HP・MP完全回復！’},
+// 装備品: tier1（初期）
+{id:‘sword’,name:‘はがねの剣’,emoji:‘⚔️’,cost:250,type:‘equip’,tier:1,eff:{atk:16},desc:‘全員ATK+16’},
+{id:‘shield’,name:‘はがねの盾’,emoji:‘🛡️’,cost:220,type:‘equip’,tier:1,eff:{def:14},desc:‘全員DEF+14’},
+{id:‘staff’,name:‘魔法のつえ’,emoji:‘🪄’,cost:230,type:‘equip’,tier:1,eff:{mat:18},desc:‘全員MAT+18’},
+{id:‘armor’,name:‘はがねの鎧’,emoji:‘🥋’,cost:320,type:‘equip’,tier:1,eff:{def:16,hpb:40},desc:‘全員DEF+16,HP+40’},
+{id:‘grimoire’,name:‘魔導書’,emoji:‘📖’,cost:380,type:‘equip’,tier:1,eff:{mat:25,mpb:20},desc:‘全員MAT+25,MP+20’},
+// tier2（tier1が全部揃ったら解禁）
+{id:‘hero_sword’,name:‘勇者のつるぎ’,emoji:‘⚔️’,cost:2000,type:‘equip’,tier:2,eff:{atk:40,hpb:60},desc:‘全員ATK+40,HP+60’},
+{id:‘magic_armor’,name:‘魔法の鎧’,emoji:‘🛡️’,cost:2800,type:‘equip’,tier:2,eff:{def:28,hpb:100},desc:‘全員DEF+28,HP+100’},
+{id:‘sage_staff’,name:‘けんじゃのつえ’,emoji:‘🔱’,cost:3500,type:‘equip’,tier:2,eff:{mat:45,mpb:50},desc:‘全員MAT+45,MP+50’},
+// tier3（tier2が全部揃ったら解禁）
+{id:‘dragon_armor’,name:‘りゅうのよろい’,emoji:‘🐉’,cost:5500,type:‘equip’,tier:3,eff:{def:45,hpb:180,mpb:30},desc:‘全員DEF+45,HP+180,MP+30’},
+{id:‘dragon_sword’,name:‘りゅうのつるぎ’,emoji:‘🗡️’,cost:6000,type:‘equip’,tier:3,eff:{atk:65,hpb:80},desc:‘全員ATK+65,HP+80’},
+{id:‘holy_staff’,name:‘せいなるつえ’,emoji:‘✨’,cost:6500,type:‘equip’,tier:3,eff:{mat:70,mpb:80},desc:‘全員MAT+70,MP+80’},
+{id:‘diamond_armor’,name:‘ダイアモンドの鎧’,emoji:‘💎’,cost:10000,type:‘equip’,tier:4,eff:{def:70,hpb:300,mpb:80},desc:‘🏆最強！全員DEF+70,HP+300,MP+80’},
+{id:‘divine_sword’,name:‘天聖剣エクスカリバー’,emoji:‘🌟’,cost:12000,type:‘equip’,tier:4,eff:{atk:100,hpb:150,mpb:50},desc:‘🏆最強！全員ATK+100,HP+150,MP+50’},
+// Ch10-19（天空編）
+[[{id:‘sky_s1’,name:‘天空騎士’,base:‘⚔️’,ov:‘☁️’,flt:‘hue-rotate(200deg) saturate(3) brightness(1.1)’,gc:’#93c5fd’,hp:500,maxHp:500,atk:160,def:80,mat:60,exp:180,gold:160,si:‘stun’},{id:‘cloud_f’,name:‘雲の精霊’,base:‘☁️’,ov:‘💨’,flt:‘hue-rotate(190deg) saturate(2) brightness(1.5)’,gc:’#bfdbfe’,hp:380,maxHp:380,atk:120,def:50,mat:90,exp:150,gold:130,si:‘stun’}],[{id:‘sky_drag’,name:‘天空翼竜’,base:‘🐉’,ov:‘☁️’,flt:‘hue-rotate(195deg) saturate(3.5) brightness(1.2)’,gc:’#7dd3fc’,hp:550,maxHp:550,atk:180,def:70,mat:100,exp:200,gold:175,si:‘stun’},{id:‘sky_s1’,name:‘天空騎士’,base:‘⚔️’,ov:‘☁️’,flt:‘hue-rotate(200deg) saturate(3) brightness(1.1)’,gc:’#93c5fd’,hp:500,maxHp:500,atk:160,def:80,mat:60,exp:180,gold:160,si:‘stun’}],[{id:‘sky_s1’,name:‘天空騎士’,base:‘⚔️’,ov:‘☁️’,flt:‘hue-rotate(200deg) saturate(3) brightness(1.1)’,gc:’#93c5fd’,hp:500,maxHp:500,atk:160,def:80,mat:60,exp:180,gold:160,si:‘stun’},{id:‘sky_s1b’,name:‘天空騎士β’,base:‘⚔️’,ov:‘⭐’,flt:‘hue-rotate(210deg) saturate(2.5) brightness(1.0)’,gc:’#60a5fa’,hp:460,maxHp:460,atk:150,def:75,mat:55,exp:165,gold:145,si:‘stun’},{id:‘cloud_f’,name:‘雲の精霊’,base:‘☁️’,ov:‘💨’,flt:‘hue-rotate(190deg) saturate(2) brightness(1.5)’,gc:’#bfdbfe’,hp:380,maxHp:380,atk:120,def:50,mat:90,exp:150,gold:130,si:‘stun’}]],
+[[{id:‘phantom’,name:‘幻影兵士’,base:‘👻’,ov:‘🌀’,flt:‘hue-rotate(260deg) saturate(4) brightness(.7)’,gc:’#a78bfa’,hp:580,maxHp:580,atk:175,def:85,mat:120,exp:210,gold:185,si:‘stun’},{id:‘phantom2’,name:‘幻影魔術師’,base:‘🧙’,ov:‘💫’,flt:‘hue-rotate(270deg) saturate(5) brightness(.65)’,gc:’#c4b5fd’,hp:420,maxHp:420,atk:100,def:60,mat:200,exp:195,gold:170,si:‘stun’}],[{id:‘cloud_g’,name:‘雲海ゴーレム’,base:‘🗿’,ov:‘☁️’,flt:‘hue-rotate(205deg) saturate(2) brightness(.9)’,gc:’#94a3b8’,hp:700,maxHp:700,atk:200,def:120,mat:40,exp:230,gold:200,si:‘stun’},{id:‘phantom’,name:‘幻影兵士’,base:‘👻’,ov:‘🌀’,flt:‘hue-rotate(260deg) saturate(4) brightness(.7)’,gc:’#a78bfa’,hp:580,maxHp:580,atk:175,def:85,mat:120,exp:210,gold:185,si:‘stun’}],[{id:‘phantom2’,name:‘幻影魔術師’,base:‘🧙’,ov:‘💫’,flt:‘hue-rotate(270deg) saturate(5) brightness(.65)’,gc:’#c4b5fd’,hp:420,maxHp:420,atk:100,def:60,mat:200,exp:195,gold:170,si:‘stun’},{id:‘cloud_g’,name:‘雲海ゴーレム’,base:‘🗿’,ov:‘☁️’,flt:‘hue-rotate(205deg) saturate(2) brightness(.9)’,gc:’#94a3b8’,hp:700,maxHp:700,atk:200,def:120,mat:40,exp:230,gold:200,si:‘stun’}]],
+[[{id:‘thunder_elem’,name:‘雷の精兵’,base:‘⚡’,ov:‘🗡️’,flt:‘hue-rotate(45deg) saturate(5) brightness(1.3)’,gc:’#fbbf24’,hp:650,maxHp:650,atk:220,def:95,mat:150,exp:250,gold:220,si:‘stun’},{id:‘thunder_giant’,name:‘雷霆巨人’,base:‘⛈️’,ov:‘💥’,flt:‘hue-rotate(45deg) saturate(4) brightness(1.1)’,gc:’#fde68a’,hp:850,maxHp:850,atk:260,def:110,mat:120,exp:280,gold:245,si:‘stun’}],[{id:‘thunder_giant’,name:‘雷霆巨人’,base:‘⛈️’,ov:‘💥’,flt:‘hue-rotate(45deg) saturate(4) brightness(1.1)’,gc:’#fde68a’,hp:850,maxHp:850,atk:260,def:110,mat:120,exp:280,gold:245,si:‘stun’},{id:‘thunder_elem’,name:‘雷の精兵’,base:‘⚡’,ov:‘🗡️’,flt:‘hue-rotate(45deg) saturate(5) brightness(1.3)’,gc:’#fbbf24’,hp:650,maxHp:650,atk:220,def:95,mat:150,exp:250,gold:220,si:‘stun’},{id:‘thunder_elem’,name:‘雷の精兵β’,base:‘⚡’,ov:‘⚔️’,flt:‘hue-rotate(50deg) saturate(4.5) brightness(1.2)’,gc:’#f59e0b’,hp:600,maxHp:600,atk:210,def:90,mat:140,exp:235,gold:205,si:‘stun’}],[{id:‘thunder_giant’,name:‘雷霆巨人’,base:‘⛈️’,ov:‘💥’,flt:‘hue-rotate(45deg) saturate(4) brightness(1.1)’,gc:’#fde68a’,hp:850,maxHp:850,atk:260,def:110,mat:120,exp:280,gold:245,si:‘stun’},{id:‘thunder_giant’,name:‘雷霆巨人β’,base:‘⛈️’,ov:‘⚡’,flt:‘hue-rotate(50deg) saturate(3.5) brightness(1.0)’,gc:’#d97706’,hp:800,maxHp:800,atk:245,def:105,mat:115,exp:265,gold:230,si:‘stun’}]],
+[[{id:‘elite_sky’,name:‘天空精鋭兵’,base:‘🛡️’,ov:‘⭐’,flt:‘hue-rotate(210deg) saturate(3.5) brightness(1.1)’,gc:’#60a5fa’,hp:750,maxHp:750,atk:250,def:130,mat:80,exp:300,gold:265,si:‘stun’},{id:‘void_eye’,name:‘虚空の眼’,base:‘👁️’,ov:‘🌀’,flt:‘hue-rotate(265deg) saturate(5) brightness(.5)’,gc:’#7c3aed’,hp:500,maxHp:500,atk:140,def:70,mat:240,exp:280,gold:245,si:‘stun’}],[{id:‘void_knight’,name:‘虚空騎士’,base:‘🌑’,ov:‘⚔️’,flt:‘brightness(.2) contrast(5) hue-rotate(280deg)’,gc:’#6d28d9’,hp:900,maxHp:900,atk:290,def:150,mat:150,exp:330,gold:290,si:‘stun’},{id:‘void_eye’,name:‘虚空の眼’,base:‘👁️’,ov:‘🌀’,flt:‘hue-rotate(265deg) saturate(5) brightness(.5)’,gc:’#7c3aed’,hp:500,maxHp:500,atk:140,def:70,mat:240,exp:280,gold:245,si:‘stun’}],[{id:‘void_knight’,name:‘虚空騎士’,base:‘🌑’,ov:‘⚔️’,flt:‘brightness(.2) contrast(5) hue-rotate(280deg)’,gc:’#6d28d9’,hp:900,maxHp:900,atk:290,def:150,mat:150,exp:330,gold:290,si:‘stun’},{id:‘elite_sky’,name:‘天空精鋭兵’,base:‘🛡️’,ov:‘⭐’,flt:‘hue-rotate(210deg) saturate(3.5) brightness(1.1)’,gc:’#60a5fa’,hp:750,maxHp:750,atk:250,def:130,mat:80,exp:300,gold:265,si:‘stun’}]],
+[[{id:‘flame_s’,name:‘炎の精霊兵’,base:‘🔥’,ov:‘⚔️’,flt:‘hue-rotate(15deg) saturate(5) brightness(.9)’,gc:’#ef4444’,hp:900,maxHp:900,atk:310,def:120,mat:180,exp:360,gold:320,si:‘burn’},{id:‘ice_s’,name:‘氷の精霊兵’,base:‘❄️’,ov:‘⚔️’,flt:‘hue-rotate(200deg) saturate(4) brightness(1.1)’,gc:’#7dd3fc’,hp:850,maxHp:850,atk:280,def:140,mat:200,exp:340,gold:300,si:‘stun’}],[{id:‘dark_s’,name:‘闇の精霊兵’,base:‘🌑’,ov:‘💀’,flt:‘brightness(.15) contrast(5) hue-rotate(270deg)’,gc:’#7c3aed’,hp:800,maxHp:800,atk:300,def:130,mat:220,exp:350,gold:310,si:‘stun’},{id:‘flame_s’,name:‘炎の精霊兵’,base:‘🔥’,ov:‘⚔️’,flt:‘hue-rotate(15deg) saturate(5) brightness(.9)’,gc:’#ef4444’,hp:900,maxHp:900,atk:310,def:120,mat:180,exp:360,gold:320,si:‘burn’}],[{id:‘ice_s’,name:‘氷の精霊兵’,base:‘❄️’,ov:‘⚔️’,flt:‘hue-rotate(200deg) saturate(4) brightness(1.1)’,gc:’#7dd3fc’,hp:850,maxHp:850,atk:280,def:140,mat:200,exp:340,gold:300,si:‘stun’},{id:‘dark_s’,name:‘闇の精霊兵’,base:‘🌑’,ov:‘💀’,flt:‘brightness(.15) contrast(5) hue-rotate(270deg)’,gc:’#7c3aed’,hp:800,maxHp:800,atk:300,def:130,mat:220,exp:350,gold:310,si:‘stun’},{id:‘flame_s’,name:‘炎の精霊兵’,base:‘🔥’,ov:‘⚔️’,flt:‘hue-rotate(15deg) saturate(5) brightness(.9)’,gc:’#ef4444’,hp:900,maxHp:900,atk:310,def:120,mat:180,exp:360,gold:320,si:‘burn’}]],
+[[{id:‘zeros_s1’,name:‘魔王軍精鋭’,base:‘💀’,ov:‘🔱’,flt:‘brightness(.2) contrast(5) hue-rotate(295deg)’,gc:’#a855f7’,hp:1100,maxHp:1100,atk:380,def:160,mat:260,exp:450,gold:400,si:‘stun’},{id:‘zeros_s2’,name:‘魔王軍術士’,base:‘🌑’,ov:‘💫’,flt:‘brightness(.18) contrast(5.5) hue-rotate(285deg)’,gc:’#9333ea’,hp:900,maxHp:900,atk:280,def:120,mat:320,exp:420,gold:375,si:‘stun’}],[{id:‘zeros_guard’,name:‘魔王直属護衛’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)’,gc:’#c084fc’,hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:‘stun’},{id:‘zeros_s2’,name:‘魔王軍術士’,base:‘🌑’,ov:‘💫’,flt:‘brightness(.18) contrast(5.5) hue-rotate(285deg)’,gc:’#9333ea’,hp:900,maxHp:900,atk:280,def:120,mat:320,exp:420,gold:375,si:‘stun’}],[{id:‘zeros_guard’,name:‘魔王直属護衛’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)’,gc:’#c084fc’,hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:‘stun’},{id:‘zeros_guard’,name:‘魔王直属護衛β’,base:‘🔱’,ov:‘💥’,flt:‘brightness(.12) contrast(7) hue-rotate(310deg) saturate(5)’,gc:’#e879f9’,hp:1250,maxHp:1250,atk:410,def:175,mat:195,exp:465,gold:415,si:‘stun’},{id:‘zeros_s1’,name:‘魔王軍精鋭’,base:‘💀’,ov:‘🔱’,flt:‘brightness(.2) contrast(5) hue-rotate(295deg)’,gc:’#a855f7’,hp:1100,maxHp:1100,atk:380,def:160,mat:260,exp:450,gold:400,si:‘stun’}]],
+[[{id:‘zeros_guard’,name:‘魔王直属護衛’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)’,gc:’#c084fc’,hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:‘stun’},{id:‘zeros_s2’,name:‘魔王軍術士’,base:‘🌑’,ov:‘💫’,flt:‘brightness(.18) contrast(5.5) hue-rotate(285deg)’,gc:’#9333ea’,hp:900,maxHp:900,atk:280,def:120,mat:320,exp:420,gold:375,si:‘stun’}],[{id:‘zeros_guard’,name:‘魔王直属護衛’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)’,gc:’#c084fc’,hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:‘stun’},{id:‘zeros_s1’,name:‘魔王軍精鋭’,base:‘💀’,ov:‘🔱’,flt:‘brightness(.2) contrast(5) hue-rotate(295deg)’,gc:’#a855f7’,hp:1100,maxHp:1100,atk:380,def:160,mat:260,exp:450,gold:400,si:‘stun’}],[{id:‘zeros_s2’,name:‘魔王軍術士’,base:‘🌑’,ov:‘💫’,flt:‘brightness(.18) contrast(5.5) hue-rotate(285deg)’,gc:’#9333ea’,hp:900,maxHp:900,atk:280,def:120,mat:320,exp:420,gold:375,si:‘stun’},{id:‘zeros_guard’,name:‘魔王直属護衛’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)’,gc:’#c084fc’,hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:‘stun’},{id:‘zeros_s1’,name:‘魔王軍精鋭’,base:‘💀’,ov:‘🔱’,flt:‘brightness(.2) contrast(5) hue-rotate(295deg)’,gc:’#a855f7’,hp:1100,maxHp:1100,atk:380,def:160,mat:260,exp:450,gold:400,si:‘stun’}]],
+[[{id:‘zeros_guard’,name:‘魔王直属護衛’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)’,gc:’#c084fc’,hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:‘stun’},{id:‘zeros_guard’,name:‘魔王直属護衛β’,base:‘🔱’,ov:‘💥’,flt:‘brightness(.12) contrast(7) hue-rotate(310deg) saturate(5)’,gc:’#e879f9’,hp:1250,maxHp:1250,atk:410,def:175,mat:195,exp:465,gold:415,si:‘stun’}],[{id:‘zeros_guard’,name:‘魔王直属護衛’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)’,gc:’#c084fc’,hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:‘stun’},{id:‘zeros_guard’,name:‘魔王直属護衛β’,base:‘🔱’,ov:‘💥’,flt:‘brightness(.12) contrast(7) hue-rotate(310deg) saturate(5)’,gc:’#e879f9’,hp:1250,maxHp:1250,atk:410,def:175,mat:195,exp:465,gold:415,si:‘stun’},{id:‘zeros_s1’,name:‘魔王軍精鋭’,base:‘💀’,ov:‘🔱’,flt:‘brightness(.2) contrast(5) hue-rotate(295deg)’,gc:’#a855f7’,hp:1100,maxHp:1100,atk:380,def:160,mat:260,exp:450,gold:400,si:‘stun’}],[{id:‘zeros_guard’,name:‘魔王直属護衛’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)’,gc:’#c084fc’,hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:‘stun’},{id:‘zeros_guard’,name:‘魔王直属護衛γ’,base:‘🔱’,ov:‘⭐’,flt:‘brightness(.1) contrast(8) hue-rotate(320deg) saturate(6)’,gc:’#f0abfc’,hp:1200,maxHp:1200,atk:400,def:170,mat:190,exp:450,gold:400,si:‘stun’}]],
+[[{id:‘zeros_guard’,name:‘魔王直属護衛’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)’,gc:’#c084fc’,hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:‘stun’},{id:‘zeros_s2’,name:‘魔王軍術士’,base:‘🌑’,ov:‘💫’,flt:‘brightness(.18) contrast(5.5) hue-rotate(285deg)’,gc:’#9333ea’,hp:900,maxHp:900,atk:280,def:120,mat:320,exp:420,gold:375,si:‘stun’}],[{id:‘zeros_guard’,name:‘魔王直属護衛’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)’,gc:’#c084fc’,hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:‘stun’},{id:‘zeros_guard’,name:‘魔王直属護衛γ’,base:‘🔱’,ov:‘⭐’,flt:‘brightness(.1) contrast(8) hue-rotate(320deg) saturate(6)’,gc:’#f0abfc’,hp:1200,maxHp:1200,atk:400,def:170,mat:190,exp:450,gold:400,si:‘stun’}],[{id:‘zeros_guard’,name:‘魔王直属護衛’,base:‘🔱’,ov:‘👑’,flt:‘brightness(.15) contrast(6) hue-rotate(300deg) saturate(4)’,gc:’#c084fc’,hp:1300,maxHp:1300,atk:420,def:180,mat:200,exp:480,gold:430,si:‘stun’},{id:‘zeros_guard’,name:‘魔王直属護衛β’,base:‘🔱’,ov:‘💥’,flt:‘brightness(.12) contrast(7) hue-rotate(310deg) saturate(5)’,gc:’#e879f9’,hp:1250,maxHp:1250,atk:410,def:175,mat:195,exp:465,gold:415,si:‘stun’},{id:‘zeros_s2’,name:‘魔王軍術士’,base:‘🌑’,ov:‘💫’,flt:‘brightness(.18) contrast(5.5) hue-rotate(285deg)’,gc:’#9333ea’,hp:900,maxHp:900,atk:280,def:120,mat:320,exp:420,gold:375,si:‘stun’}]],
+];
+
+const calcNext=lv=>{if(lv<=12)return Math.floor(120*Math.pow(lv,1.42));const base=Math.floor(120*Math.pow(12,1.42));return base+Math.floor(800*Math.pow(lv-12,1.60));};
+
+// 敵の呪文データベース
+const ENEMY_SPELL_DB={
+sotchan:[{name:‘紫の呪い’,e:‘💜’,type:‘e_atk_all’,pow:2.8,inflict:‘stun’},{name:‘闇のオーラ弾’,e:‘🌑’,type:‘e_atk_one’,pow:4.5},{name:‘ソッチャン爆発’,e:‘💥’,type:‘e_atk_all’,pow:3.2}],
+lugia:[
+{name:‘エアロブラスト’,e:‘💨’,type:‘e_atk_all’,pow:3.5},
+{name:‘サイコキネシス’,e:‘🔮’,type:‘e_atk_all’,pow:4.2},
+{name:‘しんぴのまもり’,e:‘✨’,type:‘e_heal’,pow:.35},
+{name:‘ルギア絶叫’,e:‘🌊’,type:‘e_atk_all’,pow:5.5},
+],
+luc:[
+{name:‘冥界炎’,e:‘🔥’,type:‘e_atk_all’,pow:1.4},
+{name:‘ダークウェーブ’,e:‘🌑’,type:‘e_atk_one’,pow:2.4},
+{name:‘冥界回復’,e:‘💜’,type:‘e_heal’,pow:.22},
+],
+gar:[
+{name:‘雷神の裁き’,e:‘⚡’,type:‘e_atk_all’,pow:1.7},
+{name:‘嵐の鉄拳’,e:‘💨’,type:‘e_atk_one’,pow:2.8},
+{name:‘暴風絶叫’,e:‘🌪️’,type:‘e_atk_all’,pow:1.3,inflict:‘stun’},
+],
+satan:[
+{name:‘メガンテ’,e:‘💀’,type:‘e_atk_all’,pow:2.2},
+{name:‘暗黒オーラ’,e:‘🌑’,type:‘e_atk_one’,pow:3.8,inflict:‘burn’},
+{name:‘絶望の炎’,e:‘🔥’,type:‘e_atk_all’,pow:2.0,inflict:‘burn’},
+{name:‘死神の鎌’,e:‘💀’,type:‘e_atk_one’,pow:4.5},
+{name:‘破滅の咆哮’,e:‘😈’,type:‘e_atk_all’,pow:2.6},
+{name:‘魔王回復’,e:‘👑’,type:‘e_heal’,pow:.12},
+],
+angel1:[
+{name:‘黒き聖光’,e:‘🌑’,type:‘e_atk_all’,pow:1.6},
+{name:‘堕天の剣’,e:‘⚔️’,type:‘e_atk_one’,pow:2.8},
+],
+angel2:[
+{name:‘暗黒炎’,e:‘🔥’,type:‘e_atk_all’,pow:1.5},
+{name:‘地獄の矢’,e:‘😈’,type:‘e_atk_one’,pow:2.5,inflict:‘burn’},
+],
+tempest:[{name:‘天雷崩撃’,e:‘⚡’,type:‘e_atk_all’,pow:3.2,inflict:‘stun’},{name:‘雷神の裁き’,e:‘🌩️’,type:‘e_atk_one’,pow:5.0},{name:‘嵐の咆哮’,e:‘💨’,type:‘e_atk_all’,pow:2.8}],
+illusion:[{name:‘幻影乱舞’,e:‘🌀’,type:‘e_atk_all’,pow:3.8},{name:‘虚無の矢’,e:‘💫’,type:‘e_atk_one’,pow:5.5},{name:‘幻影回復’,e:‘✨’,type:‘e_heal’,pow:.2}],
+thunder_god:[{name:‘天地崩雷’,e:‘⚡’,type:‘e_atk_all’,pow:4.2,inflict:‘stun’},{name:‘雷神絶技’,e:‘🌩️’,type:‘e_atk_one’,pow:6.0},{name:‘雷光癒し’,e:‘✨’,type:‘e_heal’,pow:.18}],
+void_mage:[{name:‘次元崩壊’,e:‘🌑’,type:‘e_atk_all’,pow:4.5},{name:‘虚無砲’,e:‘🌀’,type:‘e_atk_one’,pow:7.0},{name:‘無限回復’,e:‘💜’,type:‘e_heal’,pow:.15},{name:‘存在消滅’,e:‘💀’,type:‘e_atk_all’,pow:5.2}],
+flame_king:[{name:‘天焔崩滅’,e:‘🔥’,type:‘e_atk_all’,pow:5.0,inflict:‘burn’},{name:‘炎王の剣’,e:‘🗡️’,type:‘e_atk_one’,pow:7.5},{name:‘炎の壁’,e:‘🔥’,type:‘e_heal’,pow:.15}],
+ice_king:[{name:‘凍天消滅’,e:‘❄️’,type:‘e_atk_all’,pow:4.8,inflict:‘stun’},{name:‘絶対零度’,e:‘🧊’,type:‘e_atk_one’,pow:7.0},{name:‘氷結回復’,e:‘❄️’,type:‘e_heal’,pow:.18}],
+zeros:[{name:‘宇宙滅亡波’,e:‘🔱’,type:‘e_atk_all’,pow:5.5,inflict:‘stun’},{name:‘魔王の眼’,e:‘💀’,type:‘e_atk_one’,pow:8.0},{name:‘魔王回復’,e:‘👑’,type:‘e_heal’,pow:.12},{name:‘次元爆破’,e:‘💥’,type:‘e_atk_all’,pow:6.0}],
+zeros_true:[{name:‘時空崩壊’,e:‘🌑’,type:‘e_atk_all’,pow:6.5,inflict:‘stun’},{name:‘ゼロス滅亡砲’,e:‘⭐’,type:‘e_atk_one’,pow:10.0},{name:‘暗黒回復’,e:‘💜’,type:‘e_heal’,pow:.1},{name:‘宇宙消滅’,e:‘🌌’,type:‘e_atk_all’,pow:7.5}],
+zeros_final:[{name:‘GAME OVER砲’,e:‘💥’,type:‘e_atk_all’,pow:8.0,inflict:‘stun’},{name:‘完全体必殺技’,e:‘⭐’,type:‘e_atk_one’,pow:12.0},{name:‘時間逆行’,e:‘🌀’,type:‘e_heal’,pow:.08},{name:‘宇宙終焉’,e:‘🌑’,type:‘e_atk_all’,pow:9.5},{name:‘限界突破砲’,e:‘💀’,type:‘e_atk_all’,pow:7.0,inflict:‘burn’}],
+luc_z2:[{name:‘魔法弾’,e:‘💜’,type:‘e_atk_one’,pow:1.9}],
+gar_z1:[{name:‘雷撃’,e:‘⚡’,type:‘e_atk_one’,pow:1.7,inflict:‘stun’}],
+gar_z2:[{name:‘嵐の刃’,e:‘💨’,type:‘e_atk_one’,pow:1.6}],
+vsp1:[{name:‘猛毒霧’,e:‘☠️’,type:‘e_atk_all’,pow:0.7,inflict:‘poison’}],
+vsp2:[{name:‘猛毒霧’,e:‘☠️’,type:‘e_atk_all’,pow:0.7,inflict:‘poison’}],
+vsp3:[{name:‘猛毒霧’,e:‘☠️’,type:‘e_atk_all’,pow:0.7,inflict:‘poison’}],
+thh:[{name:‘雷撃’,e:‘⚡’,type:‘e_atk_one’,pow:1.8,inflict:‘stun’}],
+wkn:[{name:‘疾風斬り’,e:‘💨’,type:‘e_atk_one’,pow:1.6}],
+};
+
+// パーティレベルに合わせて敵を強化（動的難易度調整）
+const CHAPTER_BASE_LV=[1,3,6,9,12,15,18,21,24,28,32,36,40,44,48,55,62,70,80,90]; // 各章の基準Lv（20章対応）
+// 章ごとのボスHP上限（どれだけ高レベルでも超えない）
+const BOSS_HP_CAPS=[700,1100,1800,2400,3200,4200,5500,7000,8500,12000,20000,25000,30000,38000,45000,55000,60000,80000,120000,200000];
+// 章ごとの通常敵HP上限
+const MOB_HP_CAPS=[200,350,500,700,900,1200,1600,2000,2500,3000,5000,6000,8000,10000,12000,14000,16000,18000,20000,25000];
+const scaleEnemy=(tpl,avgLv,partySize,chIdx=0)=>{
+// パーティ人数倍率を緩和（4人=1.8x, 3人=1.4x, 2人=1.2x）
+const ps=partySize>=4?1.8:partySize===3?1.4:partySize===2?1.2:1.0;
+const chBaseLv=CHAPTER_BASE_LV[Math.min(chIdx,19)];
+// 動的難易度: パーティLvが高くても追従（章基準+20まで）
+const chCeiling=chBaseLv+20;
+const blended=Math.round(avgLv*0.70+chBaseLv*0.30);
+// 上限: 章天井 かつ パーティLv+6 以内（急追防止）
+const lv=Math.max(chBaseLv,Math.min(blended,chCeiling,avgLv+6));
+const bm=tpl.boss?1.2:1.0;
+const s=(1+(lv-1)*0.15)*ps*bm;
+const gs=tpl.rare?1.0:Math.max(1.0,Math.min(0.6+lv*0.14,3.5)); // レアはgs=1固定、通常Lv1=1.0→Lv20=3.4→上限3.5
+const defScale=1+(lv-1)*0.10;
+const rawHp=Math.round(tpl.maxHp*s);
+// HPキャップを適用
+const hpCap=tpl.boss?BOSS_HP_CAPS[Math.min(chIdx,19)]:MOB_HP_CAPS[Math.min(chIdx,19)];
+const finalHp=Math.min(rawHp,hpCap);
+const base={…tpl,hp:finalHp,maxHp:finalHp,atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*defScale),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*3.5)};
+if(tpl.boss)base.magicResist=tpl.magicResist!==undefined?tpl.magicResist:0.25;
+return base;
+};
+const SK=‘ysd_v5’;
+const slotKey=n=>`${SK}_s${n}`;
+const sv=(d,n=1)=>{try{const payload={…d,_savedAt:new Date().toLocaleString(‘ja’),_slot:n};localStorage.setItem(slotKey(n),JSON.stringify(payload));return true;}catch(e){return false;}};
+const ld=(n=1)=>{try{const d=localStorage.getItem(slotKey(n));return d?JSON.parse(d):null;}catch(e){return null;}};
+const hasSave=()=>[1,2,3,4,5].some(n=>!!localStorage.getItem(slotKey(n)));
+const loadSlotMeta=()=>[1,2,3,4,5].map(n=>{try{const d=localStorage.getItem(slotKey(n));if(!d)return null;const p=JSON.parse(d);return{slot:n,savedAt:p._savedAt||’’,chIdx:p.chIdx||0,party:p.party||[],gold:p.gold||0};}catch(e){return null;}});
+// 旧セーブデータ（ysd_v5）を新スロット形式に自動移行
+const migrateLegacySave=()=>{
+try{
+const legacy=localStorage.getItem(SK);
+if(!legacy)return false;
+const d=JSON.parse(legacy);
+// スロット1が空なら旧データをスロット1に移行
+if(!localStorage.getItem(slotKey(1))){
+const migrated={…d,_savedAt:d._savedAt||’（旧データ）’,_slot:1,_migrated:true};
+localStorage.setItem(slotKey(1),JSON.stringify(migrated));
+}
+// clearHistoryが旧データにあればスロット5に保存（クリア記録専用）
+if(d.clearHistory&&d.clearHistory.length>0&&!localStorage.getItem(slotKey(5))){
+// clearHistoryはng_choice画面で参照されるのでスロット1に含まれている
+}
+return true;
+}catch(e){return false;}
+};
+migrateLegacySave();
+const mn=m=>m.isMonster?m.name:(m.name||’？’);
+
+// ======= COMPONENTS =======
+function HpBar({hp,maxHp,label,color,small}){
+const pct=Math.max(0,(hp/maxHp)*100),col=pct>50?’#22c55e’:pct>25?’#facc15’:’#ef4444’;
+return(<div style={{marginBottom:small?‘3px’:‘6px’}}>
+<div style={{display:‘flex’,justifyContent:‘space-between’,fontSize:small?’.7rem’:’.8rem’,marginBottom:‘2px’}}>
+<span style={{color,fontWeight:900}}>{label}</span><span style={{color:’#4b5563’}}>{Math.max(0,Math.round(hp))}/{maxHp}</span>
+</div>
+<div className="hpt"><div className=“hpf” style={{width:pct+’%’,background:`linear-gradient(90deg,${col},${col}99)`,boxShadow:`0 0 5px ${col}77`}}/></div>
+
+  </div>);
+}
+function MpBar({mp,maxMp}){const pct=Math.max(0,(mp/maxMp)*100);return <div className="mpt"><div className="mpf" style={{width:pct+'%'}}/></div>;}
+function ExpBar({exp,level}){
+  const prev=level<=1?0:calcNext(level-1),nxt=calcNext(level),pct=Math.min(100,((exp-prev)/(nxt-prev))*100);
+  return(<div><div style={{display:'flex',justifyContent:'space-between',fontSize:'.74rem',color:'#5555e8',marginBottom:'2px'}}><span>EXP</span><span>次まで{nxt-exp}</span></div><div className="expt"><div className="expf" style={{width:pct+'%'}}/></div></div>);
+}
+function CharSprite({member,anim}){
+  const cls=CLASSES[member.classId],alive=member.hp>0,v=CHAR_VIS[member.classId],st=member.status;
+  const baseGlow=`drop-shadow(0 0 24px ${cls.color}) drop-shadow(0 0 10px ${cls.color}99)`;
+  let flt=baseGlow;
+  if(!alive)flt='grayscale(1) opacity(0.3)';
+  else if(st==='poison')flt='drop-shadow(0 0 20px #a855f7) hue-rotate(70deg) saturate(1.6)';
+  else if(st==='burn')flt='drop-shadow(0 0 22px #ef4444) saturate(1.8) brightness(1.1)';
+  else if(st==='stun')flt='drop-shadow(0 0 20px #fbbf24) brightness(1.3)';
+  let an='floatB 3.2s ease-in-out infinite';
+  if(!alive)an='none';else if(anim==='atk')an='charAtk .42s ease';else if(anim==='hurt')an='shakeX .38s ease';
+  const stIcon=st==='poison'?'☠️':st==='burn'?'🔥':st==='stun'?'💫':null;
+  return(<div style={{display:'flex',flexDirection:'column',alignItems:'center',position:'relative',animation:an,opacity:alive?1:.18,transformOrigin:'bottom center',transition:'opacity .4s'}}>
+    {stIcon&&<div style={{position:'absolute',top:'-16px',right:'-4px',fontSize:'.92rem',zIndex:10}}>{stIcon}</div>}
+    <div style={{position:'relative',width:'52px',height:'62px'}}>
+      {/* オーラリング */}
+      <div style={{position:'absolute',inset:'-10px',borderRadius:'50%',background:`conic-gradient(${cls.color}88,${cls.color}22,${cls.color}88)`,animation:'winSpin 3s linear infinite',opacity:.6,filter:`blur(4px)`,zIndex:0}}/>
+      <div style={{position:'absolute',inset:'-4px',borderRadius:'50%',background:`radial-gradient(circle,${cls.color}55 0%,transparent 70%)`,animation:'pulse 2s ease-in-out infinite',zIndex:0}}/>
+      {/* メインキャラ */}
+      <div style={{position:'absolute',top:0,left:'50%',transform:'translateX(-50%)',filter:flt,zIndex:2,textAlign:'center'}}>
+        <div style={{fontSize:'2.6rem',lineHeight:1}}>{v.face}</div>
+      </div>
+      {/* 武器 */}
+      <div style={{position:'absolute',bottom:'-2px',right:'-6px',fontSize:'1.6rem',zIndex:3,filter:`drop-shadow(0 0 6px ${cls.color}) drop-shadow(0 0 12px ${cls.color}88)`,animation:'floatA 2.4s ease-in-out infinite'}}>{v.wpn}</div>
+      {/* 冠 */}
+      <div style={{position:'absolute',top:'-10px',left:'50%',transform:'translateX(-50%)',fontSize:'1rem',zIndex:3,filter:`drop-shadow(0 0 5px ${cls.color})`}}>{v.crown}</div>
+      {/* 軌跡パーティクル */}
+      {alive&&<div style={{position:'absolute',bottom:'2px',left:'-6px',fontSize:'.87rem',zIndex:1,opacity:.7,animation:'floatB 1.8s ease-in-out infinite'}}>{v.trail}</div>}
+    </div>
+    <div style={{fontSize:'.84rem',color:cls.color,fontWeight:900,marginTop:'8px',textShadow:`0 0 12px ${cls.color},0 0 4px ${cls.color}`,letterSpacing:'.06em',background:`rgba(0,0,0,.5)`,padding:'1px 5px',borderRadius:'4px',border:`1px solid ${cls.color}55`}}>{member.name}</div>
+  </div>);
+}
+function MonSprite({mon,anim,size}){
+  size=size||5;const alive=mon.hp>0;
+  let flt=mon.flt||'none';
+  if(!alive)flt='grayscale(1)';else if(anim==='hurt')flt=(mon.flt||'none')+' drop-shadow(0 0 22px rgba(255,50,0,1)) brightness(1.7)';else flt=(mon.flt||'none')+` drop-shadow(0 0 10px ${mon.gc||'#888'}99)`;
+  let an='floatA 2.8s ease-in-out infinite';
+  if(!alive)an='none';else if(anim==='hurt')an='shakeX .42s ease';else if(anim==='atk')an='monAtk .42s ease';
+  return(<div style={{position:'relative',display:'inline-block',opacity:alive?1:0,transition:'opacity .5s'}}>
+    <span style={{fontSize:size+'rem',lineHeight:1,display:'block',filter:flt,animation:an,transformOrigin:'bottom center'}}>{mon.base}</span>
+    {mon.ov&&<span style={{position:'absolute',top:'-8px',right:'-7px',fontSize:(size*.34)+'rem',pointerEvents:'none'}}>{mon.ov}</span>}
+    {mon.status&&<span style={{position:'absolute',top:'-14px',left:'50%',transform:'translateX(-50%)',fontSize:'.94rem'}}>{mon.status==='poison'?'☠️':mon.status==='burn'?'🔥':'💫'}</span>}
+  </div>);
+}
+function MonPartySprite({mon,anim}){
+  const alive=mon.hp>0;let flt=mon.flt||'none';if(!alive)flt='grayscale(1)';else if(anim==='hurt')flt=(mon.flt||'none')+' drop-shadow(0 0 18px rgba(255,50,0,1))';
+  let an='floatB 3s ease-in-out infinite';if(!alive)an='none';else if(anim==='atk')an='charAtk .42s ease';else if(anim==='hurt')an='shakeX .38s ease';
+  return(<div style={{display:'flex',flexDirection:'column',alignItems:'center',animation:an,filter:flt,opacity:alive?1:.22,transformOrigin:'bottom center',transition:'opacity .4s'}}>
+    <span style={{fontSize:'2.4rem',lineHeight:1}}>{mon.base}</span>
+    {mon.ov&&<span style={{fontSize:'1rem',marginTop:'-3px'}}>{mon.ov}</span>}
+    <div style={{fontSize:'.55rem',color:'#4ade80',fontWeight:900,marginTop:'1px'}}>{mon.name}</div>
+  </div>);
+}
+
+// ======= INIT =======
+const initHuman=(classId,name)=>{const c=CLASSES[classId];return{isMonster:false,classId,name,hp:c.hp,maxHp:c.hp,mp:c.mp,maxMp:c.mp,atk:c.atk,def:c.def,mat:c.mat,exp:0,level:1,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0,learnedSpells:[]};};
+const initMonsterAlly=tpl=>({isMonster:true,id:tpl.id,name:tpl.name,base:tpl.base,ov:tpl.ov||’’,flt:tpl.flt||‘none’,gc:tpl.gc||’#888’,hp:Math.floor(tpl.maxHp*.65),maxHp:Math.floor(tpl.maxHp*.65),mp:30,maxMp:30,atk:Math.floor(tpl.atk*.88),def:Math.floor(tpl.def*.85),mat:Math.floor((tpl.mat||10)*.8),exp:0,level:1,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0,allySkill:tpl.allySkill});
+const initEnemy=tpl=>({…tpl,hp:tpl.maxHp,status:null,statusTurns:0,currentPhase:0,atkBonus:0,rageAoe:false,tripleAtk:false});
+const checkLearn=(member,lv)=>{
+if(member.isMonster)return{member,newSpells:[]};
+const spells=CLASS_SPELLS[member.classId]||[];
+// 過去職業の呪文も保持（転職後も旧職呪文が使える）
+const oldSpells=(member.oldClassSpells||[]);
+const allSpells=[…spells,…oldSpells.filter(sp=>!spells.find(s=>s.id===sp.id))];
+const newSpells=[];let lsp=[…(member.learnedSpells||[])];
+allSpells.forEach(sp=>{if(lv>=sp.level&&!lsp.includes(sp.id)){lsp.push(sp.id);newSpells.push(sp);}});
+return{member:{…member,learnedSpells:lsp},newSpells};
+};
+const doLevelUp=(member,gainExp,addLog)=>{let m={…member,exp:(member.exp||0)+gainExp};while(m.exp>=calcNext(m.level)&&m.level<500){const lv=m.level+1;const newMaxHp=m.maxHp+28,newMaxMp=m.maxMp+10;m={…m,level:lv,maxHp:newMaxHp,hp:newMaxHp,maxMp:newMaxMp,mp:newMaxMp,atk:m.atk+(m.isMonster?4:5),def:m.def+3,mat:m.mat+(m.isMonster?2:5)};const{member:mm,newSpells}=checkLearn(m,lv);m=mm;SFX.lvup();addLog(‘🌟 ‘+mn(m)+‘がLv.’+lv+‘に！’);newSpells.forEach(sp=>addLog(‘✨ 新呪文「’+sp.name+’」を覚えた！’));}return m;};
+const calcDamage=(atk,def)=>{const minDmg=Math.max(1,Math.floor(atk*0.6));const roll=Math.floor(atk*0.9)-Math.floor(def*0.08)+Math.floor(Math.random()*Math.max(6,Math.floor(atk*0.25)));return Math.max(minDmg,roll);};
+const processDot=e=>{if(!e.status||e.statusTurns<=0)return{…e,status:null,statusTurns:0};let hp=e.hp;if(e.status===‘poison’)hp=Math.max(1,hp-Math.floor(e.maxHp*.09));if(e.status===‘burn’)hp=Math.max(1,hp-Math.floor(e.maxHp*.07));const turns=e.statusTurns-1;return{…e,hp,statusTurns:turns,status:turns<=0?null:e.status};};
+const tryInflict=(e,si,rate)=>{if(!si||e.status||Math.random()>rate)return e;return{…e,status:si,statusTurns:3};};
+const decBuffs=m=>{let n={…m};if(n.atkBuffTurns>0){n.atkBuffTurns–;if(n.atkBuffTurns<=0)n.atkBuffMult=1;}if(n.defBuffTurns>0){n.defBuffTurns–;if(n.defBuffTurns<=0)n.defBuffMult=1;}n.reflecting=false;n.defending=false;return n;};
+
+// ======= APP =======
+function App(){
+const [scr,setScr]=useState(‘title’);
+const [party,setParty]=useState([]);
+const [enemies,setEnemies]=useState([]);
+const [selCls,setSelCls]=useState([]);
+const [chIdx,setChIdx]=useState(0);
+const [inv,setInv]=useState([]);
+const [gold,setGold]=useState(280);
+const [log,setLog]=useState([]);
+const [busy,setBusy]=useState(false);
+const [phase,setPhase]=useState(‘p0’);
+const [pAnims,setPAnims]=useState([‘idle’,‘idle’,‘idle’,‘idle’]);
+const [mAnims,setMAnims]=useState([‘idle’,‘idle’]);
+const [showSkill,setShowSkill]=useState(null);
+const [dmgs,setDmgs]=useState([]);
+const [sparks,setSparks]=useState([]);
+const [autoMode,setAutoMode]=useState(false);
+const [isMuted,setIsMuted]=useState(false);
+const [saveMsg,setSaveMsg]=useState(’’);
+const [spellMenu,setSpellMenu]=useState(false);
+const [fieldSpellMenu,setFieldSpellMenu]=useState(null); // {casterIdx, targetIdx}
+const [itemMenu,setItemMenu]=useState(false);
+const [itemTargetIdx,setItemTargetIdx]=useState(0);
+const [saveMenu,setSaveMenu]=useState(null);
+const [saveConfirm,setSaveConfirm]=useState(null); // 確認ダイアログ用スロット番号
+const [recruitOffer,setRecruitOffer]=useState(null);
+const [storyScreen,setStoryScreen]=useState(null);
+const [specialSlide,setSpecialSlide]=useState(null); // 特別スライド {type:‘happy’|‘newAdventure’}
+const [dragonBalls,setDragonBalls]=useState(0);
+const [dragonSummoned,setDragonSummoned]=useState(false);
+const [zacianSummoned,setZacianSummoned]=useState(false);
+const [superGengarSummoned,setSuperGengarSummoned]=useState(false);
+const [tricksterSummoned,setTricksterSummoned]=useState(false);
+const [showSuperGengarSummon,setShowSuperGengarSummon]=useState(false);
+const [showTricksterSummon,setShowTricksterSummon]=useState(false);
+const [showZacianSummon,setShowZacianSummon]=useState(false);
+const [showDragonSummon,setShowDragonSummon]=useState(false);
+const [boughtEquips,setBoughtEquips]=useState([]);
+const [showJobChange,setShowJobChange]=useState(false); // 転職メニュー
+const [substituteMenu,setSubstituteMenu]=useState(null); // 戦闘中交代UI {deadIdxs,party,bench}
+const substituteResolveRef=React.useRef(null);
+const [dbPopup,setDbPopup]=useState(false);
+const [clearCount,setClearCount]=useState(0);
+const [savedParty,setSavedParty]=useState(null); // 後方互換
+const [clearHistory,setClearHistory]=useState([]); // 最大5件
+const [chBattleNum,setChBattleNum]=useState(1); // 各章の戦闘番号(1-5, 5=ボス)
+const [battleResult,setBattleResult]=useState(null); // 戦闘結果表示
+const [monsterRoster,setMonsterRoster]=useState([]); // 仲間モンスター全員(最大10)
+const [humanRoster,setHumanRoster]=useState([]); // 控えの人間キャラ
+const [selExtra,setSelExtra]=useState([]); // 追加人間キャラ(3,4人目)
+const [selNames,setSelNames]=useState([‘リン’,‘カイ’]); // 3,4人目の名前
+
+useEffect(()=>{const d=ld();if(!d)return;if(d.clearCount)setClearCount(d.clearCount);if(d.savedParty)setSavedParty(d.savedParty);if(d.clearHistory)setClearHistory(d.clearHistory||[]);},[]);
+
+const uid=useRef(0),autoRef=useRef(autoMode);
+useEffect(()=>{autoRef.current=autoMode;},[autoMode]);
+
+const addLog=useCallback(m=>setLog(p=>[m,…p].slice(0,14)),[]);
+const addDmg=useCallback((v,type,x,y)=>{const id=uid.current++;setDmgs(p=>[…p,{id,v,type,x:x||‘40%’,y:y||‘20%’}]);setTimeout(()=>setDmgs(p=>p.filter(d=>d.id!==id)),950);},[]);
+const addSpark=useCallback((x,y)=>{const id=uid.current++;setSparks(p=>[…p,{id,x,y}]);setTimeout(()=>setSparks(p=>p.filter(s=>s.id!==id)),700);},[]);
+const setPAnim=useCallback((i,a)=>setPAnims(p=>{const n=[…p];n[i]=a;return n;}),[]);
+const setMAnim=useCallback((i,a)=>setMAnims(p=>{const n=[…p];n[i]=a;return n;}),[]);
+
+const activePIdx=phase===‘p0’?0:phase===‘p1’?1:phase===‘p2’?2:phase===‘p3’?3:-1;
+const activeM=activePIdx>=0&&party[activePIdx]?party[activePIdx]:null;
+const chDef=CHAPTERS[chIdx]||CHAPTERS[19];
+const stage=STAGES[CH_STAGE[chIdx]||0];
+
+const getMemberSpells=useCallback(m=>{
+if(!m)return[];
+if(m.isMonster)return m.allySkill?[m.allySkill]:[];
+const cls=CLASSES[m.classId];
+const spells=[cls.baseSkill];
+// 現在の職業の呪文
+(CLASS_SPELLS[m.classId]||[]).filter(sp=>(m.learnedSpells||[]).includes(sp.id)).forEach(sp=>spells.push(sp));
+// 旧職業の呪文（転職で引き継ぎ）
+(m.oldClassSpells||[]).filter(sp=>(m.learnedSpells||[]).includes(sp.id)&&!spells.find(s=>s.id===sp.id)).forEach(sp=>spells.push(sp));
+return spells;
+},[]);
+const nextPhase=useCallback((cur,p)=>{const order=[‘p0’,‘p1’,‘p2’,‘p3’];const si=order.indexOf(cur);for(let i=si+1;i<order.length;i++){if(p[i]&&p[i].hp>0)return order[i];}return ‘enemy’;},[]);
+
+const executeSpell=useCallback(async(spell,pIdx,curP,curE,isField,targetIdx=null)=>{
+let nP=[…curP],nE=curE?[…curE]:[];
+const member={…nP[pIdx]};
+if((member.mp||0)<(spell.mp||0)){addLog(‘MP不足！’);return null;}
+if(!isField){setPAnim(pIdx,‘skill’);setShowSkill(spell.e);}
+if([‘atk_all’,‘atk_one’,‘atk_double’].includes(spell.type))SFX.magic();
+else if([‘buff_atk’,‘buff_def’,‘buff_def_all’,‘buff_both’,‘reflect’].includes(spell.type))SFX.buff();
+else if([‘heal_all’,‘heal_all_mp’,‘heal_one’,‘heal_one_full’,‘heal_partial_all’,‘status_cure’].includes(spell.type))SFX.heal();
+else if(spell.type===‘revive’)SFX.revive();
+if(!isField){await sleep(320);setShowSkill(null);setPAnim(pIdx,‘idle’);}
+nP[pIdx]={…member,mp:member.mp-spell.mp};
+if(spell.type===‘atk_one’){
+const ti=nE.findIndex(e=>e.hp>0);if(ti<0)return{party:nP,enemies:nE};
+const en=nE[ti];
+let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(en.magicResist||0))));
+if(en.spellImmune){dmg=0;addLog(‘🔰 ‘+en.name+‘は呪文が完全に効かない！物理攻撃で攻めよう！’);}
+setMAnim(ti,‘hurt’);SFX.hit();addSpark(‘65%’,‘30%’);addDmg(Math.round(dmg),‘e’,‘65%’,‘18%’);
+addLog(spell.e+’ ‘+spell.name+’！’+Math.round(dmg)+‘ダメージ！’);
+let nen={…en,hp:Math.max(0,en.hp-dmg)};if(spell.inflict)nen=tryInflict(nen,spell.inflict,.42);
+nE[ti]=nen;await sleep(250);setMAnim(ti,‘idle’);
+}else if(spell.type===‘atk_all’||spell.type===‘atk_double’){
+const live=nE.map((_,i)=>i).filter(i=>nE[i].hp>0);const hits=spell.type===‘atk_double’?2:1;
+for(let h=0;h<hits;h++)for(const ti of live){if(nE[ti].hp<=0)continue;
+let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(nE[ti].magicResist||0))));if(spell.type===‘atk_double’&&h===0)dmg=Math.floor(dmg*.85);
+if(nE[ti].spellImmune){dmg=0;addLog(‘🔰 ‘+nE[ti].name+‘は呪文が完全に効かない！’);}
+const xp=60+ti*(-12);setMAnim(ti,‘hurt’);SFX.hit();addSpark(xp+’%’,‘28%’);addDmg(Math.round(dmg),‘e’,xp+’%’,‘16%’);
+let nen={…nE[ti],hp:Math.max(0,nE[ti].hp-dmg)};if(spell.inflict)nen=tryInflict(nen,spell.inflict,.38);nE[ti]=nen;await sleep(160);setMAnim(ti,‘idle’);}
+addLog(spell.e+’ ‘+spell.name+’！全体に大ダメージ！’);
+}else if(spell.type===‘heal_all’){nP=nP.map(m=>m.hp<=0?m:{…m,hp:m.maxHp,status:null,statusTurns:0});addLog(spell.e+’ ‘+spell.name+’！全員HP全回復！’);
+}else if(spell.type===‘heal_all_mp’){nP=nP.map(m=>m.hp<=0?m:{…m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0});addLog(spell.e+’ ‘+spell.name+’！全員HP・MP完全回復！’);
+}else if(spell.type===‘buff_atk’){nP[pIdx]={…nP[pIdx],atkBuffMult:2.0,atkBuffTurns:3};addLog(spell.e+’ ‘+spell.name+’！ATK 3ターン2倍！’);
+}else if(spell.type===‘buff_def_all’){nP=nP.map(m=>m.hp<=0?m:{…m,defBuffMult:1.8,defBuffTurns:3});addLog(spell.e+’ ‘+spell.name+’！全員DEF UP！’);
+}else if(spell.type===‘buff_both’){nP[pIdx]={…nP[pIdx],atkBuffMult:2.0,atkBuffTurns:4,defBuffMult:2.0,defBuffTurns:4};addLog(spell.e+’ ‘+spell.name+’！ATK・DEF 4ターン2倍！’);
+}else if(spell.type===‘reflect’){nP[pIdx]={…nP[pIdx],reflecting:true};addLog(spell.e+’ ‘+spell.name+’！次の魔法を反射！’);
+}else if(spell.type===‘revive’||spell.type===‘revive_25’){
+const pct=spell.type===‘revive’?.5:.25;
+const di=targetIdx!==null?targetIdx:nP.findIndex(m=>m.hp<=0);if(di<0||nP[di]?.hp>0){addLog(‘戦闘不能の仲間がいない！’);nP[pIdx]={…nP[pIdx],mp:member.mp};return{party:nP,enemies:nE};}
+nP[di]={…nP[di],hp:Math.floor(nP[di].maxHp*pct)};addLog(spell.e+’ ‘+spell.name+’！’+mn(nP[di])+‘が復活！HP’+(pct*100)+’%！’);
+}else if(spell.type===‘heal_one’){
+const _autoTi=nP.findIndex((m,i)=>i!==pIdx&&m.hp>0&&m.hp<m.maxHp);const tIdx=targetIdx!==null?targetIdx:(_autoTi>=0?_autoTi:pIdx);
+const amt=Math.floor((spell.pow||((c)=>80))(nP[pIdx]));
+nP[tIdx]={…nP[tIdx],hp:Math.min(nP[tIdx].maxHp,nP[tIdx].hp+amt)};
+addLog(spell.e+’ ‘+spell.name+’！’+mn(nP[tIdx])+‘のHP+’+amt+’！’);SFX.heal();
+}else if(spell.type===‘heal_one_full’){
+const ti=nP.findIndex((m,i)=>i!==pIdx&&m.hp>0&&m.hp<m.maxHp);const tIdx=ti>=0?ti:pIdx;
+nP[tIdx]={…nP[tIdx],hp:nP[tIdx].maxHp,status:null,statusTurns:0};
+addLog(spell.e+’ ‘+spell.name+’！’+mn(nP[tIdx])+‘のHPが全回復！’);SFX.heal();
+}else if(spell.type===‘heal_partial_all’){
+const amt=Math.floor((spell.pow||((c)=>150))(nP[pIdx]));
+nP=nP.map(m=>m.hp<=0?m:{…m,hp:Math.min(m.maxHp,m.hp+amt),status:null,statusTurns:0});
+addLog(spell.e+’ ‘+spell.name+’！全員HP+’+amt+‘回復！’);SFX.heal();
+}else if(spell.type===‘status_cure’){
+const ti=nP.findIndex((m,i)=>i!==pIdx&&m.status);const tIdx=ti>=0?ti:pIdx;
+nP[tIdx]={…nP[tIdx],status:null,statusTurns:0};
+addLog(spell.e+’ ‘+spell.name+’！’+mn(nP[tIdx])+‘の状態異常回復！’);SFX.heal();
+}else if(spell.type===‘debuff_def’){
+const ti=nE.findIndex(e=>e.hp>0);if(ti>=0){const cut=0.45;nE[ti]={…nE[ti],def:Math.floor(nE[ti].def*cut)};addLog(spell.e+’ ‘+spell.name+’！’+nE[ti].name+‘のDEFが大幅ダウン！’);}
+}
+return{party:nP,enemies:nE};
+},[addLog,addDmg,addSpark,setPAnim,setMAnim]);
+
+const useFieldSpell=useCallback(async(spell,pIdx,targetIdx)=>{
+if(!FIELD_SPELL_TYPES.includes(spell.type)){addLog(‘⚔️ この呪文は戦闘中のみ使用可能！’);return;}
+const r=await executeSpell(spell,pIdx,[…party],null,true,targetIdx);if(r)setParty(r.party);
+},[party,executeSpell,addLog]);
+
+const handleVictory=useCallback(async(fp,fe)=>{
+SFX.victory();bgm(‘victory’);
+const tExp=fe.reduce((s,e)=>s+e.exp,0),tGold=fe.reduce((s,e)=>s+e.gold,0);
+addLog(‘🎉 勝利！EXP+’+tExp+’ Gold+’+tGold);
+const lvLogs=[];
+let p2=fp.map(m=>{if(m.hp<=0)return m;const prevLv=m.level;const nm=doLevelUp(m,tExp,msg=>lvLogs.push(msg));if(nm.level>prevLv)SFX.lvup();return nm;});
+setParty(p2);
+// パーティメンバーのレベルアップをrosterにも即反映（控えに戻したとき古いデータにならないよう）
+setHumanRoster(r=>r.map(h=>{const updated=p2.find(m=>!m.isMonster&&m.name===h.name);return updated?{…updated}:h;}));
+setMonsterRoster(r=>r.map(mr=>{const updated=p2.find(m=>m.isMonster&&m.id===mr.id);return updated?{…updated}:mr;}));
+setGold(g=>g+tGold);await sleep(500);
+let newDB=dragonBalls,gotDB=false;
+const isBoss=fe.some(e=>e.boss);
+if(isBoss&&Math.random()<.40&&dragonBalls<3){newDB=dragonBalls+1;setDragonBalls(newDB);SFX.dragonball();gotDB=true;setDbPopup(true);setTimeout(()=>setDbPopup(false),3000);}
+// 仲間加入判定(30%) ボス戦以外 - 全候補を表示して選ばせる
+let recruitTpls=[];
+if(!isBoss&&monsterRoster.length<10){
+const recs=fe.filter(e=>e.recruitable&&e.hp<=0);
+recs.forEach(e=>{if(Math.random()<.30)recruitTpls.push(e);});
+}
+const isChClear=(chBattleNum>=10);
+setBattleResult({tExp,tGold,lvLogs,gotDB,dbCount:newDB,recruitTpls,isBoss,isChClear,isFinal:chIdx>=19});
+setScr(‘result’);setBusy(false);
+},[chIdx,chBattleNum,clearCount,dragonBalls,monsterRoster,addLog]);
+
+const closeResult=useCallback((chosenTpl,doSwap)=>{
+if(!battleResult)return;
+const {isChClear,isFinal}=battleResult;
+// 選択された仲間を追加
+if(chosenTpl){
+SFX.recruit();const ally=initMonsterAlly(chosenTpl);
+const newRoster=[…monsterRoster,ally];setMonsterRoster(newRoster);
+if(party.length<4){setParty(p=>[…p,ally]);}
+addLog(‘🤝 ‘+chosenTpl.name+‘がなかまになった！（ロスター:’+newRoster.length+’/5）’);
+}
+setBattleResult(null);
+if(isFinal){const cc=clearCount+1;setClearCount(cc);setSavedParty(party);const newHist=[{party:[…party],clearNo:cc,date:new Date().toLocaleDateString(‘ja’)},…clearHistory].slice(0,5);setClearHistory(newHist);sv({clearCount:cc,savedParty:party,clearHistory:newHist},1);stopBgm();setScr(‘ending’);return;}
+if(isChClear){
+const next=chIdx+1;
+if(chIdx===9){
+// 第10章クリア → ハッピーエンドスライド → 天空編オープニング → 第11章
+setChIdx(next);setChBattleNum(1);setScr(‘map’);bgm(‘field’);
+setSpecialSlide(‘happy’);
+} else {
+setChIdx(next);setChBattleNum(1);setScr(‘map’);bgm(‘field’);setStoryScreen(CHAPTERS[next]);
+}
+}
+else if(doSwap){setScr(‘party_mgmt’);}
+else{setChBattleNum(n=>n+1);setScr(‘map’);bgm(‘field’);}
+},[battleResult,party,monsterRoster,chIdx,clearCount,addLog]);
+
+const handleAction=useCallback(async(action,spellId)=>{
+if(busy||activePIdx<0||!activeM||activeM.hp<=0)return;
+setBusy(true);setSpellMenu(false);gac();
+let nP=[…party],nE=[…enemies];const pIdx=activePIdx;const member={…nP[pIdx]};
+if(member.status===‘stun’){addLog(‘💫 ‘+mn(member)+‘はスタン中！’);SFX.stun();nP[pIdx]={…member,statusTurns:Math.max(0,member.statusTurns-1),status:member.statusTurns<=1?null:member.status};}
+else if(action===‘spell’&&spellId){const sp=getMemberSpells(member).find(s=>s.id===spellId);if(sp){const r=await executeSpell(sp,pIdx,nP,nE);if(!r){setBusy(false);return;}nP=r.party;nE=r.enemies;}}
+else if(action===‘atk’){const ti=nE.findIndex(e=>e.hp>0);if(ti<0){setBusy(false);return;}const en=nE[ti];const effAtk=Math.floor(member.atk*(member.atkBuffMult||1));let dmg=calcDamage(effAtk,en.def);if(en.metalSlime){const isCrit=Math.random()<0.02;dmg=isCrit?2:1;if(isCrit)addLog(‘💥 会心の一撃！メタルスライムに2ダメージ！’);}else if(Math.random()<.05){dmg=Math.floor(dmg*3.0);addLog(‘💥💥 会心の一撃！！ダメージ3倍！’)}dmg=Math.max(1,dmg);const xp=60+ti*(-12);setPAnim(pIdx,‘atk’);SFX.atk();await sleep(250);setPAnim(pIdx,‘idle’);setMAnim(ti,‘hurt’);SFX.hit();addSpark(xp+’%’,‘28%’);addDmg(dmg,‘e’,xp+’%’,‘16%’);addLog(‘⚔️ ‘+mn(member)+‘の攻撃！’+dmg+‘ダメージ！’);nE[ti]={…en,hp:Math.max(0,en.hp-dmg)};await sleep(300);setMAnim(ti,‘idle’);}
+else if(action===‘defend’){nP[pIdx]={…member,defending:true,defBuffMult:2.2,defBuffTurns:1};addLog(‘🛡️ ‘+mn(member)+‘は防御！’);SFX.buff();}
+else if(action===‘heal’){const ci=inv.findIndex(i=>i.eff&&i.eff.cure),hi=inv.findIndex(i=>i.eff&&i.eff.hp&&!i.eff.cure&&!i.eff.allHeal),mi=inv.findIndex(i=>i.eff&&i.eff.mp&&!i.eff.hp&&!i.eff.allHeal),ai=inv.findIndex(i=>i.eff&&i.eff.allHeal);let used=false;
+if(!used&&ai>=0){const it=inv[ai];const ni=[…inv];ni.splice(ai,1);setInv(ni);nP=nP.map(m=>m.hp<=0?m:{…m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0});addLog(it.emoji+’ ‘+it.name+’！全員HP・MP完全回復！’);SFX.heal();used=true;}
+if(member.status&&ci>=0){const it=inv[ci];const ni=[…inv];ni.splice(ci,1);setInv(ni);nP[pIdx]={…member,status:null,statusTurns:0};addLog(it.emoji+’ ‘+it.name+’！状態異常回復！’);SFX.heal();used=true;}
+else if(!used&&member.hp<member.maxHp&&hi>=0){const it=inv[hi];const ni=[…inv];ni.splice(hi,1);setInv(ni);const add=Math.min(it.eff.hp,member.maxHp-member.hp);nP[pIdx]={…member,hp:Math.min(member.maxHp,member.hp+it.eff.hp)};addDmg(add,‘h’,‘12%’,‘22%’);addLog(it.emoji+’ ‘+it.name+’！HP+’+add);SFX.heal();used=true;}
+else if(!used&&member.mp<member.maxMp&&mi>=0){const it=inv[mi];const ni=[…inv];ni.splice(mi,1);setInv(ni);const addMp=Math.min(it.eff.mp,member.maxMp-member.mp);nP[pIdx]={…member,mp:Math.min(member.maxMp,member.mp+it.eff.mp)};addLog(it.emoji+’ ‘+it.name+’！MP+’+addMp);used=true;}
+if(!used){addLog(‘使えるアイテムがない！’);setBusy(false);return;}}
+else if(action===‘flee’){if(Math.random()>.42){SFX.flee();addLog(‘🏃 逃げ出した！’);setParty(nP);setScr(‘map’);bgm(‘field’);setBusy(false);return;}const fen=nE.find(e=>e.hp>0);if(fen){const dmg=Math.max(1,fen.atk-member.def+Math.floor(Math.random()*5)-2);nP[pIdx]={…member,hp:Math.max(0,member.hp-dmg)};setPAnim(pIdx,‘hurt’);SFX.phit();addDmg(dmg,‘p’,‘12%’,‘24%’);addLog(‘❌ 逃げられなかった！’+dmg+‘ダメージ！’);await sleep(380);setPAnim(pIdx,‘idle’);}}
+// 死者が出たら控えから選択
+if(nP.some(m=>m.hp<=0)&&nP.some(m=>m.hp>0)){nP=await waitForSubstitute(nP,nE);}
+setParty(nP);setEnemies(nE);
+if(nP.every(m=>m.hp<=0)){stopBgm();SFX.dead();setScr(‘gameover’);setBusy(false);return;}
+if(nE.every(e=>e.hp<=0)){await handleVictory(nP,nE);return;}
+const np=nextPhase(phase,nP);
+if(np===‘enemy’){setPhase(‘enemy’);await sleep(280);
+let ep=[…nP],ee=[…nE];const liveEns=ee.filter(e=>e.hp>0);
+for(let ei=0;ei<liveEns.length;ei++){const en=liveEns[ei],enIdx=ee.indexOf(en);
+// メタルスライムは85%で逃走
+if(en.metalSlime&&en.hp>0){const fleeChance=en.hagure?0.95:0.85;if(Math.random()<fleeChance){addLog(’💨 ’+(en.hagure?‘はぐれメタルは’:‘メタルスライムは’)+‘すばやく逃げ去った！EXP・Goldなし！’);ee[enIdx]={…en,hp:0,exp:0,gold:0};await sleep(400);continue;}}
+if(en.status===‘stun’){ee[enIdx]={…en,statusTurns:Math.max(0,en.statusTurns-1),status:en.statusTurns<=1?null:en.status};addLog(’💫 ’+en.name+‘はスタン中！’);continue;}
+const pd=(en.phases||[]).find(ph=>en.hp/en.maxHp<=ph.hp);
+if(pd&&(en.currentPhase||0)<(en.phases||[]).indexOf(pd)+1){ee[enIdx]={…en,currentPhase:(en.currentPhase||0)+1,atkBonus:(en.atkBonus||0)+(pd.atkBonus||0),rageAoe:pd.aoe||false,tripleAtk:pd.tripleAttack||false};addLog(‘💢 ‘+en.name+’！’+pd.msg);SFX.rage();await sleep(500);}
+const attacks=ee[enIdx].tripleAtk?3:ee[enIdx].doubleAttack?2:1;
+const eSpells=ENEMY_SPELL_DB[ee[enIdx].id]||[];
+const castSpell=eSpells.length>0&&(ee[enIdx].divineSpellCaster?Math.random()<0.85:Math.random()<0.42);
+if(castSpell){
+const esp=eSpells[Math.floor(Math.random()*eSpells.length)];
+if(esp.type===‘e_atk_all’){const bd=Math.floor(ee[enIdx].mat*(esp.pow||1.5)+8+(ee[enIdx].atkBonus||0)*.4);for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1)*.3);let dmg=Math.max(1,bd-effDef+Math.floor(Math.random()*8)-4);if(ep[pi].defending)dmg=Math.max(1,Math.floor(dmg*0.70));ep[pi]={…ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,‘hurt’);SFX.magic();addDmg(dmg,‘p’,(pi*22+5)+’%’,‘48%’);if(esp.inflict&&!ep[pi].status&&Math.random()<.35)ep[pi]={…ep[pi],status:esp.inflict,statusTurns:3};}addLog(esp.e+’ ‘+ee[enIdx].name+‘の「’+esp.name+’」！全員に魔法ダメージ！’);await sleep(420);}
+else if(esp.type===‘e_atk_one’){const alive3=ep.filter(m=>m.hp>0);if(alive3.length>0){const tgt3=alive3.reduce((a,b)=>a.hp<b.hp?a:b);const ti3=ep.indexOf(tgt3);const bd3=Math.floor(ee[enIdx].mat*(esp.pow||2.0)+5+(ee[enIdx].atkBonus||0)*.3);const effDef3=Math.floor(tgt3.def*(tgt3.defBuffMult||1)*.25);let dmg3=Math.max(1,bd3-effDef3+Math.floor(Math.random()*12)-6);if(tgt3.defending)dmg3=Math.max(1,Math.floor(dmg3*0.70));ep[ti3]={…ep[ti3],hp:Math.max(0,tgt3.hp-dmg3)};setPAnim(ti3,‘hurt’);SFX.magic();addDmg(dmg3,‘p’,(ti3*22+5)+’%’,‘44%’);addLog(esp.e+’ ‘+ee[enIdx].name+‘の「’+esp.name+’」！’+mn(tgt3)+‘に’+dmg3+‘ダメージ！’);if(esp.inflict&&!tgt3.status&&Math.random()<.42)ep[ti3]={…ep[ti3],status:esp.inflict,statusTurns:3};await sleep(380);}}
+else if(esp.type===‘e_heal’){const ha=Math.floor(ee[enIdx].maxHp*(esp.pow||.2));ee[enIdx]={…ee[enIdx],hp:Math.min(ee[enIdx].maxHp,ee[enIdx].hp+ha)};addLog(esp.e+’ ‘+ee[enIdx].name+‘がHP回復！+’+ha);SFX.heal();await sleep(320);}
+const enDotS=processDot(ee[enIdx]);if(enDotS.hp<ee[enIdx].hp){addDmg(ee[enIdx].hp-enDotS.hp,‘e’,(60+enIdx*(-12))+’%’,‘16%’);SFX.poison();}ee[enIdx]=enDotS;
+} else {
+for(let ai=0;ai<attacks;ai++){
+// ゲンガー会心：5%で10000ダメージ
+if(ee[enIdx].gengarCrit&&Math.random()<0.05){
+const gti=ep.findIndex(m=>m.hp>0);
+if(gti>=0){ep[gti]={…ep[gti],hp:Math.max(0,ep[gti].hp-10000)};setPAnim(gti,‘hurt’);SFX.magic();addDmg(10000,‘p’,(gti*22+5)+’%’,‘40%’);addLog(‘💀💜 ゲンガーの呪い！！’+mn(ep[gti])+‘に10000ダメージ！！’);}
+await sleep(500);
+} else
+if(ee[enIdx].rageAoe){const aoeBase=Math.floor(ee[enIdx].atk*(.5+ai*.1))+(ee[enIdx].atkBonus||0);
+for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1));let dmg=Math.max(1,aoeBase-effDef+Math.floor(Math.random()*6)-3);if(ep[pi].defending)dmg=Math.max(1,Math.floor(dmg*0.45));ep[pi]={…ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,‘hurt’);SFX.phit();addDmg(dmg,‘p’,(pi*22+5)+’%’,‘48%’);}
+addLog(’💥 ’+ee[enIdx].name+‘の全体攻撃！全員にダメージ！’);await sleep(400);}
+else{const alive=ep.filter(m=>m.hp>0);if(alive.length===0)break;const tgt=alive.reduce((a,b)=>a.hp<b.hp?a:b);const ti=ep.indexOf(tgt);const effDef=Math.floor(tgt.def*(tgt.defBuffMult||1));const eatk=(ee[enIdx].atk||30)+(ee[enIdx].atkBonus||0);let dmg=calcDamage(eatk,effDef);
+if(tgt.reflecting){addLog(‘💠 魔法が反射！’+ee[enIdx].name+‘にダメージ！’);ee[enIdx]={…ee[enIdx],hp:Math.max(0,ee[enIdx].hp-dmg)};ep[ti]={…tgt,reflecting:false};continue;}
+if(tgt.defending){dmg=Math.max(1,Math.floor(dmg*0.45));addLog(’🛡️ ’+mn(tgt)+‘は防御中！ダメージ55%カット！’);}
+setPAnim(ti,‘hurt’);setMAnim(enIdx,‘atk’);SFX.phit();addSpark((ti*22+5)+’%’,‘50%’);addDmg(dmg,‘p’,(ti*22+5)+’%’,‘44%’);addLog(’💢 ’+ee[enIdx].name+‘が’+mn(tgt)+‘に’+dmg+‘ダメージ！’);ep[ti]={…tgt,hp:Math.max(0,tgt.hp-dmg)};
+if(ee[enIdx].si&&!tgt.status&&Math.random()<.22){ep[ti]={…ep[ti],status:ee[enIdx].si,statusTurns:3};addLog(ee[enIdx].si===‘poison’?‘☠️毒！’:ee[enIdx].si===‘burn’?‘🔥燃焼！’:‘💫スタン！’);}
+await sleep(330);setPAnim(ti,‘idle’);setMAnim(enIdx,‘idle’);await sleep(80);}}
+const enDot=processDot(ee[enIdx]);if(enDot.hp<ee[enIdx].hp){addDmg(ee[enIdx].hp-enDot.hp,‘e’,(60+enIdx*(-12))+’%’,‘16%’);SFX.poison();}ee[enIdx]=enDot;}}
+ep=ep.map((m,i)=>{if(m.hp<=0||!m.status)return m;const pm=processDot(m);if(pm.hp<m.hp)addDmg(m.hp-pm.hp,‘p’,(i*22+5)+’%’,‘46%’);return pm;});
+ep=ep.map(m=>decBuffs(m));
+// 敵ターン後: 死者が出たら控えから選択
+if(ep.some(m=>m.hp<=0)&&ep.some(m=>m.hp>0)){ep=await waitForSubstitute(ep,ee);}
+setParty(ep);setEnemies(ee);
+if(ep.every(m=>m.hp<=0)){stopBgm();SFX.dead();setScr(‘gameover’);setBusy(false);return;}
+if(ee.every(e=>e.hp<=0)){await handleVictory(ep,ee);return;}
+const fi=ep.findIndex(m=>m.hp>0);setPhase(fi>=0?[‘p0’,‘p1’,‘p2’,‘p3’][fi]:‘p0’);}
+else setPhase(np);
+setBusy(false);
+},[busy,activePIdx,activeM,party,enemies,inv,phase,nextPhase,getMemberSpells,executeSpell,handleVictory,addLog,addDmg,addSpark,setPAnim,setMAnim]);
+
+useEffect(()=>{
+if(!autoMode||scr!==‘battle’||busy||phase===‘enemy’||spellMenu)return;
+const pIdx=activePIdx,member=party[pIdx];if(!member||member.hp<=0)return;
+const aliveEn=enemies.filter(e=>e.hp>0);if(aliveEn.length===0)return;
+const hpR=member.hp/member.maxHp,mpR=member.mp/member.maxMp;
+const spells=getMemberSpells(member);
+const deadAlly=party.find(m=>m.hp<=0);
+const healSpell=spells.find(sp=>sp&&[‘heal_one’,‘heal_one_full’].includes(sp.type)&&(member.mp||0)>=(sp.mp||0));
+const healPartialAll=spells.find(sp=>sp&&sp.type===‘heal_partial_all’&&(member.mp||0)>=(sp.mp||0));
+const healAllSpell=spells.find(sp=>sp&&[‘heal_all’,‘heal_all_mp’,‘heal_partial_all’].includes(sp.type)&&(member.mp||0)>=(sp.mp||0));
+const reviveSpell=spells.find(sp=>sp&&[‘revive’,‘revive_25’].includes(sp.type)&&(member.mp||0)>=(sp.mp||0));
+const atkSpells=spells.filter(sp=>sp&&[‘atk_all’,‘atk_one’,‘atk_double’].includes(sp.type)&&(member.mp||0)>=(sp.mp||0));
+const bestAtkSpell=atkSpells.length>0?atkSpells.reduce((a,b)=>(b.mp||0)>(a.mp||0)?b:a):null;
+const buffSpell=spells.find(sp=>sp&&(sp.type===‘buff_atk’||sp.type===‘buff_def’)&&(member.mp||0)>=(sp.mp||0)&&member.atkBuffMult<=1);
+const cureItem=inv.find(i=>i.eff&&i.eff.cure);
+const healItem=inv.find(i=>i.eff&&i.eff.hp&&!i.eff.allHeal);
+const fullHealItem=inv.find(i=>i.eff&&i.eff.allHeal);
+const mpItem=inv.find(i=>i.eff&&i.eff.mp&&!i.eff.hp);
+const aliveParty=party.filter(m=>m.hp>0);
+const avgHpR=aliveParty.reduce((s,m)=>s+m.hp/m.maxHp,0)/Math.max(1,aliveParty.length);
+const injuredAlly=aliveParty.reduce((a,b)=>b.hp/b.maxHp<(a?a.hp/a.maxHp:1)?b:a,null);
+// 敵の耐性チェック（先頭の生存敵を対象）
+const mainEn=aliveEn[0]||{};
+const enIsSpellImmune=!!mainEn.spellImmune;
+const enMagicResist=mainEn.magicResist||0;
+// 呪文が効きにくいか（免疫 or 耐性50%超）
+const spellWeak=!enIsSpellImmune&&enMagicResist<0.5;
+// 呪文免疫の場合、攻撃呪文は除外。回復・バフ呪文はOK
+const usableAtkSpells=enIsSpellImmune?[]:atkSpells;
+const bestUsableSpell=usableAtkSpells.length>0?usableAtkSpells.reduce((a,b)=>(b.mp||0)>(a.mp||0)?b:a):null;
+// 物理強化バフ（呪文免疫の敵には積極的にバイキルト等を使う）
+const atkBuffSpell=spells.find(sp=>sp&&sp.type===‘buff_atk’&&(member.mp||0)>=(sp.mp||0)&&member.atkBuffMult<=1);
+let act=‘atk’,sid=null,itemTgt=pIdx,useItm=null;
+// P1: 全滅寸前→全体回復
+if(avgHpR<0.22&&fullHealItem){useItm=fullHealItem;}
+// P2: 自分が瀕死(25%以下)→回復
+else if(hpR<0.25){
+if(healSpell){act=‘spell’;sid=healSpell.id;}
+else if(healItem){useItm=healItem;itemTgt=pIdx;}
+else if(hpR<0.15){act=‘defend’;}
+}
+// P3: 味方が瀕死(28%以下)→回復
+else if(injuredAlly&&injuredAlly.hp/injuredAlly.maxHp<0.28){
+const injIdx=party.indexOf(injuredAlly);
+if(healAllSpell){act=‘spell’;sid=healAllSpell.id;}
+else if(healSpell){act=‘spell’;sid=healSpell.id;}
+else if(healItem){useItm=healItem;itemTgt=injIdx;}
+}
+// P4: 死者復活
+else if(deadAlly&&reviveSpell){act=‘spell’;sid=reviveSpell.id;}
+// P5: 状態異常治癒
+else if(member.status&&cureItem){useItm=cureItem;itemTgt=pIdx;}
+// P6a: 呪文免疫の敵 → ATKバフを優先して物理で戦う
+else if(enIsSpellImmune&&atkBuffSpell&&member.atkBuffMult<=1){act=‘spell’;sid=atkBuffSpell.id;}
+// P6b: 通常: MPが十分→攻撃呪文（免疫敵には使わない）
+else if(bestUsableSpell&&mpR>0.08){act=‘spell’;sid=bestUsableSpell.id;}
+// P7: 呪文免疫の場合 → ATKバフ後は通常攻撃に徹する（そのままatk）
+// P7: MP回復
+else if(mpR<0.20&&mpItem){useItm=mpItem;itemTgt=pIdx;}
+// P8: バフ（DEFバフも敵が強い時は有効）
+else if(buffSpell&&Math.random()<0.65){act=‘spell’;sid=buffSpell.id;}
+const t=setTimeout(()=>{
+if(!autoRef.current)return;
+if(useItm)useItemOn(useItm,itemTgt);
+else handleAction(act,sid);
+},700);
+return()=>clearTimeout(t);
+},[autoMode,scr,busy,phase,spellMenu,activePIdx,party,enemies,inv,getMemberSpells,handleAction,useItemOn]);
+
+const doSaveSlot=(n)=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,zacianSummoned,superGengarSummoned,tricksterSummoned,clearCount,savedParty,clearHistory,chBattleNum,monsterRoster,humanRoster,boughtEquips},n);SFX.save();setSaveMenu(null);setSaveMsg(ok?`💾 スロット${n}にセーブ！`:‘❌ 失敗’);setTimeout(()=>setSaveMsg(’’),2500);};
+const doSave=()=>setSaveMenu(‘save’);
+const doLoadSlot=(n)=>{const d=ld(n);if(!d){setSaveMsg(‘データなし’);setTimeout(()=>setSaveMsg(’’),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);setHumanRoster(d.humanRoster||[]);setBoughtEquips(d.boughtEquips||[]);setZacianSummoned(d.zacianSummoned||false);setSuperGengarSummoned(d.superGengarSummoned||false);setTricksterSummoned(d.tricksterSummoned||false);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);if(d.clearHistory)setClearHistory(d.clearHistory||[]);setSaveMenu(null);setSaveMsg(‘📂 ロード完了！’);setTimeout(()=>setSaveMsg(’’),2000);setScr(‘map’);bgm(‘field’);};
+const doLoad=()=>setSaveMenu(‘load’);
+const buyItem=item=>{if(gold<item.cost){addLog(‘Gold不足！’);return;}SFX.buy();if(item.type===‘equip’){setParty(p=>p.map(m=>{let n={…m};if(item.eff.atk)n.atk+=item.eff.atk;if(item.eff.def)n.def+=item.eff.def;if(item.eff.mat)n.mat+=item.eff.mat;if(item.eff.hpb){n.maxHp+=item.eff.hpb;n.hp=Math.min(n.hp+item.eff.hpb,n.maxHp);}if(item.eff.mpb){n.maxMp+=item.eff.mpb;n.mp=Math.min(n.mp+item.eff.mpb,n.maxMp);}return n;}));setBoughtEquips(prev=>[…prev,item.id]);addLog(’🛒 ’+item.emoji+item.name+‘購入！全員に効果！’);}else{if(inv.filter(i=>i.id===item.id).length>=5){addLog(‘これ以上持てない！’);return;}setInv(p=>[…p,{…item}]);addLog(’🛒 ’+item.emoji+item.name+‘購入！’);}setGold(g=>g-item.cost);};
+// 転職関数: 旧職業ステータスを蓄積し新職業に切り替え
+const doJobChange=(memberIdx,newClassId)=>{
+if(!party[memberIdx]||party[memberIdx].isMonster)return;
+const m=party[memberIdx];
+if(m.classId===newClassId)return;
+const oldCls=CLASSES[m.classId];
+const newCls=CLASSES[newClassId];
+// 旧職業の呪文リストを引き継ぎ
+const oldSpells=[…(m.oldClassSpells||[]),…(CLASS_SPELLS[m.classId]||[])];
+// 旧職業のステータスボーナス（ATK/DEF/MAT/HP/MP差分）を保持
+const bonus={atk:m.atk-oldCls.atk,def:m.def-oldCls.def,mat:m.mat-oldCls.mat,
+hp:m.maxHp-oldCls.hp,mp:m.maxMp-oldCls.mp};
+// 新職業ベース+成長ボーナスを加算
+const newAtk=newCls.atk+bonus.atk;
+const newDef=newCls.def+bonus.def;
+const newMat=newCls.mat+bonus.mat;
+const newMaxHp=newCls.hp+bonus.hp;
+const newMaxMp=newCls.mp+bonus.mp;
+const changed={…m,classId:newClassId,
+atk:Math.max(newCls.atk,newAtk),def:Math.max(newCls.def,newDef),
+mat:Math.max(newCls.mat,newMat),maxHp:Math.max(newCls.hp,newMaxHp),
+hp:Math.min(m.hp,Math.max(newCls.hp,newMaxHp)),
+maxMp:Math.max(newCls.mp,newMaxMp),mp:Math.min(m.mp,Math.max(newCls.mp,newMaxMp)),
+oldClassSpells:oldSpells,learnedSpells:m.learnedSpells||[]};
+const np=party.map((pm,i)=>i===memberIdx?changed:pm);
+setParty(np);
+// humanRosterも更新
+setHumanRoster(r=>r.map(hr=>hr.name===m.name&&!hr.isMonster?{…changed}:hr));
+addLog(‘✨ ‘+mn(m)+‘が「’+newCls.name+’」に転職！旧職業の力を引き継いだ！’);
+SFX.lvup();
+setShowJobChange(false);
+};
+const summonSuperGengar=()=>{
+const already=monsterRoster.some(m=>m.id===‘super_gengar’);
+if(dragonBalls<3||superGengarSummoned||already||!zacianSummoned)return;
+SFX.dragon();
+const ally={…initMonsterAlly(SUPER_GENGAR_TPL),hp:SUPER_GENGAR_TPL.maxHp,maxHp:SUPER_GENGAR_TPL.maxHp,mp:90,maxMp:90,atk:SUPER_GENGAR_TPL.atk,def:SUPER_GENGAR_TPL.def,mat:SUPER_GENGAR_TPL.mat};
+const nr=[…monsterRoster,ally];setMonsterRoster(nr);
+if(party.length<4)setParty(p=>[…p,ally]);
+setDragonBalls(b=>b-3);setSuperGengarSummoned(true);
+setShowSuperGengarSummon(true);setTimeout(()=>setShowSuperGengarSummon(false),4500);
+addLog(‘💜 スーパーゲンガーがなかまになった！神の卵3個消費！’);
+};
+const summonTrickster=()=>{
+const already=monsterRoster.some(m=>m.id===‘trickster’);
+if(dragonBalls<3||tricksterSummoned||already||!superGengarSummoned)return;
+SFX.dragon();
+const ally={…initMonsterAlly(TRICKSTER_TPL),hp:TRICKSTER_TPL.maxHp,maxHp:TRICKSTER_TPL.maxHp,mp:60,maxMp:60,atk:TRICKSTER_TPL.atk,def:TRICKSTER_TPL.def,mat:TRICKSTER_TPL.mat};
+const nr=[…monsterRoster,ally];setMonsterRoster(nr);
+if(party.length<4)setParty(p=>[…p,ally]);
+setDragonBalls(b=>b-3);setTricksterSummoned(true);
+setShowTricksterSummon(true);setTimeout(()=>setShowTricksterSummon(false),4500);
+addLog(‘🎲 遊び人ルーカスがなかまになった！神の卵3個消費！’);
+};
+const summonZacian=()=>{const alreadyZacian=monsterRoster.some(m=>m.id===‘zacian’);const shenlongExists=monsterRoster.some(m=>m.id===‘shenlong’)||dragonSummoned;if(dragonBalls<3||zacianSummoned||alreadyZacian||!shenlongExists)return;SFX.dragon();const ally={…initMonsterAlly(ZACIAN_TPL),hp:ZACIAN_TPL.maxHp,maxHp:ZACIAN_TPL.maxHp,mp:70,maxMp:70,atk:ZACIAN_TPL.atk,def:ZACIAN_TPL.def,mat:ZACIAN_TPL.mat};const nr=[…monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[…p,ally]);}setDragonBalls(b=>b-3);setZacianSummoned(true);setShowZacianSummon(true);setTimeout(()=>setShowZacianSummon(false),4500);addLog(‘⚔️ 覇剣獣ザシアンがなかまになった！神の卵3個消費！’);};
+// 戦闘中死者が出たとき控えを選ばせる（Promiseで待機）
+const waitForSubstitute=React.useCallback((currentParty,currentEnemies)=>{
+const bench=[…humanRoster,…monsterRoster].filter(r=>{
+// パーティに出撃中は除外
+if(currentParty.find(p=>p.isMonster?p.id===r.id:p.name===r.name))return false;
+// HP0（死亡済み）のキャラは除外
+if((r.hp||0)<=0)return false;
+return true;
+});
+const deadIdxs=currentParty.map((m,i)=>m.hp<=0?i:-1).filter(i=>i>=0);
+if(deadIdxs.length===0)return Promise.resolve(currentParty);
+// 控えなし→全滅扱いせずそのまま続行
+if(bench.length===0)return Promise.resolve(currentParty);
+return new Promise(resolve=>{
+substituteResolveRef.current=(newParty)=>{resolve(newParty);};
+setSubstituteMenu({deadIdxs,party:currentParty,bench});
+});
+},[humanRoster,monsterRoster]);
+
+const summonDragon=()=>{const alreadyShenlong=monsterRoster.some(m=>m.id===‘shenlong’);if(dragonBalls<3||dragonSummoned||alreadyShenlong)return;SFX.dragon();const ally={…initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[…monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[…p,ally]);}setDragonBalls(b=>b-3);setDragonSummoned(true);setShowDragonSummon(true);setTimeout(()=>setShowDragonSummon(false),4500);addLog(‘🐉 神龍シェンロンがなかまになった！神の卵3個消費！’);};
+const useItemOn=(item,tgtIdx)=>{
+const m=party[tgtIdx];if(!m)return;
+const ni=[…inv];const ii=ni.findIndex(x=>x.id===item.id);if(ii<0)return;
+ni.splice(ii,1);setInv(ni);SFX.heal();
+const np=[…party];const tgt={…np[tgtIdx]};
+if(item.eff.allHeal){setParty(np.map(m2=>m2.hp<=0?m2:{…m2,hp:m2.maxHp,mp:m2.maxMp,status:null,statusTurns:0}));addLog(item.emoji+item.name+’！全員HP・MP完全回復！’);}
+else if(item.eff.cure){np[tgtIdx]={…tgt,status:null,statusTurns:0};setParty(np);addLog(item.emoji+item.name+’！’+tgt.name+‘の状態異常回復！’);}
+else if(item.eff.hp){const add=Math.min(item.eff.hp,tgt.maxHp-tgt.hp);np[tgtIdx]={…tgt,hp:Math.min(tgt.maxHp,tgt.hp+item.eff.hp)};setParty(np);addLog(item.emoji+item.name+’！’+tgt.name+’ HP+’+add+’！’);}
+else if(item.eff.mp){const add=Math.min(item.eff.mp,tgt.maxMp-tgt.mp);np[tgtIdx]={…tgt,mp:Math.min(tgt.maxMp,tgt.mp+item.eff.mp)};setParty(np);addLog(item.emoji+item.name+’！’+tgt.name+’ MP+’+add+’！’);}
+else if(item.eff.revive&&tgt.hp<=0){np[tgtIdx]={…tgt,hp:Math.floor(tgt.maxHp*.5),status:null,statusTurns:0};setParty(np);addLog(item.emoji+item.name+’！’+tgt.name+‘が復活！’);}
+setItemMenu(false);
+};
+const startGame=useOld=>{let p;if(useOld&&savedParty){p=savedParty.map(m=>({…m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0}));}else{if(selCls.length<2)return;p=[initHuman(selCls[0],‘ゆうり’),initHuman(selCls[1],‘そうや’)];selExtra.forEach((cls,i)=>{if(cls)p.push(initHuman(cls,selNames[i]||EXTRA_NAME_OPTS[0][i]));});}setParty(p);setHumanRoster([]);setChIdx(0);setChBattleNum(1);setInv([]);setGold(280);setDragonBalls(0);setDragonSummoned(false);setZacianSummoned(false);setSuperGengarSummoned(false);setTricksterSummoned(false);setMonsterRoster([]);setBattleResult(null);setLog([‘🌟 ゆうりとそうやの大冒険、開幕！’]);setStoryScreen(CHAPTERS[0]);setScr(‘map’);bgm(‘field’);};
+
+const bs=(col,dis)=>({background:dis?‘rgba(50,50,60,.25)’:`linear-gradient(135deg,${col}bb,${col}44)`,border:`1px solid ${dis?'#1e1e3a':col}`,color:dis?’#2a2a3a’:’#fff’,padding:‘10px 14px’,borderRadius:‘10px’,fontFamily:‘inherit’,fontWeight:900,fontSize:’.86rem’,cursor:dis?‘not-allowed’:‘pointer’,boxShadow:dis?‘none’:`0 0 10px ${col}33`,transition:‘all .14s’,margin:‘4px’});
+const activeMemberSpells=activeM?getMemberSpells(activeM):[];
+
+return(<div style={{minHeight:‘100vh’,background:‘linear-gradient(160deg,#02020a,#07041a,#02080a)’,display:‘flex’,flexDirection:‘column’,alignItems:‘center’,padding:‘12px 10px 80px’,color:’#dde4f0’}}>
+
+```
+{/* STORY OVERLAY */}
+{storyScreen&&(<div style={{position:'fixed',inset:0,zIndex:3000,background:'rgba(2,2,12,.97)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'20px 18px',textAlign:'center',animation:'storyIn .5s ease',overflowY:'auto'}}>
+  <div style={{fontSize:'5.5rem',marginBottom:'10px',animation:'floatA 3s ease-in-out infinite'}}>{storyScreen.emoji}</div>
+  <div style={{color:'#d4a017',fontWeight:900,fontSize:'1.7rem',letterSpacing:'.12em',marginBottom:'6px',textShadow:'0 0 20px #d4a01788'}}>{storyScreen.n}</div>
+  <div style={{color:'#94a3b8',fontWeight:700,fontSize:'1.05rem',marginBottom:'16px',background:'rgba(212,160,23,.09)',padding:'8px 22px',borderRadius:'10px',border:'1px solid rgba(212,160,23,.25)'}}>「{storyScreen.title}」</div>
+  <div style={{color:'#e2e8f0',fontSize:'1.02rem',lineHeight:2.4,maxWidth:'400px',whiteSpace:'pre-line',marginBottom:'28px',textAlign:'left',background:'rgba(0,0,0,.4)',padding:'18px 22px',borderRadius:'14px',borderLeft:'4px solid #d4a017'}} dangerouslySetInnerHTML={{__html:storyScreen.story.replace(/カシミール/g,'<ruby>カシミール<rt style="font-size:.6em">かしみーる</rt></ruby>').replace(/ドゴール/g,'<ruby>ドゴール<rt style="font-size:.6em">どごーる</rt></ruby>').replace(/フィリア姫/g,'<ruby>フィリア姫<rt style="font-size:.6em">ひめ</rt></ruby>').replace(/悪魔サタン/g,'<ruby>悪魔<rt style="font-size:.6em">あくま</rt></ruby>サタン').replace(/冥界公爵/g,'<ruby>冥界公爵<rt style="font-size:.6em">めいかいこうしゃく</rt></ruby>').replace(/天魔将軍/g,'<ruby>天魔将軍<rt style="font-size:.6em">てんましょうぐん</rt></ruby>').replace(/堕天使/g,'<ruby>堕天使<rt style="font-size:.6em">だてんし</rt></ruby>').replace(/要塞/g,'<ruby>要塞<rt style="font-size:.6em">ようさい</rt></ruby>').replace(/廃墟/g,'<ruby>廃墟<rt style="font-size:.6em">はいきょ</rt></ruby>').replace(/荒野/g,'<ruby>荒野<rt style="font-size:.6em">こうや</rt></ruby>').replace(/迷宮/g,'<ruby>迷宮<rt style="font-size:.6em">めいきゅう</rt></ruby>').replace(/玉座/g,'<ruby>玉座<rt style="font-size:.6em">ぎょくざ</rt></ruby>').replace(/最終決戦/g,'<ruby>最終決戦<rt style="font-size:.6em">さいしゅうけっせん</rt></ruby>')}}/>
+  <button onClick={()=>{setStoryScreen(null);SFX.cursor();}} style={{...bs('#d4a017'),padding:'15px 50px',fontSize:'1.1rem',fontWeight:900}}>冒険を続ける →</button>
+</div>)}
+
+{/* 特別スライド: ハッピーエンド / 天空編オープニング */}
+{specialSlide==='happy'&&(<div style={{position:'fixed',inset:0,zIndex:3100,background:'linear-gradient(135deg,#0a1628,#1a3a5c,#0d2a1a)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 20px',textAlign:'center',animation:'storyIn .8s ease',overflowY:'auto'}}>
+  <div style={{fontSize:'5rem',marginBottom:'12px',animation:'floatA 3s ease-in-out infinite'}}>🌈</div>
+  <div style={{color:'#fde68a',fontWeight:900,fontSize:'1.8rem',letterSpacing:'.1em',marginBottom:'8px',textShadow:'0 0 30px #fbbf24'}}>世界に平和が戻った！</div>
+  <div style={{color:'#a7f3d0',fontWeight:700,fontSize:'1.0rem',marginBottom:'20px',background:'rgba(16,185,129,.12)',padding:'6px 20px',borderRadius:'10px',border:'1px solid rgba(16,185,129,.3)'}}>「勝利の夜明け」</div>
+  <div style={{color:'#e2e8f0',fontSize:'.98rem',lineHeight:2.5,maxWidth:'400px',whiteSpace:'pre-line',marginBottom:'28px',textAlign:'left',background:'rgba(0,0,0,.4)',padding:'18px 22px',borderRadius:'14px',borderLeft:'4px solid #4ade80'}}>
+    {`悪魔サタンは打ち倒され、暗黒の力は消え去った。
+```
+
+空に虹がかかり、鳥たちが歌い始める。
+ドゴール王国の人々が歌い踊り、
+世界中に笑顔と希望の光が広がった。
+
+フィリア姫は二人の手を握って言った。
+「ゆうり、そうや……ありがとう。
+あなたたちのおかげで世界が救われた。
+本当に……ありがとう！」
+
+🌟 世界は再び、幸せに包まれた 🌟`} </div> <div style={{display:'flex',gap:'16px',flexWrap:'wrap',justifyContent:'center',marginBottom:'20px'}}> {['🏰','🌸','🌊','🌟','🎉','🌈','🕊️','🌺'].map((e,i)=>(<span key={i} style={{fontSize:'2rem',animation:`floatB ${2+i*.3}s ease-in-out infinite`,animationDelay:i*.2+‘s’}}>{e}</span>))}
+</div>
+<button onClick={()=>{SFX.cursor();setSpecialSlide(‘newAdventure’);}} style={{…bs(’#4ade80’),padding:‘15px 44px’,fontSize:‘1.1rem’,fontWeight:900,boxShadow:‘0 0 20px #4ade8066’}}>
+10年後… →
+</button>
+</div>)}
+
+```
+{specialSlide==='newAdventure'&&(<div style={{position:'fixed',inset:0,zIndex:3100,background:'linear-gradient(135deg,#0a0a1a,#1a0a2e,#0a1628)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 20px',textAlign:'center',animation:'storyIn .8s ease',overflowY:'auto'}}>
+  <div style={{fontSize:'5rem',marginBottom:'12px',animation:'floatA 3s ease-in-out infinite'}}>⚡</div>
+  <div style={{color:'#c084fc',fontWeight:900,fontSize:'1.6rem',letterSpacing:'.1em',marginBottom:'4px',textShadow:'0 0 30px #a855f7'}}>天空編・開幕</div>
+  <div style={{color:'#fde68a',fontWeight:900,fontSize:'1.1rem',marginBottom:'20px'}}>〜 新たなる冒険の始まり 〜</div>
+  <div style={{color:'#e2e8f0',fontSize:'.98rem',lineHeight:2.5,maxWidth:'400px',whiteSpace:'pre-line',marginBottom:'28px',textAlign:'left',background:'rgba(0,0,0,.45)',padding:'18px 22px',borderRadius:'14px',borderLeft:'4px solid #a855f7'}}>
+    {`あれから10年——。
+```
+
+平和な世界で大人になったゆうりとそうや。
+ゆうりは剣を農具に持ち替え、
+そうやは魔法の研究に打ち込んでいた。
+
+しかしある夜、天空から黒雲が広がる。
+地面が揺れ、人々が空を指さして叫んだ。
+
+「また魔王が……復活する！」
+
+ゆうりは静かに剣を取り出した。
+そうやの目に炎が宿る。
+
+「行くぞ、そうや。
+　世界を守れるのは、俺たちだけだ」`} </div> <div style={{display:'flex',gap:'12px',flexWrap:'wrap',justifyContent:'center',marginBottom:'20px'}}> {['☁️','⚡','🌑','⭐','💀','🔱','🌌','✨'].map((e,i)=>(<span key={i} style={{fontSize:'2rem',animation:`floatA ${2+i*.25}s ease-in-out infinite`,animationDelay:i*.15+‘s’}}>{e}</span>))}
+</div>
+<button onClick={()=>{SFX.cursor();setSpecialSlide(null);setStoryScreen(CHAPTERS[10]);}} style={{…bs(’#a855f7’),padding:‘15px 44px’,fontSize:‘1.1rem’,fontWeight:900,boxShadow:‘0 0 20px #a855f766’}}>
+天空へ！ →
+</button>
+</div>)}
+
+```
+{/* HEADER */}
+<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
+  <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
+  <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.4 — 2026-03-11</div>
+  <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
+</div>
+{saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
+
+{/* TITLE */}
+{scr==='title'&&(<div style={{width:'100%',maxWidth:'460px',textAlign:'center',animation:'fadeIn .4s ease',marginTop:'6px'}}>
+  <div style={{fontSize:'5rem',animation:'floatA 3s ease-in-out infinite',marginBottom:'4px'}}>🏰</div>
+  <div style={{color:'#94a3b8',fontSize:'.94rem',lineHeight:1.9,marginBottom:'8px',background:'rgba(255,255,255,.03)',padding:'12px',borderRadius:'12px',border:'1px solid rgba(255,255,255,.05)'}}>
+    <span style={{color:'#d4a017',fontWeight:900}}>カシミール地方</span>の青年ゆうりとそうや<br/>
+    悪魔サタンに囚われた<span style={{color:'#f9a8d4',fontWeight:900}}>フィリア姫</span>を救え！<br/>
+    全<span style={{color:'#fbbf24',fontWeight:900}}>10章</span>の大冒険RPG！<br/>
+    <span style={{fontSize:'.94rem',color:'#4b5563'}}>仲間モンスター・神の卵・フィールド呪文・セーブ</span>
+  </div>
+  {clearCount>0&&<div style={{fontSize:'.87rem',color:'#fbbf24',marginBottom:'6px',fontWeight:900}}>⭐ クリア回数: {clearCount}回</div>}
+  <div style={{display:'flex',flexDirection:'column',gap:'8px',alignItems:'center',marginTop:'12px'}}>
+    <button onClick={()=>{SFX.cursor();gac();setSelCls([]);setScr('select');}} style={{...bs('#d4a017'),padding:'14px 44px',fontSize:'1.05rem',width:'78%'}}>⚔️ はじめから</button>
+    {(clearHistory.length>0||(savedParty&&clearCount>0))&&<button onClick={()=>{SFX.cursor();gac();setScr('ng_choice');}} style={{...bs('#f97316'),padding:'13px 44px',fontSize:'1.05rem',width:'78%'}}>🌟 クリアパーティで再挑戦</button>}
+    {hasSave()&&<button onClick={doLoad} style={{...bs('#22c55e'),padding:'13px 44px',fontSize:'1.05rem',width:'78%'}}>📂 つづきから</button>}
+  </div>
+</div>)}
+
+{/* NG+ */}
+{scr==='ng_choice'&&(<div style={{width:'100%',maxWidth:'460px',animation:'fadeIn .4s ease'}}>
+  <div style={{textAlign:'center',marginBottom:'10px'}}><div style={{color:'#f97316',fontWeight:900,fontSize:'1rem',marginBottom:'2px'}}>🌟 クリアパーティで再挑戦！</div><div style={{color:'#374151',fontSize:'.74rem'}}>最大5つのクリアパーティから選んで冒険！</div></div>
+  {(clearHistory.length>0?clearHistory:[...(savedParty?[{party:savedParty,clearNo:clearCount,date:''}]:[])]).map((rec,ri)=>(<div key={ri} className="card" style={{borderColor:'rgba(249,115,22,.25)',padding:'8px 10px',marginBottom:'6px'}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'4px'}}><span style={{color:'#f97316',fontWeight:900,fontSize:'.84rem'}}>🏆 クリア {rec.clearNo}回目 {rec.date||''}</span><button style={{...bs('#f97316'),margin:0,padding:'4px 10px',fontSize:'.68rem'}} onClick={()=>{setSavedParty(rec.party);startGame(true);}}>このパーティで！</button></div>
+    <div style={{display:'flex',flexWrap:'wrap',gap:'3px'}}>{rec.party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';return(<span key={i} style={{fontSize:'.74rem',color:mc,background:`${mc}18`,padding:'1px 5px',borderRadius:'5px',fontWeight:900}}>{mn(m)} Lv{m.level}</span>);})}</div>
+  </div>))}
+  <div style={{textAlign:'center',marginTop:'4px'}}><button style={bs('#374151')} onClick={()=>setScr('title')}>← もどる</button></div>
+</div>)}
+
+{/* CLASS SELECT */}
+{scr==='select'&&(<div style={{width:'100%',maxWidth:'460px',animation:'fadeIn .4s ease'}}>
+  <div style={{textAlign:'center',marginBottom:'8px'}}>
+    <div style={{color:'#d4a017',fontWeight:900,fontSize:'1.05rem',marginBottom:'2px'}}>パーティを編成しよう！</div>
+    <div style={{fontSize:'.84rem',color:'#94a3b8',marginBottom:'6px',lineHeight:1.8}}>
+      ゆうり:<span style={{color:selCls[0]?CLASSES[selCls[0]]?.color:'#374151',fontWeight:900}}>{selCls[0]?CLASSES[selCls[0]]?.name:'？'}</span>　
+      そうや:<span style={{color:selCls[1]?CLASSES[selCls[1]]?.color:'#374151',fontWeight:900}}>{selCls[1]?CLASSES[selCls[1]]?.name:'？'}</span><br/>
+      {selNames[0]}:<span style={{color:selExtra[0]?CLASSES[selExtra[0]]?.color:'#374151',fontWeight:900}}>{selExtra[0]?CLASSES[selExtra[0]]?.name:'なし'}</span>　
+      {selNames[1]}:<span style={{color:selExtra[1]?CLASSES[selExtra[1]]?.color:'#374151',fontWeight:900}}>{selExtra[1]?CLASSES[selExtra[1]]?.name:'なし'}</span>
+    </div>
+    <div style={{fontSize:'.74rem',color:'#4b5563'}}>※ 最初にゆうり・そうやのクラスを選ぼう（必須）<br/>リン・カイは任意。モンスター仲間は冒険中に加わる</div>
+  </div>
+  {['ゆうり（必須）','そうや（必須）','3人目（任意）','4人目（任意）'].map((label,charIdx)=>(<div key={charIdx} style={{marginBottom:'8px'}}>
+    <div style={{fontSize:'.84rem',color:'#d4a017',fontWeight:900,marginBottom:'4px',padding:'2px 6px',background:'rgba(212,160,23,.08)',borderRadius:'5px',display:'inline-block'}}>{label}</div>
+    {charIdx>=2&&(<div style={{marginBottom:'4px'}}>
+      <div style={{fontSize:'.84rem',color:'#94a3b8',marginBottom:'3px'}}>✏️ 名前を選ぶ</div>
+      <div style={{display:'flex',flexWrap:'wrap',gap:'3px'}}>
+        {EXTRA_NAME_OPTS[charIdx-2].map(nm=>{const isSel=selNames[charIdx-2]===nm;return(<span key={nm} onClick={()=>{SFX.cursor();const ns=[...selNames];ns[charIdx-2]=nm;setSelNames(ns);}} style={{padding:'2px 7px',borderRadius:'8px',fontSize:'.77rem',cursor:'pointer',fontWeight:900,background:isSel?'rgba(212,160,23,.25)':'rgba(255,255,255,.04)',border:`1px solid ${isSel?'#d4a017':'#1e1e3a'}`,color:isSel?'#d4a017':'#94a3b8',transition:'all .15s'}}>{nm}</span>);})}
+      </div>
+    </div>)}
+    <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'5px'}}>
+      {Object.values(CLASSES).map(c=>{
+        const curVal=charIdx<2?selCls[charIdx]:selExtra[charIdx-2];
+        const isSel=curVal===c.id;
+        const cv=CHAR_VIS[c.id];
+        const onClick=()=>{SFX.cursor();if(charIdx<2){const ns=[...selCls];ns[charIdx]=isSel?undefined:c.id;setSelCls(ns.filter(Boolean).length>=charIdx+1?ns:ns.slice(0,charIdx).concat(isSel?[]:[c.id]));}else{const ns=[...selExtra];ns[charIdx-2]=isSel?undefined:c.id;setSelExtra(ns);}};
+        return(<div key={c.id} onClick={onClick} style={{background:isSel?c.bg:'rgba(255,255,255,.02)',border:`2px solid ${isSel?c.color:'#141428'}`,borderRadius:'10px',padding:'7px 4px',cursor:'pointer',textAlign:'center',transition:'all .2s',position:'relative'}}>
+          {isSel&&<div style={{position:'absolute',top:'2px',right:'3px',color:c.color,fontSize:'.84rem',fontWeight:900}}>✓</div>}
+          <div style={{filter:`drop-shadow(0 0 8px ${c.color}88)`,marginBottom:'3px'}}>
+            <span style={{fontSize:'2.2rem',lineHeight:1,display:'block'}}>{cv.face}</span>
+          </div>
+          <div style={{color:c.color,fontWeight:900,fontSize:'.68rem'}}>{c.name}</div>
+          <div style={{fontSize:'.55rem',color:cv.aura?'#94a3b8':'transparent'}}>{cv.aura||'　'}</div>
+        </div>);})}
+    </div>
+  </div>))}
+  {selCls.length>=2&&selCls[0]&&selCls[1]&&(<div style={{textAlign:'center',marginTop:'10px'}}>
+    <button onClick={()=>startGame(false)} style={{...bs('#d4a017'),padding:'13px 36px',fontSize:'1.05rem'}}>
+      ⚔️ {[`ゆうり(${CLASSES[selCls[0]]?.name})`,`そうや(${CLASSES[selCls[1]]?.name})`,...(selExtra[0]?[`${selNames[0]||'3人目'}(${CLASSES[selExtra[0]]?.name})`]:[]),...(selExtra[1]?[`${selNames[1]||'4人目'}(${CLASSES[selExtra[1]]?.name})`]:[])].join('+')} で冒険へ！
+    </button>
+  </div>)}
+  <div style={{textAlign:'center',marginTop:'4px'}}><button style={bs('#374151')} onClick={()=>setScr('title')}>← もどる</button></div>
+</div>)}
+
+{/* MAP */}
+{scr==='map'&&party.length>0&&(<>
+  <div className="card" style={{borderColor:'rgba(212,160,23,.15)',padding:'10px 12px'}}>
+    <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'6px'}}>
+      <span style={{fontSize:'1.8rem'}}>{chDef.emoji}</span>
+      <div><div style={{color:'#d4a017',fontWeight:900,fontSize:'.88rem'}}>{chDef.n}「{chDef.title}」</div></div>
+    </div>
+    <div style={{display:'flex',gap:'3px',flexWrap:'wrap'}}>
+      {CHAPTERS.map((_,i)=>{const done=i<chIdx,cur=i===chIdx;return <div key={i} style={{width:'24px',height:'24px',borderRadius:'50%',fontSize:'.58rem',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,background:done?'#22c55e':cur?'#d4a017':'rgba(255,255,255,.05)',color:done||cur?'#000':'#374151',border:`1px solid ${done?'#22c55e':cur?'#d4a017':'#1e1e3a'}`}}>{done?'✓':i+1}</div>;})}
+    </div>
+    <div style={{display:'flex',gap:'4px',marginTop:'6px',alignItems:'center'}}>
+      <span style={{fontSize:'.94rem',color:'#94a3b8',marginRight:'2px'}}>戦闘:</span>
+      {Array.from({length:10},(_,i)=>{const done=i<chBattleNum-1,cur=i===chBattleNum-1,boss=i===9;return <div key={i} style={{width:'28px',height:'18px',borderRadius:'5px',fontSize:'.58rem',display:'flex',alignItems:'center',justifyContent:'center',fontWeight:900,background:done?'#22c55e':cur?(boss?'rgba(220,38,38,.5)':'rgba(212,160,23,.4)'):'rgba(255,255,255,.05)',color:done||cur?'#fff':'#374151',border:`1px solid ${done?'#22c55e':cur?(boss?'#ef4444':'#d4a017'):'#1e1e3a'}`}}>{boss?'👑':done?'✓':i+1}</div>;})}
+      <span style={{fontSize:'.68rem',color:chBattleNum>=10?'#ef4444':'#fbbf24',fontWeight:900,marginLeft:'4px'}}>{chBattleNum>=10?'⚡BOSS':'次: 第'+chBattleNum+'戦'}</span>
+    </div>
+  </div>
+  <div className="card" style={{borderColor:'rgba(251,191,36,.18)',padding:'9px 12px'}}>
+    {dbPopup&&<div style={{background:'rgba(251,191,36,.22)',border:'2px solid #fbbf24',borderRadius:'12px',padding:'10px 16px',textAlign:'center',marginBottom:'8px',animation:'popIn .3s ease',fontSize:'1rem',fontWeight:900,color:'#fde68a'}}>🥚✨ 神の卵ゲット！ {dragonBalls}個目！ ✨🔮<br/><span style={{fontSize:'.84rem',color:'#fbbf24'}}>{dragonSummoned&&!zacianSummoned?'あと'+(Math.max(0,3-dragonBalls))+'個でザシアン召喚！':'あと'+(Math.max(0,3-dragonBalls))+'個で神龍召喚！'}</span></div>}
+    <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'4px'}}>
+      <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
+        <span style={{color:'#fbbf24',fontWeight:900,fontSize:'1.0rem'}}>🥚 神の卵:</span>
+        {Array.from({length:3},(_,i)=>(<span key={i} style={{fontSize:'1.3rem',filter:i<dragonBalls?'drop-shadow(0 0 8px #fb923c)':'grayscale(1)',opacity:i<dragonBalls?1:.2,transition:'all .3s'}}>🥚</span>))}
+        <span style={{fontSize:'.84rem',color:dragonBalls>=3?'#4ade80':'#fbbf24',fontWeight:900}}>{dragonBalls}/3</span>
+      </div>
+      {/* 神の卵 4段階召喚UI */}
+      {dragonBalls>=3&&!dragonSummoned&&!monsterRoster.some(m=>m.id==='shenlong')&&
+        <button onClick={summonDragon} style={{...bs('#4ade80'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>🐉 神龍シェンロン召喚！</button>}
+      {dragonSummoned&&!zacianSummoned&&dragonBalls<3&&
+        <span style={{fontSize:'.78rem',color:'#4ade80',fontWeight:900}}>🐉 シェンロン済　⚔️ あと{3-dragonBalls}個でザシアン！</span>}
+      {dragonBalls>=3&&dragonSummoned&&!zacianSummoned&&!monsterRoster.some(m=>m.id==='zacian')&&
+        <button onClick={summonZacian} style={{...bs('#38bdf8'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>⚔️ ザシアン召喚！</button>}
+      {zacianSummoned&&!superGengarSummoned&&dragonBalls<3&&
+        <span style={{fontSize:'.78rem',color:'#38bdf8',fontWeight:900}}>⚔️ ザシアン済　💜 あと{3-dragonBalls}個でスーパーゲンガー！</span>}
+      {dragonBalls>=3&&zacianSummoned&&!superGengarSummoned&&!monsterRoster.some(m=>m.id==='super_gengar')&&
+        <button onClick={summonSuperGengar} style={{...bs('#a855f7'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>💜 スーパーゲンガー召喚！</button>}
+      {superGengarSummoned&&!tricksterSummoned&&dragonBalls<3&&
+        <span style={{fontSize:'.78rem',color:'#a855f7',fontWeight:900}}>💜 スーパーゲンガー済　🎲 あと{3-dragonBalls}個で遊び人！</span>}
+      {dragonBalls>=3&&superGengarSummoned&&!tricksterSummoned&&!monsterRoster.some(m=>m.id==='trickster')&&
+        <button onClick={summonTrickster} style={{...bs('#f59e0b'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>🎲 遊び人ルーカス召喚！</button>}
+      {tricksterSummoned&&<span style={{fontSize:'.78rem',color:'#f59e0b',fontWeight:900}}>🎲 遊び人済 全召喚コンプリート！🎉</span>}
+    </div>
+  </div>
+  <div className="card" style={{borderColor:'rgba(255,255,255,.04)',padding:'12px 14px'}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}}>
+      <span style={{color:'#94a3b8',fontWeight:900,fontSize:'.92rem'}}>⚔️ パーティ</span>
+      <span style={{color:'#fbbf24',fontSize:'.92rem'}}>💰 {gold}G</span>
+    </div>
+    <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
+      {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const hpPct=Math.max(0,(m.hp/m.maxHp)*100);const hpCol=hpPct>70?'#22c55e':hpPct>40?'#4ade80':hpPct>25?'#facc15':'#ef4444';const mpPct=Math.max(0,(m.mp/m.maxMp)*100);const fieldSpells=getMemberSpells(m).filter(sp=>FIELD_SPELL_TYPES.includes(sp.type));const face=m.isMonster?(m.base||'👾'):CHAR_VIS[m.classId]?.face||'🧝';const statusIcon=m.status==='poison'?'☠️':m.status==='burn'?'🔥':m.status==='stun'?'💫':null;
+      return(<div key={i} style={{display:'flex',alignItems:'center',gap:'10px',opacity:m.hp<=0?.45:1}}>
+        <div style={{fontSize:'1.8rem',lineHeight:1,flexShrink:0}}>{face}</div>
+        <div style={{flex:1,minWidth:0}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'5px'}}>
+            <span style={{color:m.hp<=0?'#6b7280':mc,fontWeight:900,fontSize:'.9rem'}}>{m.hp<=0?'💀 ':''}{mn(m)} <span style={{fontSize:'.75rem',opacity:.65}}>Lv{m.level}</span>{statusIcon?<span style={{marginLeft:'3px'}}>{statusIcon}</span>:null}</span>
+            <span style={{fontSize:'.75rem',color:'#475569'}}>{m.hp<=0?'戦闘不能':Math.round(m.hp)+'/'+m.maxHp}</span>
+          </div>
+          <div style={{height:'7px',background:'rgba(255,255,255,.07)',borderRadius:'4px',overflow:'hidden'}}>
+            <div style={{height:'100%',width:hpPct+'%',background:hpCol,borderRadius:'4px',transition:'width .3s'}}/>
+          </div>
+          {m.maxMp>0&&<div style={{height:'3px',background:'rgba(14,165,233,.12)',borderRadius:'2px',overflow:'hidden',marginTop:'3px'}}><div style={{height:'100%',width:mpPct+'%',background:'#38bdf8',borderRadius:'2px'}}/></div>}
+          {fieldSpells.length>0&&m.hp>0&&<button onClick={()=>setFieldSpellMenu({casterIdx:i,targetIdx:i})} style={{...bs('#7c3aed'),margin:'4px 0 0 0',padding:'3px 10px',fontSize:'.76rem'}}>🥚 呪文 ({fieldSpells.length})</button>}
+        </div>
+      </div>);
+      })}
+    </div>
+  </div>
+  <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center'}}>
+    {chIdx===19&&chBattleNum>=10&&(<div style={{width:'100%',maxWidth:'460px',background:'rgba(220,38,38,.15)',border:'2px solid #ef4444',borderRadius:'12px',padding:'12px 16px',marginBottom:'8px',textAlign:'center',animation:'blink 1.5s ease-in-out infinite'}}>
+      <div style={{color:'#ef4444',fontWeight:900,fontSize:'1.0rem',marginBottom:'6px'}}>⚠️ 最終ボス「悪魔サタン」戦の直前！</div>
+      <div style={{color:'#94a3b8',fontSize:'.84rem',marginBottom:'8px'}}>非常に手強い敵です。ここでセーブしておくことをお勧めします！</div>
+      <button style={{...bs('#ef4444'),animation:'none'}} onClick={doSave}>💾 ここでセーブしてから戦う！</button>
+    </div>)}
+    <button style={bs('#ef4444')} onClick={()=>{
+      // 5戦目はボス、1-4戦目は通常エンカウンター
+      const isBossBattle=(chBattleNum>=10);
+      const avgLv=party.length>0?Math.round(party.reduce((s,m)=>s+m.level,0)/party.length):1;
+      const partySize=party.filter(m=>m.hp>0).length;
+      let encData;
+      if(isBossBattle){encData=BOSS_ENC[chIdx]||BOSS_ENC[0];}
+      else{const rr=Math.random();if(rr<0.28){encData=RARE_ENCOUNTERS[Math.floor(Math.random()*RARE_ENCOUNTERS.length)];}else{const pool=MOB_ENC_POOL[chIdx]||MOB_ENC_POOL[0];encData=pool[Math.floor(Math.random()*pool.length)];}}
+      const ens=encData.map(t=>initEnemy(scaleEnemy(t,avgLv,partySize,chIdx)));
+      setEnemies(ens);setMAnims(new Array(ens.length).fill('idle'));
+      const fi=party.findIndex(m=>m.hp>0);
+      setPhase(fi>=0?['p0','p1','p2','p3'][fi]:'p0');
+      setSpellMenu(false);setBusy(false);
+      const battleLabel=isBossBattle?'🚨 第10戦・BOSS！':'第'+chBattleNum+'戦！';
+      addLog('⚠️ '+battleLabel+' '+ens.map(e=>e.name).join(' & ')+'が現れた！');
+      bgm(isBossBattle?chDef.bgm||'boss':'battle');
+      setScr('battle');
+    }}>⚔️ {chBattleNum>=10?'⚡ BOSS戦！':'第'+chBattleNum+'戦へ ▸'}</button>
+    <button style={bs('#d97706')} onClick={()=>{SFX.cursor();bgm('town');setScr('shop');}}>🛒 ショップ</button>
+    <button style={bs('#22c55e')} onClick={doSave}>💾 セーブ</button>
+    {inv.length>0&&<button style={bs('#16a34a')} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
+    {monsterRoster.length>0&&<button style={bs('#60a5fa')} onClick={()=>{SFX.cursor();setScr('party_mgmt');}}>👥 なかま管理</button>}
+    {chIdx>=10&&<button style={bs('#d4a017')} onClick={()=>{SFX.cursor();setShowJobChange(true);}}>⚡ 転職</button>}
+  </div>
+</>)}
+
+{/* BATTLE RESULT */}
+{scr==='result'&&battleResult&&(<div className="card" style={{animation:'fadeIn .4s ease',borderColor:'rgba(212,160,23,.35)',maxWidth:'460px',width:'100%'}}>
+  <div style={{textAlign:'center',marginBottom:'10px'}}>
+    <div style={{fontSize:'2.5rem',marginBottom:'4px'}}>{battleResult.isBoss?'👑':battleResult.isChClear?'🏆':'⚔️'}</div>
+    <div style={{color:'#d4a017',fontWeight:900,fontSize:'1.2rem'}}>{battleResult.isChClear?chDef.n+'クリア！':'第'+chBattleNum+'戦 勝利！'}</div>
+  </div>
+  <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'6px',marginBottom:'10px'}}>
+    <div style={{background:'rgba(99,102,241,.12)',borderRadius:'8px',padding:'8px',textAlign:'center'}}>
+      <div style={{fontSize:'.94rem',color:'#818cf8',marginBottom:'2px'}}>獲得EXP</div>
+      <div style={{color:'#a5b4fc',fontWeight:900,fontSize:'1.1rem'}}>+{battleResult.tExp}</div>
+    </div>
+    <div style={{background:'rgba(251,191,36,.1)',borderRadius:'8px',padding:'8px',textAlign:'center'}}>
+      <div style={{fontSize:'.94rem',color:'#fbbf24',marginBottom:'2px'}}>獲得Gold</div>
+      <div style={{color:'#fde68a',fontWeight:900,fontSize:'1.1rem'}}>+{battleResult.tGold}G</div>
+    </div>
+  </div>
+  {battleResult.lvLogs.length>0&&(<div style={{background:'rgba(34,197,94,.08)',border:'1px solid rgba(34,197,94,.2)',borderRadius:'8px',padding:'8px',marginBottom:'8px'}}>
+    {battleResult.lvLogs.map((l,i)=>(<div key={i} style={{fontSize:'1.0rem',color:'#4ade80',fontWeight:900,textAlign:'center',animation:'popIn .3s ease'}}>{l}</div>))}
+  </div>)}
+  {battleResult.gotDB&&(<div style={{background:'rgba(251,191,36,.15)',border:'2px solid #fbbf24',borderRadius:'10px',padding:'8px',marginBottom:'8px',textAlign:'center',animation:'popIn .4s ease'}}>
+    <div style={{fontSize:'1.5rem',marginBottom:'2px'}}>🥚✨</div>
+    <div style={{color:'#fde68a',fontWeight:900}}>神の卵 ゲット！</div>
+    <div style={{color:'#fbbf24',fontSize:'1.0rem'}}>{battleResult.dbCount}/3個　{battleResult.dbCount>=3?'✨ 召喚できる！':'あと'+(3-battleResult.dbCount)+'個で次の召喚！'}</div>
+  </div>)}
+  {battleResult.recruitTpls&&battleResult.recruitTpls.length>0&&(<div style={{background:'rgba(74,222,128,.1)',border:'1px solid rgba(74,222,128,.3)',borderRadius:'10px',padding:'10px',marginBottom:'8px'}}>
+    <div style={{color:'#4ade80',fontWeight:900,fontSize:'.97rem',textAlign:'center',marginBottom:'6px'}}>🤝 仲間にする敵を選ぼう！（仲間ロスター: {monsterRoster.length}/5）</div>
+    <div style={{display:'grid',gridTemplateColumns:battleResult.recruitTpls.length>1?'1fr 1fr':'1fr',gap:'5px',marginBottom:'6px'}}>
+      {battleResult.recruitTpls.map((tpl,i)=>(<button key={i} onClick={()=>closeResult(tpl,false)} style={{...bs('#22c55e'),margin:0,padding:'8px 6px',fontSize:'1.0rem',display:'flex',flexDirection:'column',alignItems:'center',gap:'2px'}}>
+        <span style={{fontSize:'1.6rem'}}>{tpl.base}{tpl.ov||''}</span>
+        <span style={{fontWeight:900}}>{tpl.name}</span>
+        {tpl.allySkill&&<span style={{fontSize:'.84rem',opacity:.85}}>{tpl.allySkill.e} {tpl.allySkill.name}</span>}
+      </button>))}
+    </div>
+    <div style={{textAlign:'center'}}><button style={{...bs('#374151'),margin:0,padding:'7px 20px',fontSize:'1.0rem'}} onClick={()=>closeResult(null,false)}>今回は断る</button></div>
+  </div>)}
+  {(!battleResult.recruitTpls||battleResult.recruitTpls.length===0)&&(<div style={{display:'flex',justifyContent:'center',gap:'6px',flexWrap:'wrap'}}>
+    {monsterRoster.length>0&&party.length>=2&&<button style={{...bs('#60a5fa'),margin:0,padding:'9px 14px',fontSize:'.94rem'}} onClick={()=>closeResult(null,true)}>👥 パーティ管理</button>}{inv.length>0&&<button style={{...bs('#16a34a'),margin:0,padding:'9px 14px',fontSize:'.94rem'}} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
+    <button style={{...bs('#d4a017'),margin:0,padding:'9px 20px',fontSize:'.88rem'}} onClick={()=>closeResult(null,false)}>{battleResult.isChClear?'次の章へ →':'次の戦いへ →'}</button>
+  </div>)}
+</div>)}
+
+{/* PARTY MANAGEMENT */}
+{scr==='party_mgmt'&&(()=>{
+  const benchH=humanRoster.filter(h=>!party.find(p=>!p.isMonster&&p.name===h.name)); // nameだけで判定
+  const benchM=monsterRoster.filter(r=>!party.find(p=>p.id===r.id));
+  const bench=[...benchH,...benchM];
+  const addM=m=>{if(party.length>=4)return;SFX.cursor();
+    // 控えから最新データ取得してパーティ追加（人間もモンスターも最新版を使う）
+    const latest=m.isMonster
+      ?(monsterRoster.find(r=>r.id===m.id)||m)
+      :(humanRoster.find(h=>h.name===m.name)||m);
+    setParty(p=>[...p,{...latest,hp:Math.min(latest.hp,latest.maxHp)}]);
+  };
+  const removeM=i=>{
+    const m=party[i];if(party.length<=1)return;SFX.cursor();
+    const np=party.filter((_,j)=>j!==i);setParty(np);
+    if(m.isMonster){
+      // 現在のLv・ステータスをmonsterRosterに同期して保存
+      // 存在しない場合（シェンロン等）はrosterに追加してから同期
+      setMonsterRoster(r=>{
+        const exists=r.some(r2=>r2.id===m.id);
+        if(exists) return r.map(r2=>r2.id===m.id?{...m}:r2);
+        return [...r,{...m}]; // なければ追加（消えるバグ防止）
+      });
+    } else {
+      // 人間メンバー: nameだけでマッチ（転職でclassId変わっても追跡できる）
+      setHumanRoster(r=>{
+        const exists=r.some(h=>h.name===m.name);
+        if(exists) return r.map(h=>h.name===m.name?{...m}:h);
+        return [...r,m];
+      });
+    }
+  };
+  return(<div style={{width:'100%',maxWidth:'460px',animation:'fadeIn .3s ease'}}>
+    <div style={{color:'#60a5fa',fontWeight:900,textAlign:'center',marginBottom:'3px',fontSize:'1.05rem'}}>👥 パーティ編成</div>
+    <div style={{fontSize:'.63rem',color:'#94a3b8',textAlign:'center',marginBottom:'8px'}}>人間も怪物も自由に！全員怪物もOK 最大4人・最低1人</div>
+    <div style={{marginBottom:'8px'}}>
+      <div style={{fontSize:'.84rem',color:'#60a5fa',fontWeight:900,marginBottom:'4px'}}>⚔️ 出撃中 ({party.length}/4)</div>
+      {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';return(<div key={i} style={{display:'flex',alignItems:'center',gap:'6px',background:'rgba(255,255,255,.05)',border:`2px solid ${mc}55`,borderRadius:'10px',padding:'7px 10px',marginBottom:'5px'}}>
+        <span style={{fontSize:'1.5rem'}}>{m.isMonster?m.base:(CHAR_VIS[m.classId]?.face||'🧑')}</span>
+        <div style={{flex:1}}><div style={{fontSize:'1.0rem',color:mc,fontWeight:900}}>{mn(m)} Lv.{m.level}</div><div style={{fontSize:'.84rem',color:'#374151'}}>HP:{m.hp}/{m.maxHp} MP:{m.mp}/{m.maxMp}</div></div>
+        {party.length>1&&<button onClick={()=>removeM(i)} style={{...bs('#ef4444'),margin:0,padding:'4px 10px',fontSize:'.77rem'}}>控えに</button>}
+      </div>);})}
+    </div>
+    {bench.length>0&&(<div style={{marginBottom:'8px'}}>
+      <div style={{fontSize:'.84rem',color:'#94a3b8',fontWeight:900,marginBottom:'4px'}}>🏕️ 控え ({bench.length}人)</div>
+      {bench.map((m,j)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const canAdd=party.length<4;return(<div key={j} style={{display:'flex',alignItems:'center',gap:'6px',background:m.isMonster?'rgba(74,222,128,.04)':'rgba(255,255,255,.02)',border:`1px solid ${mc}33`,borderRadius:'10px',padding:'7px 10px',marginBottom:'5px',opacity:canAdd?1:.5}}>
+        <span style={{fontSize:'1.5rem'}}>{m.isMonster?m.base:(CHAR_VIS[m.classId]?.face||'🧑')}</span>
+        <div style={{flex:1}}><div style={{fontSize:'1.0rem',color:mc,fontWeight:900}}>{mn(m)} Lv.{m.level}</div><div style={{fontSize:'.84rem',color:'#374151'}}>HP:{m.maxHp} ATK:{m.atk} DEF:{m.def} MAT:{m.mat}</div></div>
+        <button disabled={!canAdd} onClick={()=>addM(m)} style={{...bs(mc,!canAdd),margin:0,padding:'4px 10px',fontSize:'.77rem'}}>参加!</button>
+      </div>);})}
+    </div>)}
+    {bench.length===0&&(<div style={{color:'#374151',fontSize:'.94rem',textAlign:'center',padding:'6px',marginBottom:'6px'}}>控えなし（怪物を仲間にしよう！）</div>)}
+    <div style={{display:'flex',justifyContent:'center',gap:'6px',marginTop:'6px',flexWrap:'wrap'}}>
+      {inv.length>0&&<button style={{...bs('#16a34a'),margin:0}} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
+      <button style={{...bs('#374151'),margin:0}} onClick={()=>{setScr('map');bgm('field');}}>← マップへ</button>
+    </div>
+  </div>);
+})()}
+
+{/* フィールド呪文メニュー */}
+{fieldSpellMenu&&(()=>{
+  const caster=party[fieldSpellMenu.casterIdx];
+  const target=party[fieldSpellMenu.targetIdx];
+  if(!caster)return null;
+  const spells=getMemberSpells(caster).filter(sp=>FIELD_SPELL_TYPES.includes(sp.type));
+  const isHealTarget=['heal_one','heal_one_full','status_cure','revive','revive_25'].includes;
+  const needsTarget=sp=>['heal_one','heal_one_full','status_cure','revive','revive_25'].includes(sp.type);
+  return(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.75)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} onClick={e=>{if(e.target===e.currentTarget)setFieldSpellMenu(null);}}>
+    <div style={{background:'#1e293b',border:'2px solid #7c3aed',borderRadius:'14px',padding:'14px',width:'100%',maxWidth:'360px'}}>
+      <div style={{color:'#a78bfa',fontWeight:900,fontSize:'1.0rem',marginBottom:'8px',textAlign:'center'}}>🥚 {caster.base||'🧝'} {caster.name} の呪文</div>
+      <div style={{color:'#64748b',fontSize:'.72rem',textAlign:'center',marginBottom:'10px'}}>MP: {caster.mp}/{caster.maxMp}</div>
+      {/* ターゲット選択（単体対象呪文が選ばれた時） */}
+      {fieldSpellMenu.spell&&needsTarget(fieldSpellMenu.spell)&&(<>
+        <div style={{color:'#94a3b8',fontSize:'.8rem',textAlign:'center',marginBottom:'6px'}}>誰に使う？</div>
+        <div style={{display:'flex',flexDirection:'column',gap:'5px',marginBottom:'10px'}}>
+          {party.map((t,ti)=>{const tc=t.isMonster?'#4ade80':CLASSES[t.classId]?.color||'#fff';const canRevive=['revive','revive_25'].includes(fieldSpellMenu.spell.type);return(<button key={ti} disabled={canRevive?t.hp>0:t.hp<=0} onClick={async()=>{const r=await executeSpell(fieldSpellMenu.spell,fieldSpellMenu.casterIdx,[...party],null,true,ti);if(r)setParty(r.party);setFieldSpellMenu(null);}} style={{...bs(tc,(canRevive?t.hp>0:t.hp<=0)),margin:0,padding:'6px 10px',fontSize:'.84rem'}}>{t.isMonster?t.base:'🧝'} {t.name} HP:{t.hp}/{t.maxHp} {t.hp<=0?'💀':''}</button>);})}
+        </div>
+        <button onClick={()=>setFieldSpellMenu({casterIdx:fieldSpellMenu.casterIdx})} style={{...bs('#374151'),margin:0,width:'100%',padding:'5px',fontSize:'.78rem'}}>← 呪文一覧に戻る</button>
+      </>)}
+      {!fieldSpellMenu.spell&&(<>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'4px',marginBottom:'8px'}}>
+          {spells.map(sp=>{const disabled=caster.mp<sp.mp;return(<button key={sp.id} disabled={disabled} onClick={async()=>{if(needsTarget(sp)){setFieldSpellMenu({...fieldSpellMenu,spell:sp});}else{const r=await executeSpell(sp,fieldSpellMenu.casterIdx,[...party],null,true);if(r)setParty(r.party);setFieldSpellMenu(null);}}} style={{...bs(sp.color||'#22c55e',disabled),margin:0,padding:'6px 3px',display:'flex',flexDirection:'column',alignItems:'center',gap:'1px'}}>
+            <span style={{fontSize:'1.1rem'}}>{sp.e}</span>
+            <span style={{fontSize:'.72rem',fontWeight:900}}>{sp.name}</span>
+            <span style={{fontSize:'.62rem',color:disabled?'#ef4444':'#38bdf8'}}>MP{sp.mp}{disabled?' ✕':''}</span>
+          </button>);})}
+        </div>
+        <button onClick={()=>setFieldSpellMenu(null)} style={{...bs('#374151'),margin:0,width:'100%',padding:'5px',fontSize:'.78rem'}}>閉じる</button>
+      </>)}
+    </div>
+  </div>);
+})()}
+{/* 転職モーダル */}
+{showJobChange&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.88)',zIndex:50,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .18s ease'}}
+  onClick={()=>setShowJobChange(false)}>
+  <div style={{background:'#0d0d1a',border:'1px solid #d4a01755',borderRadius:'14px',padding:'16px',width:'100%',maxWidth:'400px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
+    <div style={{color:'#d4a017',fontWeight:900,fontSize:'1.1rem',textAlign:'center',marginBottom:'10px'}}>⚡ 転職（旧職業の力を引き継ぐ）</div>
+    <div style={{fontSize:'.78rem',color:'#94a3b8',textAlign:'center',marginBottom:'10px'}}>転職しても旧職業の呪文・能力は保持されます</div>
+    {party.filter(m=>!m.isMonster).map((m,i)=>{
+      const actualIdx=party.indexOf(m);
+      const mc=CLASSES[m.classId]?.color||'#fff';
+      return(<div key={i} style={{marginBottom:'12px',padding:'10px',background:'rgba(255,255,255,.03)',borderRadius:'10px',border:`1px solid ${mc}33`}}>
+        <div style={{color:mc,fontWeight:900,marginBottom:'6px',fontSize:'.95rem'}}>{mn(m)} Lv.{m.level} [{CLASSES[m.classId]?.name}]</div>
+        {m.oldClassSpells&&m.oldClassSpells.length>0&&<div style={{fontSize:'.68rem',color:'#4ade80',marginBottom:'4px'}}>旧職呪文: {[...new Set(m.oldClassSpells.map(s=>s.name))].join('/')} 引き継ぎ済み</div>}
+        <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:'4px'}}>
+          {Object.values(CLASSES).filter(cls=>cls.id!==m.classId).map(cls=>(<button key={cls.id} onClick={()=>doJobChange(actualIdx,cls.id)} style={{...bs(cls.color),margin:0,padding:'7px',fontSize:'.84rem',display:'flex',flexDirection:'column',alignItems:'center',gap:'2px'}}>
+            <span style={{fontSize:'1.2rem'}}>{CHAR_VIS[cls.id]?.face||'🧝'}</span>
+            <span style={{fontWeight:900}}>{cls.name}</span>
+            <span style={{fontSize:'.65rem',opacity:.7}}>ATK{cls.atk} DEF{cls.def} MAT{cls.mat}</span>
+          </button>))}
+        </div>
+      </div>);
+    })}
+    <button onClick={()=>setShowJobChange(false)} style={{...bs('#374151'),margin:'4px 0 0 0',width:'100%',padding:'8px',fontSize:'.87rem'}}>閉じる</button>
+  </div>
+</div>)}
+
+{/* 戦闘中 控え選択モーダル */}
+{substituteMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.92)',zIndex:70,display:'flex',alignItems:'center',justifyContent:'center',padding:'12px'}}>
+  <div style={{background:'#0d0d1a',border:'2px solid #ef4444',borderRadius:'14px',padding:'14px',width:'100%',maxWidth:'380px',animation:'popIn .2s ease'}}>
+    <div style={{color:'#ef4444',fontWeight:900,fontSize:'1.05rem',textAlign:'center',marginBottom:'4px'}}>💀 戦闘不能！控えを選んで！</div>
+    <div style={{fontSize:'.78rem',color:'#94a3b8',textAlign:'center',marginBottom:'10px'}}>倒れたメンバーと交代するキャラを選ぼう</div>
+    {substituteMenu.deadIdxs.map(deadIdx=>{
+      const dead=substituteMenu.party[deadIdx];
+      const deadColor=dead.isMonster?'#4ade80':CLASSES[dead.classId]?.color||'#ef4444';
+      // まだ交代していない控えだけ表示
+      const bench=substituteMenu.bench;
+      return(<div key={deadIdx} style={{marginBottom:'10px',padding:'8px',background:'rgba(239,68,68,.05)',border:'1px solid #ef444433',borderRadius:'10px'}}>
+        <div style={{color:'#ef4444',fontSize:'.85rem',fontWeight:900,marginBottom:'6px'}}>
+          💀 {mn(dead)} が倒れた…
+        </div>
+        {bench.length===0
+          ? <div style={{color:'#94a3b8',fontSize:'.8rem'}}>控えにキャラがいない…</div>
+          : <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:'5px'}}>
+            {bench.map((bm,bi)=>{
+              const latest=bm.isMonster?(monsterRoster.find(r=>r.id===bm.id)||bm):(humanRoster.find(h=>h.name===bm.name)||bm);
+              const bc=latest.isMonster?'#4ade80':CLASSES[latest.classId]?.color||'#fff';
+              return(<button key={bi} onClick={()=>{
+                // 選択されたキャラで交代
+                const newParty=substituteMenu.party.map((pm,i)=>{
+                  if(i!==deadIdx)return pm;
+                  return{...latest,hp:Math.min(latest.hp,latest.maxHp),status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0};
+                });
+                addLog('🔄 '+mn(dead)+'→'+mn(latest)+'が参戦！');SFX.cursor();
+                // 死亡したキャラのHP0状態をrosterに反映（再選択不可に）
+                if(!dead.isMonster){setHumanRoster(r=>r.map(h=>h.name===dead.name?{...dead,hp:0}:h));}
+                else{setMonsterRoster(r=>r.map(mr=>mr.id===dead.id?{...dead,hp:0}:mr));}
+                // まだ他の死者がいれば続行（次の deadIdx 処理へ）
+                const remainingDead=substituteMenu.deadIdxs.filter(i=>i!==deadIdx&&newParty[i].hp<=0);
+                const newBench=bench.filter((_,j)=>j!==bi);
+                if(remainingDead.length>0&&newBench.length>0){
+                  setSubstituteMenu({deadIdxs:remainingDead,party:newParty,bench:newBench});
+                } else {
+                  setSubstituteMenu(null);
+                  substituteResolveRef.current?.(newParty);
+                }
+              }} style={{...bs(bc),margin:0,padding:'7px 4px',fontSize:'.82rem',display:'flex',flexDirection:'column',alignItems:'center',gap:'1px'}}>
+                <span style={{fontSize:'1.15rem'}}>{latest.isMonster?latest.base:CHAR_VIS[latest.classId]?.face||'🧝'}</span>
+                <span style={{fontWeight:900}}>{mn(latest)}</span>
+                <span style={{fontSize:'.65rem',opacity:.8}}>Lv{latest.level} HP{latest.hp}</span>
+              </button>);
+            })}
+          </div>
+        }
+        {bench.length===0&&<button onClick={()=>{
+          setSubstituteMenu(null);
+          substituteResolveRef.current?.(substituteMenu.party);
+        }} style={{...bs('#374151'),margin:'4px 0 0 0',width:'100%',padding:'6px',fontSize:'.82rem'}}>このまま続ける</button>}
+      </div>);
+    })}
+  </div>
+</div>)}
+
+{false&&(<div></div>)}
+
+{/* BATTLE */}
+{scr==='battle'&&party.length>0&&enemies.length>0&&(<>
+  <div style={{position:'relative',width:'100%',maxWidth:'460px',height:'238px',borderRadius:'14px',overflow:'hidden',marginBottom:'9px',border:`2px solid ${enemies.some(e=>e.boss)?'rgba(220,38,38,.5)':'rgba(255,100,30,.15)'}`}}>
+    <div style={{position:'absolute',inset:0,background:stage.sky}}/>
+    <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,.65) 1px,transparent 1px)',backgroundSize:'20px 20px',animation:'starPulse 4s ease-in-out infinite'}}/>
+    {enemies.some(e=>e.final)&&<div style={{position:'absolute',inset:0,animation:'rageFlash 3s ease-in-out infinite',background:'rgba(220,38,38,.04)'}}/>}
+    <div style={{position:'absolute',bottom:0,left:0,right:0,height:'60px',background:`linear-gradient(transparent,${stage.gnd})`,borderTop:`1px solid ${stage.gb}`}}/>
+    {party.map((m,i)=>(<div key={i} style={{position:'absolute',bottom:'28px',left:(1+i*11)+'%',transformOrigin:'bottom center'}}>{m.isMonster?<MonPartySprite mon={m} anim={pAnims[i]}/>:<CharSprite member={m} anim={pAnims[i]}/>}</div>))}
+    {enemies.map((en,i)=>(<div key={i} style={{position:'absolute',bottom:'24px',right:(enemies.length===1?8:1+i*18)+'%',transformOrigin:'bottom center'}}><MonSprite mon={en} anim={mAnims[i]} size={en.big?4.8:enemies.length===1?4.8:enemies.length===2?4.2:3.8}/></div>))}
+    <div style={{position:'absolute',top:'8px',left:'50%',transform:'translateX(-50%)',fontSize:'.66rem',color:'rgba(255,255,255,.28)',whiteSpace:'nowrap'}}>{chDef.n}</div>
+    {enemies.some(e=>e.boss)&&<div style={{position:'absolute',top:'8px',left:'8px',fontSize:'.68rem',color:'#ef4444',fontWeight:900,animation:'blink 1s ease-in-out infinite'}}>⚠️BOSS</div>}
+    {autoMode&&<div style={{position:'absolute',top:'8px',right:'8px',fontSize:'.77rem',color:'#22c55e',background:'rgba(34,197,94,.18)',padding:'2px 6px',borderRadius:'5px'}}>AUTO▶</div>}
+    {showSkill&&<div style={{position:'absolute',inset:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'5rem',animation:'skillFlash .65s ease forwards',zIndex:50,pointerEvents:'none'}}>{showSkill}</div>}
+    {dmgs.map(d=>(<div key={d.id} style={{position:'absolute',fontWeight:900,fontSize:'1.8rem',pointerEvents:'none',zIndex:100,animation:'dmgUp .95s ease forwards',textShadow:'0 2px 8px rgba(0,0,0,.95)',color:d.type==='e'?'#ff5555':d.type==='h'?'#4ade80':'#ffd700',left:d.x,top:d.y}}>{d.type==='h'?'+'+d.v:'-'+d.v}</div>))}
+    {sparks.map(s=>Array.from({length:7},(_,si)=>{const a=(si/7)*Math.PI*2,dist=25+Math.random()*20;return <div key={s.id+'_'+si} style={{position:'absolute',width:'6px',height:'6px',borderRadius:'50%',left:s.x,top:s.y,background:`hsl(${14+si*14},100%,62%)`,pointerEvents:'none',zIndex:60,animation:'sparkFly .62s ease forwards','--tx':Math.cos(a)*dist+'px','--ty':Math.sin(a)*dist+'px'}}/>;}))}
+  </div>
+  {/* バトルログ: ステータス上に表示・文字大きめ */}
+  {log.length>0&&(<div style={{width:'100%',maxWidth:'460px',padding:'7px 12px',marginBottom:'6px',background:'rgba(0,0,0,.6)',borderRadius:'10px',border:'1px solid rgba(255,255,255,.1)',minHeight:'48px'}}>
+    {log.slice(0,3).map((e,i)=>(<div key={i} style={{fontSize:i===0?'1.0rem':'.85rem',lineHeight:1.7,opacity:i===0?1:i===1?.55:.30,color:i===0?'#f8fafc':'#94a3b8',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontWeight:i===0?700:400}}>{e}</div>))}
+  </div>)}
+  <div className="card" style={{borderColor:'rgba(220,38,38,.18)',padding:'8px 10px'}}>
+    <div style={{display:'grid',gridTemplateColumns:enemies.length>1?'1fr 1fr':'1fr',gap:'2px 8px',marginBottom:'4px'}}>
+      {enemies.map((en,i)=>{const pct=Math.max(0,(en.hp/en.maxHp)*100),col=pct>50?'#ef4444':pct>25?'#f97316':'#dc2626';return(<div key={i} style={{marginBottom:'2px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:'.84rem',marginBottom:'1px'}}>
+          <span style={{color:en.boss?'#fca5a5':'#f87171',fontWeight:900}}>{en.base}{en.boss?'👑':''} {en.name.length>9?en.name.slice(0,9)+'…':en.name}</span>
+          <span style={{color:'#6b7280',fontSize:'.77rem'}}>{Math.max(0,Math.round(en.hp))}</span>
+        </div>
+        <div style={{height:'7px',background:'rgba(0,0,0,.5)',borderRadius:'4px',overflow:'hidden',border:'1px solid rgba(239,68,68,.3)'}}>
+          <div style={{height:'100%',width:pct+'%',background:`linear-gradient(90deg,${col},${col}aa)`,borderRadius:'4px',transition:'width .3s ease'}}/>
+        </div>
+      </div>);})}
+    </div>
+    <div style={{borderTop:'1px solid rgba(255,255,255,.06)',margin:'4px 0'}}/>
+    <div style={{display:'grid',gridTemplateColumns:party.length>2?'1fr 1fr':'1fr',gap:'2px 8px'}}>
+      {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const hpPct=Math.max(0,(m.hp/m.maxHp)*100),hpCol=hpPct>70?'#22c55e':hpPct>40?'#4ade80':hpPct>25?'#facc15':'#ef4444';const mpPct=Math.max(0,(m.mp/m.maxMp)*100);const bStr=[];if(m.atkBuffMult>1)bStr.push('↑');if(m.reflecting)bStr.push('反');return(<div key={i} style={{marginBottom:'2px'}}>
+        <div style={{display:'flex',justifyContent:'space-between',fontSize:'.84rem',marginBottom:'1px'}}>
+          <span style={{color:m.hp<=0?'#6b7280':mc,fontWeight:900}}>{m.hp<=0?'💀':''}{mn(m)} Lv{m.level}{m.status?'🤢':''}{bStr.length?'✨':''}</span>
+          <span style={{color:'#6b7280',fontSize:'.77rem'}}>{m.hp<=0?'--':Math.round(m.hp)+'/'+m.maxHp}</span>
+        </div>
+        <div style={{height:'6px',background:'rgba(0,0,0,.5)',borderRadius:'3px',overflow:'hidden',border:`1px solid ${mc}33`,marginBottom:'2px'}}>
+          <div style={{height:'100%',width:hpPct+'%',background:`linear-gradient(90deg,${hpCol},${hpCol}99)`,borderRadius:'3px',transition:'width .3s ease'}}/>
+        </div>
+        <div style={{height:'4px',background:'rgba(0,0,0,.4)',borderRadius:'2px',overflow:'hidden',border:'1px solid rgba(14,165,233,.2)'}}>
+          <div style={{height:'100%',width:mpPct+'%',background:'linear-gradient(90deg,#0ea5e9,#38bdf8)',borderRadius:'2px',transition:'width .3s ease'}}/>
+        </div>
+      </div>);})}
+    </div>
+  </div>
+
+  <div className="card" style={{borderColor:'rgba(212,160,23,.1)',padding:'6px 8px'}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'4px'}}>
+      <div style={{fontSize:'.92rem',fontWeight:900,color:activeM?(activeM.isMonster?'#4ade80':CLASSES[activeM.classId]?.color||'#fff'):'#374151'}}>{phase==='enemy'?'💢 敵のターン…':activeM?mn(activeM)+'のターン！':''}</div>
+      <button onClick={()=>setAutoMode(v=>!v)} style={{background:autoMode?'rgba(34,197,94,.22)':'rgba(80,80,90,.18)',border:`1px solid ${autoMode?'#22c55e':'#1e1e3a'}`,color:autoMode?'#22c55e':'#374151',padding:'4px 12px',borderRadius:'16px',fontSize:'.87rem',fontWeight:900,cursor:'pointer'}}>{autoMode?'AUTO●':'AUTO○'}</button>
+    </div>
+    {!spellMenu&&(<>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:'3px',marginBottom:'3px'}}>
+        {[{l:'⚔️',s:'こうげき',c:'#dc2626',dis:busy||autoMode||phase==='enemy',fn:()=>handleAction('atk',null)},
+          {l:'✨',s:'呪文',c:'#8b5cf6',dis:busy||autoMode||phase==='enemy'||activeMemberSpells.length===0,fn:()=>setSpellMenu(true)},
+          {l:'🌿',s:'アイテム',c:'#16a34a',dis:busy||autoMode||inv.length===0||phase==='enemy',fn:()=>handleAction('heal',null)},
+          {l:'🛡️',s:'防御',c:'#0ea5e9',dis:busy||autoMode||phase==='enemy',fn:()=>handleAction('defend',null)},
+          {l:'🏃',s:'にげる',c:'#4b5563',dis:busy||autoMode||phase==='enemy',fn:()=>handleAction('flee',null)},
+        ].map(b=>(<button key={b.l} disabled={b.dis} onClick={b.fn} style={{...bs(b.c,b.dis),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'0px',padding:'5px 2px',minWidth:0}}><span style={{fontSize:'1.1rem'}}>{b.l}</span><span style={{fontSize:'.58rem',opacity:.8,fontWeight:900}}>{b.s}</span></button>))}
+      </div>
+      {(()=>{
+        const benchAll=[...humanRoster,...monsterRoster].filter(r=>!party.find(p=>p.isMonster?p.id===r.id:(p.name===r.name)));
+        if(benchAll.length===0)return null;
+        return(<div style={{display:'flex',gap:'3px',flexWrap:'wrap'}}>
+          <span style={{fontSize:'.65rem',color:'#94a3b8',alignSelf:'center',flexShrink:0}}>交代▶</span>
+          {party.map((pm,pIdx)=>{if(pm.hp<=0)return null;const mc=pm.isMonster?'#4ade80':CLASSES[pm.classId]?.color||'#fff';return(<button key={pIdx} disabled={busy||autoMode||phase==='enemy'} onClick={()=>{
+            // 交代: 控えから選ぶミニUI（次のステートで管理）
+            const bench=benchAll;if(bench.length===0)return;
+            // 簡易交代: 最初の控えと自動交代
+            const bm=bench[0];
+            const latestBm=bm.isMonster?(monsterRoster.find(r=>r.id===bm.id)||bm):
+              (humanRoster.find(r=>r.name===bm.name)||bm);
+            const np=party.map((p,i)=>i===pIdx?{...latestBm,hp:Math.min(latestBm.hp,latestBm.maxHp)}:p);
+            setParty(np);
+            if(bm.isMonster)setMonsterRoster(r=>r.map(r2=>r2.id===bm.id?{...bm}:r2));
+            else setHumanRoster(r=>{
+              // pmをrosterに保存（未登録なら追加、登録済みなら更新）
+              const exists=r.some(h=>h.name===pm.name);
+              if(exists) return r.map(h=>h.name===pm.name?{...pm}:h);
+              return [...r,{...pm}];
+            });
+            addLog('🔄 '+mn(pm)+'→'+mn(latestBm)+'に交代！');SFX.cursor();
+          }} style={{...bs(mc,busy||autoMode||phase==='enemy'),margin:0,padding:'3px 5px',fontSize:'.65rem'}}>{mn(pm).slice(0,3)}</button>);})}
+        </div>);
+      })()}
+    </>)}
+    {spellMenu&&activeM&&(<div>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'4px'}}>
+        <span style={{fontSize:'.78rem',fontWeight:900,color:'#a78bfa'}}>✨ {mn(activeM)}の呪文</span>
+        <button onClick={()=>setSpellMenu(false)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'2px 6px',borderRadius:'6px',fontSize:'.74rem',cursor:'pointer'}}>← もどる</button>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'3px',maxHeight:'200px',overflowY:'auto'}}>
+        {activeMemberSpells.map((sp,i)=>{const noMp=(activeM.mp||0)<(sp.mp||0);return(<button key={sp.id||i} disabled={busy||noMp} onClick={()=>{setSpellMenu(false);handleAction('spell',sp.id);}} style={{...bs(sp.color||'#8b5cf6',busy||noMp),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'1px',padding:'5px 3px',fontSize:'.72rem'}}><span style={{fontSize:'.95rem'}}>{sp.e}</span><span style={{fontWeight:900,fontSize:'.72rem'}}>{sp.name}</span><span style={{fontSize:'.62rem',color:noMp?'#ef4444':'#38bdf8'}}>MP{sp.mp}</span></button>);})}
+      </div>
+    </div>)}
+  </div>
+  {/* アイテムメニュー（戦闘中）*/}
+  {itemMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.82)',zIndex:50,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .18s ease'}}>
+    <div style={{background:'#0d0d1a',border:'1px solid #22c55e44',borderRadius:'14px',padding:'14px',width:'100%',maxWidth:'360px',maxHeight:'80vh',overflowY:'auto'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}}>
+        <span style={{fontSize:'.97rem',fontWeight:900,color:'#22c55e'}}>🌿 アイテムを使う</span>
+        <button onClick={()=>setItemMenu(false)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'3px 8px',borderRadius:'8px',fontSize:'.87rem',cursor:'pointer'}}>← とじる</button>
+      </div>
+      {/* 対象選択 */}
+      <div style={{marginBottom:'10px'}}>
+        <div style={{fontSize:'.77rem',color:'#94a3b8',marginBottom:'5px'}}>👤 使う相手</div>
+        <div style={{display:'flex',gap:'5px',flexWrap:'wrap'}}>
+          {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#94a3b8';const dead=m.hp<=0;return(<button key={i} onClick={()=>{SFX.cursor();setItemTargetIdx(i);}} style={{...bs(i===itemTargetIdx?mc:'#1e1e3a'),margin:0,padding:'5px 8px',fontSize:'.68rem',opacity:dead?.5:1,border:`1px solid ${i===itemTargetIdx?mc:'#2a2a4a'}`}}><span style={{fontSize:'1.0rem'}}>{m.isMonster?m.base:(CHAR_VIS[m.classId]?.face||'🧑')}</span><br/><span style={{color:mc}}>{mn(m)}</span><br/><span style={{color:m.hp/m.maxHp<.25?'#ef4444':'#94a3b8'}}>{dead?'💀':m.hp+'/'+m.maxHp}</span></button>);})}            </div>
+      </div>
+      {/* アイテムリスト */}
+      {inv.length===0?<div style={{color:'#374151',textAlign:'center',padding:'12px'}}>アイテムがない</div>:[...new Set(inv.map(i=>i.id))].map(id=>{const item=inv.find(x=>x.id===id);const cnt=inv.filter(x=>x.id===id).length;return(<div key={id} onClick={()=>useItemOn(item,itemTargetIdx)} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'6px',padding:'8px 10px',background:'rgba(34,197,94,.05)',border:'1px solid rgba(34,197,94,.18)',borderRadius:'10px',cursor:'pointer',transition:'all .15s'}}><span style={{fontSize:'1.4rem'}}>{item.emoji}</span><div style={{flex:1}}><div style={{fontSize:'1.0rem',fontWeight:900,color:'#d1fae5'}}>{item.name} <span style={{color:'#4ade80',fontSize:'.68rem'}}>×{cnt}</span></div><div style={{fontSize:'.74rem',color:'#374151'}}>{item.desc}</div></div><span style={{fontSize:'.84rem',color:'#22c55e',fontWeight:900}}>使う ▶</span></div>);})}
+    </div>
+  </div>)}
+  {/* セーブスロットモーダル */}
+  {saveConfirm&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.92)',zIndex:80,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .15s ease'}}>
+    <div style={{background:'#0d0d1a',border:'2px solid #22c55e',borderRadius:'14px',padding:'20px',width:'100%',maxWidth:'320px',textAlign:'center'}}>
+      <div style={{fontSize:'1.5rem',marginBottom:'8px'}}>💾</div>
+      <div style={{color:'#22c55e',fontWeight:900,fontSize:'1.05rem',marginBottom:'6px'}}>スロット{saveConfirm}にセーブしますか？</div>
+      {loadSlotMeta()[saveConfirm-1]&&<div style={{fontSize:'.78rem',color:'#94a3b8',marginBottom:'12px'}}>※ 既存のデータは上書きされます</div>}
+      {!loadSlotMeta()[saveConfirm-1]&&<div style={{fontSize:'.78rem',color:'#94a3b8',marginBottom:'12px'}}>新しくセーブします</div>}
+      <div style={{display:'flex',gap:'8px'}}>
+        <button onClick={()=>{doSaveSlot(saveConfirm);setSaveConfirm(null);}} style={{flex:1,background:'#166534',border:'1px solid #22c55e',color:'#4ade80',padding:'10px',borderRadius:'10px',fontWeight:900,fontSize:'1rem',cursor:'pointer'}}>✅ セーブする</button>
+        <button onClick={()=>setSaveConfirm(null)} style={{flex:1,background:'rgba(255,255,255,.04)',border:'1px solid #374151',color:'#94a3b8',padding:'10px',borderRadius:'10px',fontWeight:900,fontSize:'1rem',cursor:'pointer'}}>❌ やめる</button>
+      </div>
+    </div>
+  </div>)}
+  {saveMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.88)',zIndex:60,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .18s ease'}}>
+    <div style={{background:'#0d0d1a',border:'1px solid #22c55e44',borderRadius:'14px',padding:'16px',width:'100%',maxWidth:'360px'}}>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+        <span style={{fontSize:'1.0rem',fontWeight:900,color:saveMenu==='save'?'#22c55e':'#60a5fa'}}>{saveMenu==='save'?'💾 セーブ先を選んで':'📂 ロードするデータを選んで'}</span>
+        <button onClick={()=>setSaveMenu(null)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'3px 8px',borderRadius:'8px',fontSize:'.87rem',cursor:'pointer'}}>✕</button>
+      </div>
+      {loadSlotMeta().map((meta,i)=>{const n=i+1;const empty=!meta;return(<div key={n} onClick={()=>{SFX.cursor();if(saveMenu==='save'){SFX.cursor();setSaveMenu(null);setSaveConfirm(n);}else if(!empty)doLoadSlot(n);}} style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'7px',padding:'10px 12px',background:empty?'rgba(255,255,255,.02)':'rgba(34,197,94,.05)',border:`1px solid ${empty?'#1e1e3a':'rgba(34,197,94,.25)'}`,borderRadius:'10px',cursor:saveMenu==='load'&&empty?'not-allowed':'pointer',opacity:saveMenu==='load'&&empty?.4:1,transition:'all .15s'}}>
+        <div style={{width:'24px',height:'24px',borderRadius:'50%',background:empty?'#1e1e3a':'#22c55e22',border:`1px solid ${empty?'#2a2a4a':'#22c55e'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.87rem',fontWeight:900,color:empty?'#374151':'#22c55e',flexShrink:0}}>{n}</div>
+        {empty?<span style={{fontSize:'.87rem',color:'#374151'}}>― 空き ―</span>:<div style={{flex:1}}>
+          <div style={{fontSize:'.84rem',color:'#d1fae5',fontWeight:900}}>{CHAPTERS[meta.chIdx]?.n||''} / Gold {meta.gold}G</div>
+          <div style={{fontSize:'.74rem',color:'#4ade80',marginTop:'1px'}}>{meta.party.map(m=>mn(m)+' Lv'+m.level).join(' · ')}</div>
+          <div style={{fontSize:'.58rem',color:'#374151',marginTop:'1px'}}>{meta.savedAt}</div>
+        </div>}
+        <span style={{fontSize:'.92rem',color:saveMenu==='save'?'#22c55e':'#60a5fa'}}>{saveMenu==='save'?'保存▶':'読込▶'}</span>
+      </div>);})}
+    </div>
+  </div>)}
+</>)}
+
+{/* SHOP */}
+{scr==='shop'&&(<div className="card" style={{animation:'fadeIn .3s ease',borderColor:'rgba(212,160,23,.16)'}}>
+  <div style={{color:'#d4a017',fontWeight:900,textAlign:'center',marginBottom:'8px'}}>🛒 ショップ　Gold: {gold}</div>
+  {(()=>{
+```
+
+const equipTiers=ITEMS.filter(i=>i.type===‘equip’).map(i=>i.tier);
+const maxTier=Math.max(…equipTiers);
+// 現在解禁されているtier: 全tier1が買われたらtier2、全tier2が買われたらtier3…
+let unlockedTier=1;
+for(let t=1;t<maxTier;t++){
+const tierItems=ITEMS.filter(i=>i.type===‘equip’&&i.tier===t);
+if(tierItems.every(i=>boughtEquips.includes(i.id)))unlockedTier=t+1;
+else break;
+}
+const shopList=ITEMS.filter(i=>i.type===‘con’||(i.type===‘equip’&&i.tier===unlockedTier&&!boughtEquips.includes(i.id)));
+const allBought=ITEMS.filter(i=>i.type===‘equip’&&i.tier===unlockedTier).every(i=>boughtEquips.includes(i.id));
+return(<>
+{unlockedTier>1&&<div style={{fontSize:’.78rem’,color:’#fbbf24’,marginBottom:‘6px’,textAlign:‘center’}}>🌟 強化Tier {unlockedTier} 装備が解禁されました！</div>}
+{shopList.map(item=>(<div key={item.id} style={{display:‘flex’,alignItems:‘center’,gap:‘7px’,marginBottom:‘6px’,padding:‘8px’,background:item.type===‘equip’?‘rgba(212,160,23,.08)’:‘rgba(255,255,255,.025)’,borderRadius:‘9px’,border:item.type===‘equip’?‘1px solid rgba(212,160,23,.2)’:‘none’}}><span style={{fontSize:‘1.3rem’}}>{item.emoji}</span><div style={{flex:1}}><div style={{fontSize:’.94rem’,fontWeight:‘bold’}}>{item.name}{item.type===‘equip’?<span style={{fontSize:’.68rem’,color:’#fbbf24’,marginLeft:‘4px’}}>一回限り</span>:null}</div><div style={{fontSize:’.68rem’,color:’#4b5563’}}>{item.desc}</div></div><button onClick={()=>buyItem(item)} disabled={gold<item.cost} style={{…bs(’#d97706’,gold<item.cost),margin:0,padding:‘7px 10px’,fontSize:‘1.0rem’}}>{item.cost}G</button></div>))}
+{shopList.filter(i=>i.type===‘equip’).length===0&&!allBought&&<div style={{fontSize:’.82rem’,color:’#4ade80’,textAlign:‘center’,padding:‘8px’}}>✅ 現在の装備は全て購入済み！</div>}
+</>);
+})()}
+<div style={{display:‘flex’,justifyContent:‘center’,gap:‘6px’,marginTop:‘8px’,flexWrap:‘wrap’}}>
+{inv.length>0&&<button style={{…bs(’#16a34a’),margin:0}} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
+<button style={{…bs(’#374151’),margin:0}} onClick={()=>{SFX.cursor();setScr(‘map’);bgm(‘field’);}}>🔙 もどる</button></div>
+</div>)}
+
+```
+{/* GAME OVER */}
+{scr==='gameover'&&(<div className="card" style={{textAlign:'center',animation:'popIn .5s ease',borderColor:'rgba(220,38,38,.3)'}}>
+  <div style={{fontSize:'4rem',marginBottom:'7px'}}>💀</div>
+  <div style={{color:'#dc2626',fontSize:'1.5rem',fontWeight:900,marginBottom:'4px'}}>GAME OVER</div>
+  <div style={{color:'#4b5563',marginBottom:'14px',fontSize:'.97rem'}}>パーティは全滅した…</div>
+  <button style={bs('#dc2626')} onClick={()=>{setParty([]);setEnemies([]);setLog([]);setScr('title');stopBgm();}}>🔄 タイトルへ</button>
+</div>)}
+
+{/* ENDING */}
+{scr==='ending'&&(<div className="card" style={{animation:'popIn .5s ease',borderColor:'rgba(212,160,23,.4)',textAlign:'center'}}>
+  <div style={{fontSize:'4rem',marginBottom:'8px',animation:'winSpin .8s ease-in-out infinite'}}>🏆</div>
+  <div style={{color:'#d4a017',fontSize:'1.3rem',fontWeight:900,marginBottom:'10px'}}>🎉 ゲームクリア！ 🎉</div>
+  <div style={{color:'#94a3b8',fontSize:'.88rem',lineHeight:2.1,marginBottom:'16px',background:'rgba(0,0,0,.35)',padding:'14px 16px',borderRadius:'12px',textAlign:'left',borderLeft:'3px solid #d4a017'}}>
+    悪魔サタンが消滅した！<br/>
+    天空城が崩れる中、ゆうりはフィリア姫を抱えて脱出した。<br/><br/>
+    <span style={{color:'#f9a8d4',fontWeight:900}}>「ありがとう…ゆうりさん、そうやさん。あなたたちは世界の英雄です！」</span><br/><br/>
+    ドゴール地方を覆っていた闇が晴れ、太陽の光が降り注ぐ。<br/>
+    カシミール地方にも朗報が届き、村全体が歓声に包まれた。<br/><br/>
+    <span style={{color:'#d4a017',fontWeight:900}}>こうして世界に平和が戻った。ゆうりとそうやの伝説は永遠に語り継がれることになった——。</span>
+  </div>
+  <div style={{fontSize:'1.0rem',color:'#4b5563',marginBottom:'10px'}}>{party.map(m=>mn(m)+' Lv.'+m.level).join(' / ')}<br/>クリア回数: {clearCount}回</div>
+  <div style={{display:'flex',justifyContent:'center',gap:'8px',flexWrap:'wrap'}}>
+    <button style={bs('#22c55e')} onClick={doSave}>💾 セーブ</button>
+    {inv.length>0&&<button style={bs('#16a34a')} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
+    {monsterRoster.length>0&&<button style={bs('#60a5fa')} onClick={()=>{SFX.cursor();setScr('party_mgmt');}}>👥 なかま管理</button>}
+    {chIdx>=10&&<button style={bs('#d4a017')} onClick={()=>{SFX.cursor();setShowJobChange(true);}}>⚡ 転職</button>}
+    <button style={bs('#d4a017')} onClick={()=>{setParty([]);setEnemies([]);setLog([]);stopBgm();setScr('title');}}>🔄 タイトルへ</button>
+  </div>
+</div>)}
+
+{/* 神龍召喚演出 */}
+{showDragonSummon&&(<div onClick={()=>setShowDragonSummon(false)} style={{position:'fixed',inset:0,zIndex:300,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'radial-gradient(ellipse at center,rgba(0,20,0,.92) 0%,rgba(0,0,0,.98) 100%)',animation:'fadeIn .4s ease',cursor:'pointer'}}>
+  <div style={{fontSize:'9rem',animation:'dragonPulse 1s ease-in-out infinite',filter:'drop-shadow(0 0 40px #4ade80) drop-shadow(0 0 80px #22c55e)',marginBottom:'16px'}}>🐉</div>
+  <div style={{fontSize:'1.8rem',fontWeight:900,color:'#4ade80',textShadow:'0 0 30px #4ade80,0 0 60px #22c55e',animation:'popIn .5s ease',marginBottom:'8px',letterSpacing:'.1em'}}>神 龍 降 臨 ！！</div>
+  <div style={{fontSize:'1.1rem',color:'#86efac',fontWeight:700,marginBottom:'24px',animation:'fadeIn .8s .3s ease both'}}>シェンロンがなかまになった！</div>
+  <div style={{display:'flex',gap:'12px',marginBottom:'20px'}}>
+    {[...Array(3)].map((_,i)=>(<div key={i} style={{fontSize:'2rem',filter:'drop-shadow(0 0 12px #fb923c)',animation:`popIn .4s ${i*.15}s ease both`}}>🥚</div>))}
+  </div>
+  <div style={{fontSize:'.88rem',color:'#4ade80',opacity:.7}}>神の卵3個消費</div>
+  <div style={{fontSize:'.75rem',color:'#4ade80',opacity:.4,marginTop:'20px'}}>タップで閉じる</div>
+</div>)}
+{/* ザシアン召喚演出 */}
+{showZacianSummon&&(<div onClick={()=>setShowZacianSummon(false)} style={{position:'fixed',inset:0,zIndex:300,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',background:'radial-gradient(ellipse at center,rgba(0,10,30,.95) 0%,rgba(0,0,20,.99) 100%)',animation:'fadeIn .4s ease',cursor:'pointer'}}>
+  <div style={{fontSize:'9rem',animation:'dragonPulse 1s ease-in-out infinite',filter:'drop-shadow(0 0 40px #38bdf8) drop-shadow(0 0 80px #0ea5e9)',marginBottom:'16px'}}>🐺</div>
+  <div style={{fontSize:'1.8rem',fontWeight:900,color:'#38bdf8',textShadow:'0 0 30px #38bdf8,0 0 60px #0ea5e9',animation:'popIn .5s ease',marginBottom:'8px',letterSpacing:'.1em'}}>覇 剣 獣 降 臨 ！！</div>
+  <div style={{fontSize:'1.1rem',color:'#7dd3fc',fontWeight:700,marginBottom:'8px',animation:'fadeIn .8s .3s ease both'}}>ザシアンがなかまになった！</div>
+  <div style={{fontSize:'.88rem',color:'#38bdf8',fontWeight:600,marginBottom:'20px',animation:'fadeIn .8s .5s ease both'}}>⚔️ きょじゅうざん で敵を一撃！</div>
+  <div style={{display:'flex',gap:'12px',marginBottom:'20px'}}>
+    {[...Array(3)].map((_,i)=>(<div key={i} style={{fontSize:'2rem',filter:'drop-shadow(0 0 12px #38bdf8)',animation:`popIn .4s ${i*.15}s ease both`}}>🥚</div>))}
+  </div>
+  <div style={{fontSize:'.88rem',color:'#38bdf8',opacity:.7}}>神の卵3個消費</div>
+  <div style={{fontSize:'.75rem',color:'#38bdf8',opacity:.4,marginTop:'20px'}}>タップで閉じる</div>
+</div>)}
+{/* グローバルアイテムモーダル */}
+{itemMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.82)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .18s ease'}}>
+  <div style={{background:'#0d0d1a',border:'1px solid rgba(34,197,94,.35)',borderRadius:'14px',padding:'14px',width:'100%',maxWidth:'360px',maxHeight:'80vh',overflowY:'auto'}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}}>
+      <span style={{fontSize:'.97rem',fontWeight:900,color:'#22c55e'}}>🌿 アイテムを使う</span>
+      <button onClick={()=>setItemMenu(false)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'3px 8px',borderRadius:'8px',fontSize:'.87rem',cursor:'pointer'}}>← とじる</button>
+    </div>
+    <div style={{marginBottom:'10px'}}>
+      <div style={{fontSize:'.77rem',color:'#94a3b8',marginBottom:'5px'}}>👤 使う相手</div>
+      <div style={{display:'flex',gap:'5px',flexWrap:'wrap'}}>
+        {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#94a3b8';const dead=m.hp<=0;return(<button key={i} onClick={()=>{SFX.cursor();setItemTargetIdx(i);}} style={{...bs(i===itemTargetIdx?mc:'#1e1e3a'),margin:0,padding:'5px 8px',fontSize:'.68rem',opacity:dead?.5:1,border:`1px solid ${i===itemTargetIdx?mc:'#2a2a4a'}`}}><span style={{fontSize:'1.0rem'}}>{m.isMonster?m.base:(CHAR_VIS[m.classId]?.face||'🧑')}</span><br/><span style={{color:mc}}>{mn(m)}</span><br/><span style={{color:dead?'#ef4444':'#94a3b8'}}>{dead?'💀':m.hp+'/'+m.maxHp}</span></button>);})}
+      </div>
+    </div>
+    {inv.length===0
+      ?<div style={{color:'#374151',textAlign:'center',padding:'12px'}}>アイテムがない</div>
+      :[...new Set(inv.map(i=>i.id))].map(id=>{const item=inv.find(x=>x.id===id);const cnt=inv.filter(x=>x.id===id).length;return(<div key={id} onClick={()=>useItemOn(item,itemTargetIdx)} style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'6px',padding:'8px 10px',background:'rgba(34,197,94,.05)',border:'1px solid rgba(34,197,94,.18)',borderRadius:'10px',cursor:'pointer'}}><span style={{fontSize:'1.4rem'}}>{item.emoji}</span><div style={{flex:1}}><div style={{fontSize:'1.0rem',fontWeight:900,color:'#d1fae5'}}>{item.name} <span style={{color:'#4ade80',fontSize:'.68rem'}}>×{cnt}</span></div><div style={{fontSize:'.74rem',color:'#374151'}}>{item.desc}</div></div><span style={{fontSize:'.84rem',color:'#22c55e',fontWeight:900}}>使う ▶</span></div>);})
+    }
+  </div>
+</div>)}
+{/* グローバルセーブモーダル */}
+  {saveConfirm&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.92)',zIndex:80,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .15s ease'}}>
+    <div style={{background:'#0d0d1a',border:'2px solid #22c55e',borderRadius:'14px',padding:'20px',width:'100%',maxWidth:'320px',textAlign:'center'}}>
+      <div style={{fontSize:'1.5rem',marginBottom:'8px'}}>💾</div>
+      <div style={{color:'#22c55e',fontWeight:900,fontSize:'1.05rem',marginBottom:'6px'}}>スロット{saveConfirm}にセーブしますか？</div>
+      {loadSlotMeta()[saveConfirm-1]&&<div style={{fontSize:'.78rem',color:'#94a3b8',marginBottom:'12px'}}>※ 既存のデータは上書きされます</div>}
+      {!loadSlotMeta()[saveConfirm-1]&&<div style={{fontSize:'.78rem',color:'#94a3b8',marginBottom:'12px'}}>新しくセーブします</div>}
+      <div style={{display:'flex',gap:'8px'}}>
+        <button onClick={()=>{doSaveSlot(saveConfirm);setSaveConfirm(null);}} style={{flex:1,background:'#166534',border:'1px solid #22c55e',color:'#4ade80',padding:'10px',borderRadius:'10px',fontWeight:900,fontSize:'1rem',cursor:'pointer'}}>✅ セーブする</button>
+        <button onClick={()=>setSaveConfirm(null)} style={{flex:1,background:'rgba(255,255,255,.04)',border:'1px solid #374151',color:'#94a3b8',padding:'10px',borderRadius:'10px',fontWeight:900,fontSize:'1rem',cursor:'pointer'}}>❌ やめる</button>
+      </div>
+    </div>
+  </div>)}
+{saveMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.88)',zIndex:210,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .18s ease'}}>
+  <div style={{background:'#0d0d1a',border:'1px solid rgba(34,197,94,.35)',borderRadius:'14px',padding:'16px',width:'100%',maxWidth:'360px'}}>
+    <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+      <span style={{fontSize:'1.0rem',fontWeight:900,color:saveMenu==='save'?'#22c55e':'#60a5fa'}}>{saveMenu==='save'?'💾 セーブ先を選んで':'📂 ロードするデータを選んで'}</span>
+      <button onClick={()=>setSaveMenu(null)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'3px 8px',borderRadius:'8px',fontSize:'.87rem',cursor:'pointer'}}>✕</button>
+    </div>
+    {loadSlotMeta().map((meta,i)=>{const n=i+1;const empty=!meta;return(<div key={n} onClick={()=>{SFX.cursor();if(saveMenu==='save'){SFX.cursor();setSaveMenu(null);setSaveConfirm(n);}else if(!empty)doLoadSlot(n);}} style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'7px',padding:'10px 12px',background:empty?'rgba(255,255,255,.02)':'rgba(34,197,94,.06)',border:`1px solid ${empty?'#1e1e3a':'rgba(34,197,94,.28)'}`,borderRadius:'10px',cursor:saveMenu==='load'&&empty?'not-allowed':'pointer',opacity:saveMenu==='load'&&empty?.38:1}}>
+      <div style={{width:'24px',height:'24px',borderRadius:'50%',background:empty?'#1e1e3a':'#22c55e22',border:`1px solid ${empty?'#2a2a4a':'#22c55e'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.87rem',fontWeight:900,color:empty?'#374151':'#22c55e',flexShrink:0}}>{n}</div>
+      {empty?<span style={{fontSize:'.87rem',color:'#374151'}}>― 空き ―</span>:<div style={{flex:1}}>
+        <div style={{fontSize:'.84rem',color:'#d1fae5',fontWeight:900}}>{CHAPTERS[meta.chIdx]?.n||''} / Gold {meta.gold}G</div>
+        <div style={{fontSize:'.74rem',color:'#4ade80',marginTop:'1px'}}>{meta.party.map(m=>mn(m)+' Lv'+m.level).join(' · ')}</div>
+        <div style={{fontSize:'.58rem',color:'#374151',marginTop:'1px'}}>{meta.savedAt}</div>
+      </div>}
+      <span style={{fontSize:'.92rem',color:saveMenu==='save'?'#22c55e':'#60a5fa'}}>{saveMenu==='save'?'保存▶':'読込▶'}</span>
+    </div>);})}      </div>
+</div>)}
+{/* LOG - 非バトル画面のみ下部に小さく表示 */}
+{scr!=='title'&&scr!=='select'&&scr!=='ng_choice'&&scr!=='battle'&&(<div className="card" style={{maxHeight:'80px',overflowY:'auto',borderColor:'rgba(255,255,255,.04)',padding:'5px 8px'}}>
+  {log.slice(0,3).map((e,i)=>(<div key={i} style={{padding:'2px 0',fontSize:'.78rem',lineHeight:1.5,opacity:1-i*.25,color:i===0?'#e2e8f0':'#64748b'}}>{e}</div>))}
+</div>)}
+```
+
+  </div>);
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body>
+</html>
