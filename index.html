@@ -941,11 +941,17 @@ function App(){
     const summonZacian=()=>{const alreadyZacian=monsterRoster.some(m=>m.id==='zacian');const shenlongExists=monsterRoster.some(m=>m.id==='shenlong')||dragonSummoned;if(dragonBalls<3||zacianSummoned||alreadyZacian||!shenlongExists)return;SFX.dragon();const ally={...initMonsterAlly(ZACIAN_TPL),hp:ZACIAN_TPL.maxHp,maxHp:ZACIAN_TPL.maxHp,mp:70,maxMp:70,atk:ZACIAN_TPL.atk,def:ZACIAN_TPL.def,mat:ZACIAN_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setZacianSummoned(true);setShowZacianSummon(true);setTimeout(()=>setShowZacianSummon(false),4500);addLog('⚔️ 覇剣獣ザシアンがなかまになった！神の卵3個消費！');};
   // 戦闘中死者が出たとき控えを選ばせる（Promiseで待機）
   const waitForSubstitute=React.useCallback((currentParty,currentEnemies)=>{
-    const bench=[...humanRoster,...monsterRoster].filter(r=>
-      !currentParty.find(p=>p.isMonster?p.id===r.id:p.name===r.name)
-    );
+    const bench=[...humanRoster,...monsterRoster].filter(r=>{
+      // パーティに出撃中は除外
+      if(currentParty.find(p=>p.isMonster?p.id===r.id:p.name===r.name))return false;
+      // HP0（死亡済み）のキャラは除外
+      if((r.hp||0)<=0)return false;
+      return true;
+    });
     const deadIdxs=currentParty.map((m,i)=>m.hp<=0?i:-1).filter(i=>i>=0);
-    if(deadIdxs.length===0||bench.length===0)return Promise.resolve(currentParty);
+    if(deadIdxs.length===0)return Promise.resolve(currentParty);
+    // 控えなし→全滅扱いせずそのまま続行
+    if(bench.length===0)return Promise.resolve(currentParty);
     return new Promise(resolve=>{
       substituteResolveRef.current=(newParty)=>{resolve(newParty);};
       setSubstituteMenu({deadIdxs,party:currentParty,bench});
@@ -984,7 +990,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.20.5 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.20.6 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -1343,6 +1349,9 @@ function App(){
                       return{...latest,hp:Math.min(latest.hp,latest.maxHp),status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0};
                     });
                     addLog('🔄 '+mn(dead)+'→'+mn(latest)+'が参戦！');SFX.cursor();
+                    // 死亡したキャラのHP0状態をrosterに反映（再選択不可に）
+                    if(!dead.isMonster){setHumanRoster(r=>r.map(h=>h.name===dead.name?{...dead,hp:0}:h));}
+                    else{setMonsterRoster(r=>r.map(mr=>mr.id===dead.id?{...dead,hp:0}:mr));}
                     // まだ他の死者がいれば続行（次の deadIdx 処理へ）
                     const remainingDead=substituteMenu.deadIdxs.filter(i=>i!==deadIdx&&newParty[i].hp<=0);
                     const newBench=bench.filter((_,j)=>j!==bi);
