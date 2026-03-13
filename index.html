@@ -1165,9 +1165,6 @@ function App(){
           {tricksterSummoned&&<span style={{fontSize:'.78rem',color:'#f59e0b',fontWeight:900}}>🎲 遊び人済 全召喚コンプリート！🎉</span>}
         </div>
       </div>
-          <div style={{color:'#94a3b8',fontSize:'.84rem',marginBottom:'8px'}}>非常に手強い敵です。ここでセーブしておくことをお勧めします！</div>
-          <button style={{...bs('#ef4444'),animation:'none'}} onClick={doSave}>💾 ここでセーブしてから戦う！</button>
-        </div>)}
         <button style={bs('#ef4444')} onClick={()=>{
           // 5戦目はボス、1-4戦目は通常エンカウンター
           const isBossBattle=(chBattleNum>=10);
@@ -1221,6 +1218,32 @@ function App(){
       <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:'5px',marginBottom:'6px'}}>
         {chIdx===19&&chBattleNum>=10&&(<div style={{width:'100%',maxWidth:'460px',background:'rgba(220,38,38,.15)',border:'2px solid #ef4444',borderRadius:'12px',padding:'12px 16px',marginBottom:'8px',textAlign:'center',animation:'blink 1.5s ease-in-out infinite'}}>
           <div style={{color:'#ef4444',fontWeight:900,fontSize:'1.0rem',marginBottom:'6px'}}>⚠️ 最終ボス「悪魔サタン」戦の直前！</div>
+          <div style={{color:'#94a3b8',fontSize:'.84rem',marginBottom:'8px'}}>非常に手強い敵です。ここでセーブしておくことをお勧めします！</div>
+          <button style={{...bs('#ef4444'),animation:'none'}} onClick={doSave}>💾 ここでセーブしてから戦う！</button>
+        </div>)}
+        <button style={bs('#ef4444')} onClick={()=>{
+          const isBossBattle=(chBattleNum>=10);
+          const avgLv=party.length>0?Math.round(party.reduce((s,m)=>s+m.level,0)/party.length):1;
+          const partySize=party.filter(m=>m.hp>0).length;
+          let encData;
+          if(isBossBattle){encData=BOSS_ENC[chIdx]||BOSS_ENC[0];}
+          else{const rr=Math.random();if(rr<0.28){encData=RARE_ENCOUNTERS[Math.floor(Math.random()*RARE_ENCOUNTERS.length)];}else{const pool=MOB_ENC_POOL[chIdx]||MOB_ENC_POOL[0];encData=pool[Math.floor(Math.random()*pool.length)];}}
+          const ens=encData.map(t=>initEnemy(scaleEnemy(t,avgLv,partySize,chIdx)));
+          setEnemies(ens);setMAnims(new Array(ens.length).fill('idle'));
+          const fi=party.findIndex(m=>m.hp>0);
+          setPhase(fi>=0?['p0','p1','p2','p3'][fi]:'p0');
+          setSpellMenu(false);setBusy(false);
+          const battleLabel=isBossBattle?'🚨 第10戦・BOSS！':'第'+chBattleNum+'戦！';
+          addLog('⚠️ '+battleLabel+' '+ens.map(e=>e.name).join(' & ')+'が現れた！');
+          bgm(isBossBattle?chDef.bgm||'boss':'battle');
+          setScr('battle');
+        }}>⚔️ {chBattleNum>=10?'⚡ BOSS戦！':'第'+chBattleNum+'戦へ ▸'}</button>
+        <button style={bs('#d97706')} onClick={()=>{SFX.cursor();bgm('town');setScr('shop');}}>🛒 ショップ</button>
+        <button style={bs('#22c55e')} onClick={doSave}>💾 セーブ</button>
+        {inv.length>0&&<button style={bs('#16a34a')} onClick={()=>{SFX.cursor();setItemTargetIdx(0);setItemMenu(true);}}>🌿 アイテム({inv.length})</button>}
+        {monsterRoster.length>0&&<button style={bs('#60a5fa')} onClick={()=>{SFX.cursor();setScr('party_mgmt');}}>👥 なかま管理</button>}
+        {chIdx>=10&&<button style={bs('#d4a017')} onClick={()=>{SFX.cursor();setShowJobChange(true);}}>⚡ 転職</button>}
+      </div>
 
       <div className="card" style={{borderColor:'rgba(212,160,23,.15)',padding:'10px 12px'}}>
         <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'6px'}}>
