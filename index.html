@@ -936,7 +936,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.20.0 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.20.2 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -1145,8 +1145,10 @@ function App(){
       const benchM=monsterRoster.filter(r=>!party.find(p=>p.id===r.id));
       const bench=[...benchH,...benchM];
       const addM=m=>{if(party.length>=4)return;SFX.cursor();
-        // 控えから最新データ取得してパーティ追加
-        const latest=m.isMonster?(monsterRoster.find(r=>r.id===m.id)||m):m;
+        // 控えから最新データ取得してパーティ追加（人間もモンスターも最新版を使う）
+        const latest=m.isMonster
+          ?(monsterRoster.find(r=>r.id===m.id)||m)
+          :(humanRoster.find(h=>h.name===m.name&&h.classId===m.classId)||m);
         setParty(p=>[...p,{...latest,hp:Math.min(latest.hp,latest.maxHp)}]);
       };
       const removeM=i=>{
@@ -1160,8 +1162,13 @@ function App(){
             if(exists) return r.map(r2=>r2.id===m.id?{...m}:r2);
             return [...r,{...m}]; // なければ追加（消えるバグ防止）
           });
-        } else if(!humanRoster.find(h=>h.name===m.name&&h.classId===m.classId)){
-          setHumanRoster(r=>[...r,m]);
+        } else {
+          // 人間メンバー: 常に最新ステータスでhumanRosterを更新（レベル保持）
+          setHumanRoster(r=>{
+            const exists=r.some(h=>h.name===m.name&&h.classId===m.classId);
+            if(exists) return r.map(h=>h.name===m.name&&h.classId===m.classId?{...m}:h);
+            return [...r,m];
+          });
         }
       };
       return(<div style={{width:'100%',maxWidth:'460px',animation:'fadeIn .3s ease'}}>
