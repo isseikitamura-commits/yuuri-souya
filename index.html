@@ -582,8 +582,10 @@ function App(){
   const [itemMenu,setItemMenu]=useState(false);
   const [itemTargetIdx,setItemTargetIdx]=useState(0);
   const [saveMenu,setSaveMenu]=useState(null);
+  const [saveConfirm,setSaveConfirm]=useState(null); // 確認ダイアログ用スロット番号
   const [recruitOffer,setRecruitOffer]=useState(null);
   const [storyScreen,setStoryScreen]=useState(null);
+  const [specialSlide,setSpecialSlide]=useState(null); // 特別スライド {type:'happy'|'newAdventure'}
   const [dragonBalls,setDragonBalls]=useState(0);
   const [dragonSummoned,setDragonSummoned]=useState(false);
   const [zacianSummoned,setZacianSummoned]=useState(false);
@@ -651,7 +653,7 @@ function App(){
     if(spell.type==='atk_one'){
       const ti=nE.findIndex(e=>e.hp>0);if(ti<0)return{party:nP,enemies:nE};
       const en=nE[ti];
-      let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(en.magicResist||0)))-(en.def||0)*0.2);
+      let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(en.magicResist||0))));
       if(en.spellImmune){dmg=0;addLog('🔰 '+en.name+'は呪文が完全に効かない！物理攻撃で攻めよう！');}
       setMAnim(ti,'hurt');SFX.hit();addSpark('65%','30%');addDmg(Math.round(dmg),'e','65%','18%');
       addLog(spell.e+' '+spell.name+'！'+Math.round(dmg)+'ダメージ！');
@@ -660,7 +662,7 @@ function App(){
     }else if(spell.type==='atk_all'||spell.type==='atk_double'){
       const live=nE.map((_,i)=>i).filter(i=>nE[i].hp>0);const hits=spell.type==='atk_double'?2:1;
       for(let h=0;h<hits;h++)for(const ti of live){if(nE[ti].hp<=0)continue;
-        let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(nE[ti].magicResist||0)))-(nE[ti].def||0)*0.2);if(spell.type==='atk_double'&&h===0)dmg=Math.floor(dmg*.85);
+        let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(nE[ti].magicResist||0))));if(spell.type==='atk_double'&&h===0)dmg=Math.floor(dmg*.85);
         if(nE[ti].spellImmune){dmg=0;addLog('🔰 '+nE[ti].name+'は呪文が完全に効かない！');}
         const xp=60+ti*(-12);setMAnim(ti,'hurt');SFX.hit();addSpark(xp+'%','28%');addDmg(Math.round(dmg),'e',xp+'%','16%');
         let nen={...nE[ti],hp:Math.max(0,nE[ti].hp-dmg)};if(spell.inflict)nen=tryInflict(nen,spell.inflict,.38);nE[ti]=nen;await sleep(160);setMAnim(ti,'idle');}
@@ -709,7 +711,11 @@ function App(){
     addLog('🎉 勝利！EXP+'+tExp+' Gold+'+tGold);
     const lvLogs=[];
     let p2=fp.map(m=>{if(m.hp<=0)return m;const prevLv=m.level;const nm=doLevelUp(m,tExp,msg=>lvLogs.push(msg));if(nm.level>prevLv)SFX.lvup();return nm;});
-    setParty(p2);setGold(g=>g+tGold);await sleep(500);
+    setParty(p2);
+    // パーティメンバーのレベルアップをrosterにも即反映（控えに戻したとき古いデータにならないよう）
+    setHumanRoster(r=>r.map(h=>{const updated=p2.find(m=>!m.isMonster&&m.name===h.name);return updated?{...updated}:h;}));
+    setMonsterRoster(r=>r.map(mr=>{const updated=p2.find(m=>m.isMonster&&m.id===mr.id);return updated?{...updated}:mr;}));
+    setGold(g=>g+tGold);await sleep(500);
     let newDB=dragonBalls,gotDB=false;
     const isBoss=fe.some(e=>e.boss);
     if(isBoss&&Math.random()<.40&&dragonBalls<3){newDB=dragonBalls+1;setDragonBalls(newDB);SFX.dragonball();gotDB=true;setDbPopup(true);setTimeout(()=>setDbPopup(false),3000);}
@@ -736,7 +742,16 @@ function App(){
     }
     setBattleResult(null);
     if(isFinal){const cc=clearCount+1;setClearCount(cc);setSavedParty(party);const newHist=[{party:[...party],clearNo:cc,date:new Date().toLocaleDateString('ja')},...clearHistory].slice(0,5);setClearHistory(newHist);sv({clearCount:cc,savedParty:party,clearHistory:newHist},1);stopBgm();setScr('ending');return;}
-    if(isChClear){const next=chIdx+1;setChIdx(next);setChBattleNum(1);setScr('map');bgm('field');setStoryScreen(CHAPTERS[next]);}
+    if(isChClear){
+      const next=chIdx+1;
+      if(chIdx===9){
+        // 第10章クリア → ハッピーエンドスライド → 天空編オープニング → 第11章
+        setChIdx(next);setChBattleNum(1);setScr('map');bgm('field');
+        setSpecialSlide('happy');
+      } else {
+        setChIdx(next);setChBattleNum(1);setScr('map');bgm('field');setStoryScreen(CHAPTERS[next]);
+      }
+    }
     else if(doSwap){setScr('party_mgmt');}
     else{setChBattleNum(n=>n+1);setScr('map');bgm('field');}
   },[battleResult,party,monsterRoster,chIdx,clearCount,addLog]);
@@ -987,10 +1002,66 @@ function App(){
       <button onClick={()=>{setStoryScreen(null);SFX.cursor();}} style={{...bs('#d4a017'),padding:'15px 50px',fontSize:'1.1rem',fontWeight:900}}>冒険を続ける →</button>
     </div>)}
 
+    {/* 特別スライド: ハッピーエンド / 天空編オープニング */}
+    {specialSlide==='happy'&&(<div style={{position:'fixed',inset:0,zIndex:3100,background:'linear-gradient(135deg,#0a1628,#1a3a5c,#0d2a1a)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 20px',textAlign:'center',animation:'storyIn .8s ease',overflowY:'auto'}}>
+      <div style={{fontSize:'5rem',marginBottom:'12px',animation:'floatA 3s ease-in-out infinite'}}>🌈</div>
+      <div style={{color:'#fde68a',fontWeight:900,fontSize:'1.8rem',letterSpacing:'.1em',marginBottom:'8px',textShadow:'0 0 30px #fbbf24'}}>世界に平和が戻った！</div>
+      <div style={{color:'#a7f3d0',fontWeight:700,fontSize:'1.0rem',marginBottom:'20px',background:'rgba(16,185,129,.12)',padding:'6px 20px',borderRadius:'10px',border:'1px solid rgba(16,185,129,.3)'}}>「勝利の夜明け」</div>
+      <div style={{color:'#e2e8f0',fontSize:'.98rem',lineHeight:2.5,maxWidth:'400px',whiteSpace:'pre-line',marginBottom:'28px',textAlign:'left',background:'rgba(0,0,0,.4)',padding:'18px 22px',borderRadius:'14px',borderLeft:'4px solid #4ade80'}}>
+        {`悪魔サタンは打ち倒され、暗黒の力は消え去った。
+空に虹がかかり、鳥たちが歌い始める。
+ドゴール王国の人々が歌い踊り、
+世界中に笑顔と希望の光が広がった。
+
+フィリア姫は二人の手を握って言った。
+「ゆうり、そうや……ありがとう。
+あなたたちのおかげで世界が救われた。
+本当に……ありがとう！」
+
+🌟 世界は再び、幸せに包まれた 🌟`}
+      </div>
+      <div style={{display:'flex',gap:'16px',flexWrap:'wrap',justifyContent:'center',marginBottom:'20px'}}>
+        {['🏰','🌸','🌊','🌟','🎉','🌈','🕊️','🌺'].map((e,i)=>(<span key={i} style={{fontSize:'2rem',animation:`floatB ${2+i*.3}s ease-in-out infinite`,animationDelay:i*.2+'s'}}>{e}</span>))}
+      </div>
+      <button onClick={()=>{SFX.cursor();setSpecialSlide('newAdventure');}} style={{...bs('#4ade80'),padding:'15px 44px',fontSize:'1.1rem',fontWeight:900,boxShadow:'0 0 20px #4ade8066'}}>
+        10年後… →
+      </button>
+    </div>)}
+
+    {specialSlide==='newAdventure'&&(<div style={{position:'fixed',inset:0,zIndex:3100,background:'linear-gradient(135deg,#0a0a1a,#1a0a2e,#0a1628)',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 20px',textAlign:'center',animation:'storyIn .8s ease',overflowY:'auto'}}>
+      <div style={{fontSize:'5rem',marginBottom:'12px',animation:'floatA 3s ease-in-out infinite'}}>⚡</div>
+      <div style={{color:'#c084fc',fontWeight:900,fontSize:'1.6rem',letterSpacing:'.1em',marginBottom:'4px',textShadow:'0 0 30px #a855f7'}}>天空編・開幕</div>
+      <div style={{color:'#fde68a',fontWeight:900,fontSize:'1.1rem',marginBottom:'20px'}}>〜 新たなる冒険の始まり 〜</div>
+      <div style={{color:'#e2e8f0',fontSize:'.98rem',lineHeight:2.5,maxWidth:'400px',whiteSpace:'pre-line',marginBottom:'28px',textAlign:'left',background:'rgba(0,0,0,.45)',padding:'18px 22px',borderRadius:'14px',borderLeft:'4px solid #a855f7'}}>
+        {`あれから10年——。
+
+平和な世界で大人になったゆうりとそうや。
+ゆうりは剣を農具に持ち替え、
+そうやは魔法の研究に打ち込んでいた。
+
+しかしある夜、天空から黒雲が広がる。
+地面が揺れ、人々が空を指さして叫んだ。
+
+「また魔王が……復活する！」
+
+ゆうりは静かに剣を取り出した。
+そうやの目に炎が宿る。
+
+「行くぞ、そうや。
+　世界を守れるのは、俺たちだけだ」`}
+      </div>
+      <div style={{display:'flex',gap:'12px',flexWrap:'wrap',justifyContent:'center',marginBottom:'20px'}}>
+        {['☁️','⚡','🌑','⭐','💀','🔱','🌌','✨'].map((e,i)=>(<span key={i} style={{fontSize:'2rem',animation:`floatA ${2+i*.25}s ease-in-out infinite`,animationDelay:i*.15+'s'}}>{e}</span>))}
+      </div>
+      <button onClick={()=>{SFX.cursor();setSpecialSlide(null);setStoryScreen(CHAPTERS[10]);}} style={{...bs('#a855f7'),padding:'15px 44px',fontSize:'1.1rem',fontWeight:900,boxShadow:'0 0 20px #a855f766'}}>
+        天空へ！ →
+      </button>
+    </div>)}
+
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.20.6 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.0 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -1114,7 +1185,7 @@ function App(){
           <span style={{color:'#fbbf24',fontSize:'.92rem'}}>💰 {gold}G</span>
         </div>
         <div style={{display:'flex',flexDirection:'column',gap:'10px'}}>
-          {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const hpPct=Math.max(0,(m.hp/m.maxHp)*100);const hpCol=hpPct>50?mc:hpPct>25?'#facc15':'#ef4444';const mpPct=Math.max(0,(m.mp/m.maxMp)*100);const fieldSpells=getMemberSpells(m).filter(sp=>FIELD_SPELL_TYPES.includes(sp.type));const face=m.isMonster?(m.base||'👾'):CHAR_VIS[m.classId]?.face||'🧝';const statusIcon=m.status==='poison'?'☠️':m.status==='burn'?'🔥':m.status==='stun'?'💫':null;
+          {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const hpPct=Math.max(0,(m.hp/m.maxHp)*100);const hpCol=hpPct>70?'#22c55e':hpPct>40?'#4ade80':hpPct>25?'#facc15':'#ef4444';const mpPct=Math.max(0,(m.mp/m.maxMp)*100);const fieldSpells=getMemberSpells(m).filter(sp=>FIELD_SPELL_TYPES.includes(sp.type));const face=m.isMonster?(m.base||'👾'):CHAR_VIS[m.classId]?.face||'🧝';const statusIcon=m.status==='poison'?'☠️':m.status==='burn'?'🔥':m.status==='stun'?'💫':null;
           return(<div key={i} style={{display:'flex',alignItems:'center',gap:'10px',opacity:m.hp<=0?.45:1}}>
             <div style={{fontSize:'1.8rem',lineHeight:1,flexShrink:0}}>{face}</div>
             <div style={{flex:1,minWidth:0}}>
@@ -1410,7 +1481,7 @@ function App(){
         </div>
         <div style={{borderTop:'1px solid rgba(255,255,255,.06)',margin:'4px 0'}}/>
         <div style={{display:'grid',gridTemplateColumns:party.length>2?'1fr 1fr':'1fr',gap:'2px 8px'}}>
-          {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const hpPct=Math.max(0,(m.hp/m.maxHp)*100),hpCol=hpPct>50?mc:hpPct>25?'#facc15':'#ef4444';const mpPct=Math.max(0,(m.mp/m.maxMp)*100);const bStr=[];if(m.atkBuffMult>1)bStr.push('↑');if(m.reflecting)bStr.push('反');return(<div key={i} style={{marginBottom:'2px'}}>
+          {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const hpPct=Math.max(0,(m.hp/m.maxHp)*100),hpCol=hpPct>70?'#22c55e':hpPct>40?'#4ade80':hpPct>25?'#facc15':'#ef4444';const mpPct=Math.max(0,(m.mp/m.maxMp)*100);const bStr=[];if(m.atkBuffMult>1)bStr.push('↑');if(m.reflecting)bStr.push('反');return(<div key={i} style={{marginBottom:'2px'}}>
             <div style={{display:'flex',justifyContent:'space-between',fontSize:'.84rem',marginBottom:'1px'}}>
               <span style={{color:m.hp<=0?'#6b7280':mc,fontWeight:900}}>{m.hp<=0?'💀':''}{mn(m)} Lv{m.level}{m.status?'🤢':''}{bStr.length?'✨':''}</span>
               <span style={{color:'#6b7280',fontSize:'.77rem'}}>{m.hp<=0?'--':Math.round(m.hp)+'/'+m.maxHp}</span>
@@ -1496,13 +1567,25 @@ function App(){
         </div>
       </div>)}
       {/* セーブスロットモーダル */}
+      {saveConfirm&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.92)',zIndex:80,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .15s ease'}}>
+        <div style={{background:'#0d0d1a',border:'2px solid #22c55e',borderRadius:'14px',padding:'20px',width:'100%',maxWidth:'320px',textAlign:'center'}}>
+          <div style={{fontSize:'1.5rem',marginBottom:'8px'}}>💾</div>
+          <div style={{color:'#22c55e',fontWeight:900,fontSize:'1.05rem',marginBottom:'6px'}}>スロット{saveConfirm}にセーブしますか？</div>
+          {loadSlotMeta()[saveConfirm-1]&&<div style={{fontSize:'.78rem',color:'#94a3b8',marginBottom:'12px'}}>※ 既存のデータは上書きされます</div>}
+          {!loadSlotMeta()[saveConfirm-1]&&<div style={{fontSize:'.78rem',color:'#94a3b8',marginBottom:'12px'}}>新しくセーブします</div>}
+          <div style={{display:'flex',gap:'8px'}}>
+            <button onClick={()=>{doSaveSlot(saveConfirm);setSaveConfirm(null);}} style={{flex:1,background:'#166534',border:'1px solid #22c55e',color:'#4ade80',padding:'10px',borderRadius:'10px',fontWeight:900,fontSize:'1rem',cursor:'pointer'}}>✅ セーブする</button>
+            <button onClick={()=>setSaveConfirm(null)} style={{flex:1,background:'rgba(255,255,255,.04)',border:'1px solid #374151',color:'#94a3b8',padding:'10px',borderRadius:'10px',fontWeight:900,fontSize:'1rem',cursor:'pointer'}}>❌ やめる</button>
+          </div>
+        </div>
+      </div>)}
       {saveMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.88)',zIndex:60,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .18s ease'}}>
         <div style={{background:'#0d0d1a',border:'1px solid #22c55e44',borderRadius:'14px',padding:'16px',width:'100%',maxWidth:'360px'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
             <span style={{fontSize:'1.0rem',fontWeight:900,color:saveMenu==='save'?'#22c55e':'#60a5fa'}}>{saveMenu==='save'?'💾 セーブ先を選んで':'📂 ロードするデータを選んで'}</span>
             <button onClick={()=>setSaveMenu(null)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'3px 8px',borderRadius:'8px',fontSize:'.87rem',cursor:'pointer'}}>✕</button>
           </div>
-          {loadSlotMeta().map((meta,i)=>{const n=i+1;const empty=!meta;return(<div key={n} onClick={()=>{SFX.cursor();if(saveMenu==='save')doSaveSlot(n);else if(!empty)doLoadSlot(n);}} style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'7px',padding:'10px 12px',background:empty?'rgba(255,255,255,.02)':'rgba(34,197,94,.05)',border:`1px solid ${empty?'#1e1e3a':'rgba(34,197,94,.25)'}`,borderRadius:'10px',cursor:saveMenu==='load'&&empty?'not-allowed':'pointer',opacity:saveMenu==='load'&&empty?.4:1,transition:'all .15s'}}>
+          {loadSlotMeta().map((meta,i)=>{const n=i+1;const empty=!meta;return(<div key={n} onClick={()=>{SFX.cursor();if(saveMenu==='save'){SFX.cursor();setSaveConfirm(n);}else if(!empty)doLoadSlot(n);}} style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'7px',padding:'10px 12px',background:empty?'rgba(255,255,255,.02)':'rgba(34,197,94,.05)',border:`1px solid ${empty?'#1e1e3a':'rgba(34,197,94,.25)'}`,borderRadius:'10px',cursor:saveMenu==='load'&&empty?'not-allowed':'pointer',opacity:saveMenu==='load'&&empty?.4:1,transition:'all .15s'}}>
             <div style={{width:'24px',height:'24px',borderRadius:'50%',background:empty?'#1e1e3a':'#22c55e22',border:`1px solid ${empty?'#2a2a4a':'#22c55e'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.87rem',fontWeight:900,color:empty?'#374151':'#22c55e',flexShrink:0}}>{n}</div>
             {empty?<span style={{fontSize:'.87rem',color:'#374151'}}>― 空き ―</span>:<div style={{flex:1}}>
               <div style={{fontSize:'.84rem',color:'#d1fae5',fontWeight:900}}>{CHAPTERS[meta.chIdx]?.n||''} / Gold {meta.gold}G</div>
@@ -1614,13 +1697,25 @@ function App(){
       </div>
     </div>)}
     {/* グローバルセーブモーダル */}
+      {saveConfirm&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.92)',zIndex:80,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .15s ease'}}>
+        <div style={{background:'#0d0d1a',border:'2px solid #22c55e',borderRadius:'14px',padding:'20px',width:'100%',maxWidth:'320px',textAlign:'center'}}>
+          <div style={{fontSize:'1.5rem',marginBottom:'8px'}}>💾</div>
+          <div style={{color:'#22c55e',fontWeight:900,fontSize:'1.05rem',marginBottom:'6px'}}>スロット{saveConfirm}にセーブしますか？</div>
+          {loadSlotMeta()[saveConfirm-1]&&<div style={{fontSize:'.78rem',color:'#94a3b8',marginBottom:'12px'}}>※ 既存のデータは上書きされます</div>}
+          {!loadSlotMeta()[saveConfirm-1]&&<div style={{fontSize:'.78rem',color:'#94a3b8',marginBottom:'12px'}}>新しくセーブします</div>}
+          <div style={{display:'flex',gap:'8px'}}>
+            <button onClick={()=>{doSaveSlot(saveConfirm);setSaveConfirm(null);}} style={{flex:1,background:'#166534',border:'1px solid #22c55e',color:'#4ade80',padding:'10px',borderRadius:'10px',fontWeight:900,fontSize:'1rem',cursor:'pointer'}}>✅ セーブする</button>
+            <button onClick={()=>setSaveConfirm(null)} style={{flex:1,background:'rgba(255,255,255,.04)',border:'1px solid #374151',color:'#94a3b8',padding:'10px',borderRadius:'10px',fontWeight:900,fontSize:'1rem',cursor:'pointer'}}>❌ やめる</button>
+          </div>
+        </div>
+      </div>)}
     {saveMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.88)',zIndex:210,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',animation:'fadeIn .18s ease'}}>
       <div style={{background:'#0d0d1a',border:'1px solid rgba(34,197,94,.35)',borderRadius:'14px',padding:'16px',width:'100%',maxWidth:'360px'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
           <span style={{fontSize:'1.0rem',fontWeight:900,color:saveMenu==='save'?'#22c55e':'#60a5fa'}}>{saveMenu==='save'?'💾 セーブ先を選んで':'📂 ロードするデータを選んで'}</span>
           <button onClick={()=>setSaveMenu(null)} style={{background:'transparent',border:'1px solid #2a2a4a',color:'#64748b',padding:'3px 8px',borderRadius:'8px',fontSize:'.87rem',cursor:'pointer'}}>✕</button>
         </div>
-        {loadSlotMeta().map((meta,i)=>{const n=i+1;const empty=!meta;return(<div key={n} onClick={()=>{SFX.cursor();if(saveMenu==='save')doSaveSlot(n);else if(!empty)doLoadSlot(n);}} style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'7px',padding:'10px 12px',background:empty?'rgba(255,255,255,.02)':'rgba(34,197,94,.06)',border:`1px solid ${empty?'#1e1e3a':'rgba(34,197,94,.28)'}`,borderRadius:'10px',cursor:saveMenu==='load'&&empty?'not-allowed':'pointer',opacity:saveMenu==='load'&&empty?.38:1}}>
+        {loadSlotMeta().map((meta,i)=>{const n=i+1;const empty=!meta;return(<div key={n} onClick={()=>{SFX.cursor();if(saveMenu==='save'){SFX.cursor();setSaveConfirm(n);}else if(!empty)doLoadSlot(n);}} style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'7px',padding:'10px 12px',background:empty?'rgba(255,255,255,.02)':'rgba(34,197,94,.06)',border:`1px solid ${empty?'#1e1e3a':'rgba(34,197,94,.28)'}`,borderRadius:'10px',cursor:saveMenu==='load'&&empty?'not-allowed':'pointer',opacity:saveMenu==='load'&&empty?.38:1}}>
           <div style={{width:'24px',height:'24px',borderRadius:'50%',background:empty?'#1e1e3a':'#22c55e22',border:`1px solid ${empty?'#2a2a4a':'#22c55e'}`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'.87rem',fontWeight:900,color:empty?'#374151':'#22c55e',flexShrink:0}}>{n}</div>
           {empty?<span style={{fontSize:'.87rem',color:'#374151'}}>― 空き ―</span>:<div style={{flex:1}}>
             <div style={{fontSize:'.84rem',color:'#d1fae5',fontWeight:900}}>{CHAPTERS[meta.chIdx]?.n||''} / Gold {meta.gold}G</div>
