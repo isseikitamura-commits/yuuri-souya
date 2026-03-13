@@ -319,6 +319,8 @@ const BOSS_ENC=[
     {id:'fallen_b1',name:'大堕天使ベリアル',base:'👼',ov:'🔥',flt:'hue-rotate(340deg) saturate(3.5) brightness(.6) contrast(1.8)',gc:'#b91c1c',hp:500,maxHp:500,atk:90,def:50,mat:70,exp:400,gold:290,si:'burn'}],
 ];
 
+const SUPER_GENGAR_TPL={id:'super_gengar',name:'スーパーゲンガー',base:'👾',ov:'💎',flt:'hue-rotate(285deg) saturate(12) brightness(.45) contrast(4) drop-shadow(0 0 15px #a855f7) drop-shadow(0 0 40px #7c3aed)',gc:'#c084fc',maxHp:3800,atk:480,def:120,mat:650,allySkill:{id:'sgengar_burst',name:'シャドーバースト',e:'💜',mp:45,type:'atk_all',pow:c=>Math.floor(c.mat*11.0+c.atk*3.0),desc:'全敵に紫の爆撃！超強力！',color:'#a855f7'}};
+const TRICKSTER_TPL={id:'trickster',name:'遊び人ルーカス',base:'🃏',ov:'🎲',flt:'hue-rotate(30deg) saturate(5) brightness(1.2) contrast(1.4)',gc:'#f59e0b',maxHp:2400,atk:380,def:100,mat:380,allySkill:{id:'trickster_all',name:'いたずら大爆発',e:'🎲',mp:30,type:'atk_all',pow:c=>Math.floor((c.atk+c.mat)*6.0+Math.random()*500),desc:'全敵にランダム超ダメージ！',color:'#f59e0b'}};
 const ZACIAN_TPL={id:'zacian',name:'覇剣獣ザシアン',base:'🐺',ov:'⚔️',flt:'hue-rotate(200deg) saturate(3.5) brightness(1.1) contrast(1.2)',gc:'#38bdf8',maxHp:3200,atk:520,def:160,mat:180,allySkill:{id:'zacian_slash',name:'きょじゅうざん',e:'⚔️',mp:35,type:'atk_one',pow:c=>Math.floor(c.atk*12.0+c.mat*2.0),desc:'単体に超強力な一撃！',color:'#38bdf8'}};
 const SHENLONG_TPL={id:'shenlong',name:'神龍シェンロン',base:'🐉',ov:'✨',flt:'hue-rotate(120deg) saturate(3) brightness(1.2)',gc:'#4ade80',maxHp:2800,atk:420,def:180,mat:360,allySkill:{id:'dragon_fire',name:'龍炎神撃',e:'🐉',mp:40,type:'atk_all',pow:c=>Math.floor(c.mat*9.0+c.atk*5.0),desc:'全敵に超強力な龍炎神撃！',color:'#4ade80'}};
 
@@ -585,10 +587,16 @@ function App(){
   const [dragonBalls,setDragonBalls]=useState(0);
   const [dragonSummoned,setDragonSummoned]=useState(false);
   const [zacianSummoned,setZacianSummoned]=useState(false);
+  const [superGengarSummoned,setSuperGengarSummoned]=useState(false);
+  const [tricksterSummoned,setTricksterSummoned]=useState(false);
+  const [showSuperGengarSummon,setShowSuperGengarSummon]=useState(false);
+  const [showTricksterSummon,setShowTricksterSummon]=useState(false);
   const [showZacianSummon,setShowZacianSummon]=useState(false);
   const [showDragonSummon,setShowDragonSummon]=useState(false);
   const [boughtEquips,setBoughtEquips]=useState([]);
   const [showJobChange,setShowJobChange]=useState(false); // 転職メニュー
+  const [substituteMenu,setSubstituteMenu]=useState(null); // 戦闘中交代UI {deadIdxs,party,bench}
+  const substituteResolveRef=React.useRef(null);
   const [dbPopup,setDbPopup]=useState(false);
   const [clearCount,setClearCount]=useState(0);
   const [savedParty,setSavedParty]=useState(null); // 後方互換
@@ -748,6 +756,8 @@ function App(){
       else if(!used&&member.mp<member.maxMp&&mi>=0){const it=inv[mi];const ni=[...inv];ni.splice(mi,1);setInv(ni);const addMp=Math.min(it.eff.mp,member.maxMp-member.mp);nP[pIdx]={...member,mp:Math.min(member.maxMp,member.mp+it.eff.mp)};addLog(it.emoji+' '+it.name+'！MP+'+addMp);used=true;}
       if(!used){addLog('使えるアイテムがない！');setBusy(false);return;}}
     else if(action==='flee'){if(Math.random()>.42){SFX.flee();addLog('🏃 逃げ出した！');setParty(nP);setScr('map');bgm('field');setBusy(false);return;}const fen=nE.find(e=>e.hp>0);if(fen){const dmg=Math.max(1,fen.atk-member.def+Math.floor(Math.random()*5)-2);nP[pIdx]={...member,hp:Math.max(0,member.hp-dmg)};setPAnim(pIdx,'hurt');SFX.phit();addDmg(dmg,'p','12%','24%');addLog('❌ 逃げられなかった！'+dmg+'ダメージ！');await sleep(380);setPAnim(pIdx,'idle');}}
+    // 死者が出たら控えから選択
+    if(nP.some(m=>m.hp<=0)&&nP.some(m=>m.hp>0)){nP=await waitForSubstitute(nP,nE);}
     setParty(nP);setEnemies(nE);
     if(nP.every(m=>m.hp<=0)){stopBgm();SFX.dead();setScr('gameover');setBusy(false);return;}
     if(nE.every(e=>e.hp<=0)){await handleVictory(nP,nE);return;}
@@ -788,7 +798,10 @@ function App(){
               await sleep(330);setPAnim(ti,'idle');setMAnim(enIdx,'idle');await sleep(80);}}
         const enDot=processDot(ee[enIdx]);if(enDot.hp<ee[enIdx].hp){addDmg(ee[enIdx].hp-enDot.hp,'e',(60+enIdx*(-12))+'%','16%');SFX.poison();}ee[enIdx]=enDot;}}
       ep=ep.map((m,i)=>{if(m.hp<=0||!m.status)return m;const pm=processDot(m);if(pm.hp<m.hp)addDmg(m.hp-pm.hp,'p',(i*22+5)+'%','46%');return pm;});
-      ep=ep.map(m=>decBuffs(m));setParty(ep);setEnemies(ee);
+      ep=ep.map(m=>decBuffs(m));
+      // 敵ターン後: 死者が出たら控えから選択
+      if(ep.some(m=>m.hp<=0)&&ep.some(m=>m.hp>0)){ep=await waitForSubstitute(ep,ee);}
+      setParty(ep);setEnemies(ee);
       if(ep.every(m=>m.hp<=0)){stopBgm();SFX.dead();setScr('gameover');setBusy(false);return;}
       if(ee.every(e=>e.hp<=0)){await handleVictory(ep,ee);return;}
       const fi=ep.findIndex(m=>m.hp>0);setPhase(fi>=0?['p0','p1','p2','p3'][fi]:'p0');}
@@ -866,9 +879,9 @@ function App(){
     return()=>clearTimeout(t);
   },[autoMode,scr,busy,phase,spellMenu,activePIdx,party,enemies,inv,getMemberSpells,handleAction,useItemOn]);
 
-  const doSaveSlot=(n)=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,zacianSummoned,clearCount,savedParty,clearHistory,chBattleNum,monsterRoster,humanRoster,boughtEquips},n);SFX.save();setSaveMenu(null);setSaveMsg(ok?`💾 スロット${n}にセーブ！`:'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
+  const doSaveSlot=(n)=>{const ok=sv({party,chIdx,inv,gold,log,selCls,selExtra,selNames,dragonBalls,dragonSummoned,zacianSummoned,superGengarSummoned,tricksterSummoned,clearCount,savedParty,clearHistory,chBattleNum,monsterRoster,humanRoster,boughtEquips},n);SFX.save();setSaveMenu(null);setSaveMsg(ok?`💾 スロット${n}にセーブ！`:'❌ 失敗');setTimeout(()=>setSaveMsg(''),2500);};
   const doSave=()=>setSaveMenu('save');
-  const doLoadSlot=(n)=>{const d=ld(n);if(!d){setSaveMsg('データなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);setHumanRoster(d.humanRoster||[]);setBoughtEquips(d.boughtEquips||[]);setZacianSummoned(d.zacianSummoned||false);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);if(d.clearHistory)setClearHistory(d.clearHistory||[]);setSaveMenu(null);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
+  const doLoadSlot=(n)=>{const d=ld(n);if(!d){setSaveMsg('データなし');setTimeout(()=>setSaveMsg(''),2000);return;}setParty(d.party||[]);setChIdx(d.chIdx||0);setInv(d.inv||[]);setGold(d.gold||280);setLog(d.log||[]);setSelCls(d.selCls||[]);setDragonBalls(d.dragonBalls||0);setDragonSummoned(d.dragonSummoned||false);setClearCount(d.clearCount||0);setSavedParty(d.savedParty||null);setChBattleNum(d.chBattleNum||1);setMonsterRoster(d.monsterRoster||[]);setHumanRoster(d.humanRoster||[]);setBoughtEquips(d.boughtEquips||[]);setZacianSummoned(d.zacianSummoned||false);setSuperGengarSummoned(d.superGengarSummoned||false);setTricksterSummoned(d.tricksterSummoned||false);if(d.selExtra)setSelExtra(d.selExtra);if(d.selNames)setSelNames(d.selNames);if(d.clearHistory)setClearHistory(d.clearHistory||[]);setSaveMenu(null);setSaveMsg('📂 ロード完了！');setTimeout(()=>setSaveMsg(''),2000);setScr('map');bgm('field');};
   const doLoad=()=>setSaveMenu('load');
   const buyItem=item=>{if(gold<item.cost){addLog('Gold不足！');return;}SFX.buy();if(item.type==='equip'){setParty(p=>p.map(m=>{let n={...m};if(item.eff.atk)n.atk+=item.eff.atk;if(item.eff.def)n.def+=item.eff.def;if(item.eff.mat)n.mat+=item.eff.mat;if(item.eff.hpb){n.maxHp+=item.eff.hpb;n.hp=Math.min(n.hp+item.eff.hpb,n.maxHp);}if(item.eff.mpb){n.maxMp+=item.eff.mpb;n.mp=Math.min(n.mp+item.eff.mpb,n.maxMp);}return n;}));setBoughtEquips(prev=>[...prev,item.id]);addLog('🛒 '+item.emoji+item.name+'購入！全員に効果！');}else{if(inv.filter(i=>i.id===item.id).length>=5){addLog('これ以上持てない！');return;}setInv(p=>[...p,{...item}]);addLog('🛒 '+item.emoji+item.name+'購入！');}setGold(g=>g-item.cost);};
   // 転職関数: 旧職業ステータスを蓄積し新職業に切り替え
@@ -898,13 +911,48 @@ function App(){
     const np=party.map((pm,i)=>i===memberIdx?changed:pm);
     setParty(np);
     // humanRosterも更新
-    setHumanRoster(r=>r.map(hr=>hr.name===m.name&&!hr.isMonster?changed:hr));
+    setHumanRoster(r=>r.map(hr=>hr.name===m.name&&!hr.isMonster?{...changed}:hr));
     addLog('✨ '+mn(m)+'が「'+newCls.name+'」に転職！旧職業の力を引き継いだ！');
     SFX.lvup();
     setShowJobChange(false);
   };
-    const summonZacian=()=>{const alreadyZacian=monsterRoster.some(m=>m.id==='zacian');const shenlongExists=monsterRoster.some(m=>m.id==='shenlong')||dragonSummoned;if(dragonBalls<3||zacianSummoned||alreadyZacian||!shenlongExists)return;SFX.dragon();const ally={...initMonsterAlly(ZACIAN_TPL),hp:ZACIAN_TPL.maxHp,maxHp:ZACIAN_TPL.maxHp,mp:70,maxMp:70,atk:ZACIAN_TPL.atk,def:ZACIAN_TPL.def,mat:ZACIAN_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setZacianSummoned(true);setShowZacianSummon(true);setTimeout(()=>setShowZacianSummon(false),4500);addLog('⚔️ 覇剣獣ザシアンがなかまになった！ドラゴンボール3個消費！');};
-  const summonDragon=()=>{const alreadyShenlong=monsterRoster.some(m=>m.id==='shenlong');if(dragonBalls<3||dragonSummoned||alreadyShenlong)return;SFX.dragon();const ally={...initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setDragonSummoned(true);setShowDragonSummon(true);setTimeout(()=>setShowDragonSummon(false),4500);addLog('🐉 神龍シェンロンがなかまになった！ドラゴンボール3個消費！');};
+    const summonSuperGengar=()=>{
+      const already=monsterRoster.some(m=>m.id==='super_gengar');
+      if(dragonBalls<3||superGengarSummoned||already||!zacianSummoned)return;
+      SFX.dragon();
+      const ally={...initMonsterAlly(SUPER_GENGAR_TPL),hp:SUPER_GENGAR_TPL.maxHp,maxHp:SUPER_GENGAR_TPL.maxHp,mp:90,maxMp:90,atk:SUPER_GENGAR_TPL.atk,def:SUPER_GENGAR_TPL.def,mat:SUPER_GENGAR_TPL.mat};
+      const nr=[...monsterRoster,ally];setMonsterRoster(nr);
+      if(party.length<4)setParty(p=>[...p,ally]);
+      setDragonBalls(b=>b-3);setSuperGengarSummoned(true);
+      setShowSuperGengarSummon(true);setTimeout(()=>setShowSuperGengarSummon(false),4500);
+      addLog('💜 スーパーゲンガーがなかまになった！神の卵3個消費！');
+    };
+    const summonTrickster=()=>{
+      const already=monsterRoster.some(m=>m.id==='trickster');
+      if(dragonBalls<3||tricksterSummoned||already||!superGengarSummoned)return;
+      SFX.dragon();
+      const ally={...initMonsterAlly(TRICKSTER_TPL),hp:TRICKSTER_TPL.maxHp,maxHp:TRICKSTER_TPL.maxHp,mp:60,maxMp:60,atk:TRICKSTER_TPL.atk,def:TRICKSTER_TPL.def,mat:TRICKSTER_TPL.mat};
+      const nr=[...monsterRoster,ally];setMonsterRoster(nr);
+      if(party.length<4)setParty(p=>[...p,ally]);
+      setDragonBalls(b=>b-3);setTricksterSummoned(true);
+      setShowTricksterSummon(true);setTimeout(()=>setShowTricksterSummon(false),4500);
+      addLog('🎲 遊び人ルーカスがなかまになった！神の卵3個消費！');
+    };
+    const summonZacian=()=>{const alreadyZacian=monsterRoster.some(m=>m.id==='zacian');const shenlongExists=monsterRoster.some(m=>m.id==='shenlong')||dragonSummoned;if(dragonBalls<3||zacianSummoned||alreadyZacian||!shenlongExists)return;SFX.dragon();const ally={...initMonsterAlly(ZACIAN_TPL),hp:ZACIAN_TPL.maxHp,maxHp:ZACIAN_TPL.maxHp,mp:70,maxMp:70,atk:ZACIAN_TPL.atk,def:ZACIAN_TPL.def,mat:ZACIAN_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setZacianSummoned(true);setShowZacianSummon(true);setTimeout(()=>setShowZacianSummon(false),4500);addLog('⚔️ 覇剣獣ザシアンがなかまになった！神の卵3個消費！');};
+  // 戦闘中死者が出たとき控えを選ばせる（Promiseで待機）
+  const waitForSubstitute=React.useCallback((currentParty,currentEnemies)=>{
+    const bench=[...humanRoster,...monsterRoster].filter(r=>
+      !currentParty.find(p=>p.isMonster?p.id===r.id:p.name===r.name)
+    );
+    const deadIdxs=currentParty.map((m,i)=>m.hp<=0?i:-1).filter(i=>i>=0);
+    if(deadIdxs.length===0||bench.length===0)return Promise.resolve(currentParty);
+    return new Promise(resolve=>{
+      substituteResolveRef.current=(newParty)=>{resolve(newParty);};
+      setSubstituteMenu({deadIdxs,party:currentParty,bench});
+    });
+  },[humanRoster,monsterRoster]);
+
+  const summonDragon=()=>{const alreadyShenlong=monsterRoster.some(m=>m.id==='shenlong');if(dragonBalls<3||dragonSummoned||alreadyShenlong)return;SFX.dragon();const ally={...initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setDragonSummoned(true);setShowDragonSummon(true);setTimeout(()=>setShowDragonSummon(false),4500);addLog('🐉 神龍シェンロンがなかまになった！神の卵3個消費！');};
   const useItemOn=(item,tgtIdx)=>{
     const m=party[tgtIdx];if(!m)return;
     const ni=[...inv];const ii=ni.findIndex(x=>x.id===item.id);if(ii<0)return;
@@ -917,7 +965,7 @@ function App(){
     else if(item.eff.revive&&tgt.hp<=0){np[tgtIdx]={...tgt,hp:Math.floor(tgt.maxHp*.5),status:null,statusTurns:0};setParty(np);addLog(item.emoji+item.name+'！'+tgt.name+'が復活！');}
     setItemMenu(false);
   };
-  const startGame=useOld=>{let p;if(useOld&&savedParty){p=savedParty.map(m=>({...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0}));}else{if(selCls.length<2)return;p=[initHuman(selCls[0],'ゆうり'),initHuman(selCls[1],'そうや')];selExtra.forEach((cls,i)=>{if(cls)p.push(initHuman(cls,selNames[i]||EXTRA_NAME_OPTS[0][i]));});}setParty(p);setHumanRoster([]);setChIdx(0);setChBattleNum(1);setInv([]);setGold(280);setDragonBalls(0);setDragonSummoned(false);setZacianSummoned(false);setMonsterRoster([]);setBattleResult(null);setLog(['🌟 ゆうりとそうやの大冒険、開幕！']);setStoryScreen(CHAPTERS[0]);setScr('map');bgm('field');};
+  const startGame=useOld=>{let p;if(useOld&&savedParty){p=savedParty.map(m=>({...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0}));}else{if(selCls.length<2)return;p=[initHuman(selCls[0],'ゆうり'),initHuman(selCls[1],'そうや')];selExtra.forEach((cls,i)=>{if(cls)p.push(initHuman(cls,selNames[i]||EXTRA_NAME_OPTS[0][i]));});}setParty(p);setHumanRoster([]);setChIdx(0);setChBattleNum(1);setInv([]);setGold(280);setDragonBalls(0);setDragonSummoned(false);setZacianSummoned(false);setSuperGengarSummoned(false);setTricksterSummoned(false);setMonsterRoster([]);setBattleResult(null);setLog(['🌟 ゆうりとそうやの大冒険、開幕！']);setStoryScreen(CHAPTERS[0]);setScr('map');bgm('field');};
 
   const bs=(col,dis)=>({background:dis?'rgba(50,50,60,.25)':`linear-gradient(135deg,${col}bb,${col}44)`,border:`1px solid ${dis?'#1e1e3a':col}`,color:dis?'#2a2a3a':'#fff',padding:'10px 14px',borderRadius:'10px',fontFamily:'inherit',fontWeight:900,fontSize:'.86rem',cursor:dis?'not-allowed':'pointer',boxShadow:dis?'none':`0 0 10px ${col}33`,transition:'all .14s',margin:'4px'});
   const activeMemberSpells=activeM?getMemberSpells(activeM):[];
@@ -936,7 +984,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.20.2 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.20.5 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -948,7 +996,7 @@ function App(){
         <span style={{color:'#d4a017',fontWeight:900}}>カシミール地方</span>の青年ゆうりとそうや<br/>
         悪魔サタンに囚われた<span style={{color:'#f9a8d4',fontWeight:900}}>フィリア姫</span>を救え！<br/>
         全<span style={{color:'#fbbf24',fontWeight:900}}>10章</span>の大冒険RPG！<br/>
-        <span style={{fontSize:'.94rem',color:'#4b5563'}}>仲間モンスター・ドラゴンボール・フィールド呪文・セーブ</span>
+        <span style={{fontSize:'.94rem',color:'#4b5563'}}>仲間モンスター・神の卵・フィールド呪文・セーブ</span>
       </div>
       {clearCount>0&&<div style={{fontSize:'.87rem',color:'#fbbf24',marginBottom:'6px',fontWeight:900}}>⭐ クリア回数: {clearCount}回</div>}
       <div style={{display:'flex',flexDirection:'column',gap:'8px',alignItems:'center',marginTop:'12px'}}>
@@ -1029,17 +1077,29 @@ function App(){
         </div>
       </div>
       <div className="card" style={{borderColor:'rgba(251,191,36,.18)',padding:'9px 12px'}}>
-        {dbPopup&&<div style={{background:'rgba(251,191,36,.22)',border:'2px solid #fbbf24',borderRadius:'12px',padding:'10px 16px',textAlign:'center',marginBottom:'8px',animation:'popIn .3s ease',fontSize:'1rem',fontWeight:900,color:'#fde68a'}}>🔮✨ ドラゴンボールゲット！ {dragonBalls}個目！ ✨🔮<br/><span style={{fontSize:'.84rem',color:'#fbbf24'}}>{dragonSummoned&&!zacianSummoned?'あと'+(Math.max(0,3-dragonBalls))+'個でザシアン召喚！':'あと'+(Math.max(0,3-dragonBalls))+'個で神龍召喚！'}</span></div>}
+        {dbPopup&&<div style={{background:'rgba(251,191,36,.22)',border:'2px solid #fbbf24',borderRadius:'12px',padding:'10px 16px',textAlign:'center',marginBottom:'8px',animation:'popIn .3s ease',fontSize:'1rem',fontWeight:900,color:'#fde68a'}}>🥚✨ 神の卵ゲット！ {dragonBalls}個目！ ✨🔮<br/><span style={{fontSize:'.84rem',color:'#fbbf24'}}>{dragonSummoned&&!zacianSummoned?'あと'+(Math.max(0,3-dragonBalls))+'個でザシアン召喚！':'あと'+(Math.max(0,3-dragonBalls))+'個で神龍召喚！'}</span></div>}
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'4px'}}>
           <div style={{display:'flex',alignItems:'center',gap:'6px'}}>
-            <span style={{color:'#fbbf24',fontWeight:900,fontSize:'1.0rem'}}>🔮 ドラゴンボール:</span>
-            {Array.from({length:3},(_,i)=>(<span key={i} style={{fontSize:'1.3rem',filter:i<dragonBalls?'drop-shadow(0 0 8px #fb923c)':'grayscale(1)',opacity:i<dragonBalls?1:.2,transition:'all .3s'}}>🔮</span>))}
+            <span style={{color:'#fbbf24',fontWeight:900,fontSize:'1.0rem'}}>🥚 神の卵:</span>
+            {Array.from({length:3},(_,i)=>(<span key={i} style={{fontSize:'1.3rem',filter:i<dragonBalls?'drop-shadow(0 0 8px #fb923c)':'grayscale(1)',opacity:i<dragonBalls?1:.2,transition:'all .3s'}}>🥚</span>))}
             <span style={{fontSize:'.84rem',color:dragonBalls>=3?'#4ade80':'#fbbf24',fontWeight:900}}>{dragonBalls}/3</span>
           </div>
-          {dragonBalls>=3&&!dragonSummoned&&!monsterRoster.some(m=>m.id==='shenlong')&&<button onClick={summonDragon} style={{...bs('#4ade80'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>🐉 神龍召喚！{party.length>=4?' (控えに追加)':''}</button>}
-          {dragonSummoned&&!zacianSummoned&&dragonBalls<3&&<span style={{fontSize:'.84rem',color:'#4ade80',fontWeight:900}}>🐉 龍召喚済み　<span style={{color:'#38bdf8',fontSize:'.78rem'}}>⚔️ あと{3-dragonBalls}個でザシアン召喚！</span></span>}
-          {dragonBalls>=3&&(dragonSummoned||monsterRoster.some(m=>m.id==='shenlong'))&&!zacianSummoned&&!monsterRoster.some(m=>m.id==='zacian')&&<button onClick={summonZacian} style={{...bs('#38bdf8'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>⚔️ ザシアン召喚！{party.length>=4?' (控えに追加)':''}</button>}
-          {zacianSummoned&&<span style={{fontSize:'.94rem',color:'#38bdf8',fontWeight:900}}>⚔️ ザシアン召喚済み</span>}
+          {/* 神の卵 4段階召喚UI */}
+          {dragonBalls>=3&&!dragonSummoned&&!monsterRoster.some(m=>m.id==='shenlong')&&
+            <button onClick={summonDragon} style={{...bs('#4ade80'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>🐉 神龍シェンロン召喚！</button>}
+          {dragonSummoned&&!zacianSummoned&&dragonBalls<3&&
+            <span style={{fontSize:'.78rem',color:'#4ade80',fontWeight:900}}>🐉 シェンロン済　⚔️ あと{3-dragonBalls}個でザシアン！</span>}
+          {dragonBalls>=3&&dragonSummoned&&!zacianSummoned&&!monsterRoster.some(m=>m.id==='zacian')&&
+            <button onClick={summonZacian} style={{...bs('#38bdf8'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>⚔️ ザシアン召喚！</button>}
+          {zacianSummoned&&!superGengarSummoned&&dragonBalls<3&&
+            <span style={{fontSize:'.78rem',color:'#38bdf8',fontWeight:900}}>⚔️ ザシアン済　💜 あと{3-dragonBalls}個でスーパーゲンガー！</span>}
+          {dragonBalls>=3&&zacianSummoned&&!superGengarSummoned&&!monsterRoster.some(m=>m.id==='super_gengar')&&
+            <button onClick={summonSuperGengar} style={{...bs('#a855f7'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>💜 スーパーゲンガー召喚！</button>}
+          {superGengarSummoned&&!tricksterSummoned&&dragonBalls<3&&
+            <span style={{fontSize:'.78rem',color:'#a855f7',fontWeight:900}}>💜 スーパーゲンガー済　🎲 あと{3-dragonBalls}個で遊び人！</span>}
+          {dragonBalls>=3&&superGengarSummoned&&!tricksterSummoned&&!monsterRoster.some(m=>m.id==='trickster')&&
+            <button onClick={summonTrickster} style={{...bs('#f59e0b'),margin:0,padding:'5px 10px',fontSize:'.84rem',animation:'dragonPulse 2s ease-in-out infinite'}}>🎲 遊び人ルーカス召喚！</button>}
+          {tricksterSummoned&&<span style={{fontSize:'.78rem',color:'#f59e0b',fontWeight:900}}>🎲 遊び人済 全召喚コンプリート！🎉</span>}
         </div>
       </div>
       <div className="card" style={{borderColor:'rgba(255,255,255,.04)',padding:'12px 14px'}}>
@@ -1060,7 +1120,7 @@ function App(){
                 <div style={{height:'100%',width:hpPct+'%',background:hpCol,borderRadius:'4px',transition:'width .3s'}}/>
               </div>
               {m.maxMp>0&&<div style={{height:'3px',background:'rgba(14,165,233,.12)',borderRadius:'2px',overflow:'hidden',marginTop:'3px'}}><div style={{height:'100%',width:mpPct+'%',background:'#38bdf8',borderRadius:'2px'}}/></div>}
-              {fieldSpells.length>0&&m.hp>0&&<button onClick={()=>setFieldSpellMenu({casterIdx:i,targetIdx:i})} style={{...bs('#7c3aed'),margin:'4px 0 0 0',padding:'3px 10px',fontSize:'.76rem'}}>🔮 呪文 ({fieldSpells.length})</button>}
+              {fieldSpells.length>0&&m.hp>0&&<button onClick={()=>setFieldSpellMenu({casterIdx:i,targetIdx:i})} style={{...bs('#7c3aed'),margin:'4px 0 0 0',padding:'3px 10px',fontSize:'.76rem'}}>🥚 呪文 ({fieldSpells.length})</button>}
             </div>
           </div>);
           })}
@@ -1118,9 +1178,9 @@ function App(){
         {battleResult.lvLogs.map((l,i)=>(<div key={i} style={{fontSize:'1.0rem',color:'#4ade80',fontWeight:900,textAlign:'center',animation:'popIn .3s ease'}}>{l}</div>))}
       </div>)}
       {battleResult.gotDB&&(<div style={{background:'rgba(251,191,36,.15)',border:'2px solid #fbbf24',borderRadius:'10px',padding:'8px',marginBottom:'8px',textAlign:'center',animation:'popIn .4s ease'}}>
-        <div style={{fontSize:'1.5rem',marginBottom:'2px'}}>🔮✨</div>
-        <div style={{color:'#fde68a',fontWeight:900}}>ドラゴンボール ゲット！</div>
-        <div style={{color:'#fbbf24',fontSize:'1.0rem'}}>{battleResult.dbCount}/3個　{battleResult.dbCount>=3?'🐉 神龍召喚できる！':'あと'+(3-battleResult.dbCount)+'個で召喚！'}</div>
+        <div style={{fontSize:'1.5rem',marginBottom:'2px'}}>🥚✨</div>
+        <div style={{color:'#fde68a',fontWeight:900}}>神の卵 ゲット！</div>
+        <div style={{color:'#fbbf24',fontSize:'1.0rem'}}>{battleResult.dbCount}/3個　{battleResult.dbCount>=3?'✨ 召喚できる！':'あと'+(3-battleResult.dbCount)+'個で次の召喚！'}</div>
       </div>)}
       {battleResult.recruitTpls&&battleResult.recruitTpls.length>0&&(<div style={{background:'rgba(74,222,128,.1)',border:'1px solid rgba(74,222,128,.3)',borderRadius:'10px',padding:'10px',marginBottom:'8px'}}>
         <div style={{color:'#4ade80',fontWeight:900,fontSize:'.97rem',textAlign:'center',marginBottom:'6px'}}>🤝 仲間にする敵を選ぼう！（仲間ロスター: {monsterRoster.length}/5）</div>
@@ -1141,14 +1201,14 @@ function App(){
 
     {/* PARTY MANAGEMENT */}
     {scr==='party_mgmt'&&(()=>{
-      const benchH=humanRoster.filter(h=>!party.find(p=>!p.isMonster&&p.name===h.name&&p.classId===h.classId));
+      const benchH=humanRoster.filter(h=>!party.find(p=>!p.isMonster&&p.name===h.name)); // nameだけで判定
       const benchM=monsterRoster.filter(r=>!party.find(p=>p.id===r.id));
       const bench=[...benchH,...benchM];
       const addM=m=>{if(party.length>=4)return;SFX.cursor();
         // 控えから最新データ取得してパーティ追加（人間もモンスターも最新版を使う）
         const latest=m.isMonster
           ?(monsterRoster.find(r=>r.id===m.id)||m)
-          :(humanRoster.find(h=>h.name===m.name&&h.classId===m.classId)||m);
+          :(humanRoster.find(h=>h.name===m.name)||m);
         setParty(p=>[...p,{...latest,hp:Math.min(latest.hp,latest.maxHp)}]);
       };
       const removeM=i=>{
@@ -1163,10 +1223,10 @@ function App(){
             return [...r,{...m}]; // なければ追加（消えるバグ防止）
           });
         } else {
-          // 人間メンバー: 常に最新ステータスでhumanRosterを更新（レベル保持）
+          // 人間メンバー: nameだけでマッチ（転職でclassId変わっても追跡できる）
           setHumanRoster(r=>{
-            const exists=r.some(h=>h.name===m.name&&h.classId===m.classId);
-            if(exists) return r.map(h=>h.name===m.name&&h.classId===m.classId?{...m}:h);
+            const exists=r.some(h=>h.name===m.name);
+            if(exists) return r.map(h=>h.name===m.name?{...m}:h);
             return [...r,m];
           });
         }
@@ -1208,7 +1268,7 @@ function App(){
       const needsTarget=sp=>['heal_one','heal_one_full','status_cure','revive','revive_25'].includes(sp.type);
       return(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.75)',zIndex:200,display:'flex',alignItems:'center',justifyContent:'center',padding:'16px'}} onClick={e=>{if(e.target===e.currentTarget)setFieldSpellMenu(null);}}>
         <div style={{background:'#1e293b',border:'2px solid #7c3aed',borderRadius:'14px',padding:'14px',width:'100%',maxWidth:'360px'}}>
-          <div style={{color:'#a78bfa',fontWeight:900,fontSize:'1.0rem',marginBottom:'8px',textAlign:'center'}}>🔮 {caster.base||'🧝'} {caster.name} の呪文</div>
+          <div style={{color:'#a78bfa',fontWeight:900,fontSize:'1.0rem',marginBottom:'8px',textAlign:'center'}}>🥚 {caster.base||'🧝'} {caster.name} の呪文</div>
           <div style={{color:'#64748b',fontSize:'.72rem',textAlign:'center',marginBottom:'10px'}}>MP: {caster.mp}/{caster.maxMp}</div>
           {/* ターゲット選択（単体対象呪文が選ばれた時） */}
           {fieldSpellMenu.spell&&needsTarget(fieldSpellMenu.spell)&&(<>
@@ -1253,6 +1313,59 @@ function App(){
           </div>);
         })}
         <button onClick={()=>setShowJobChange(false)} style={{...bs('#374151'),margin:'4px 0 0 0',width:'100%',padding:'8px',fontSize:'.87rem'}}>閉じる</button>
+      </div>
+    </div>)}
+
+    {/* 戦闘中 控え選択モーダル */}
+    {substituteMenu&&(<div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.92)',zIndex:70,display:'flex',alignItems:'center',justifyContent:'center',padding:'12px'}}>
+      <div style={{background:'#0d0d1a',border:'2px solid #ef4444',borderRadius:'14px',padding:'14px',width:'100%',maxWidth:'380px',animation:'popIn .2s ease'}}>
+        <div style={{color:'#ef4444',fontWeight:900,fontSize:'1.05rem',textAlign:'center',marginBottom:'4px'}}>💀 戦闘不能！控えを選んで！</div>
+        <div style={{fontSize:'.78rem',color:'#94a3b8',textAlign:'center',marginBottom:'10px'}}>倒れたメンバーと交代するキャラを選ぼう</div>
+        {substituteMenu.deadIdxs.map(deadIdx=>{
+          const dead=substituteMenu.party[deadIdx];
+          const deadColor=dead.isMonster?'#4ade80':CLASSES[dead.classId]?.color||'#ef4444';
+          // まだ交代していない控えだけ表示
+          const bench=substituteMenu.bench;
+          return(<div key={deadIdx} style={{marginBottom:'10px',padding:'8px',background:'rgba(239,68,68,.05)',border:'1px solid #ef444433',borderRadius:'10px'}}>
+            <div style={{color:'#ef4444',fontSize:'.85rem',fontWeight:900,marginBottom:'6px'}}>
+              💀 {mn(dead)} が倒れた…
+            </div>
+            {bench.length===0
+              ? <div style={{color:'#94a3b8',fontSize:'.8rem'}}>控えにキャラがいない…</div>
+              : <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:'5px'}}>
+                {bench.map((bm,bi)=>{
+                  const latest=bm.isMonster?(monsterRoster.find(r=>r.id===bm.id)||bm):(humanRoster.find(h=>h.name===bm.name)||bm);
+                  const bc=latest.isMonster?'#4ade80':CLASSES[latest.classId]?.color||'#fff';
+                  return(<button key={bi} onClick={()=>{
+                    // 選択されたキャラで交代
+                    const newParty=substituteMenu.party.map((pm,i)=>{
+                      if(i!==deadIdx)return pm;
+                      return{...latest,hp:Math.min(latest.hp,latest.maxHp),status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0};
+                    });
+                    addLog('🔄 '+mn(dead)+'→'+mn(latest)+'が参戦！');SFX.cursor();
+                    // まだ他の死者がいれば続行（次の deadIdx 処理へ）
+                    const remainingDead=substituteMenu.deadIdxs.filter(i=>i!==deadIdx&&newParty[i].hp<=0);
+                    const newBench=bench.filter((_,j)=>j!==bi);
+                    if(remainingDead.length>0&&newBench.length>0){
+                      setSubstituteMenu({deadIdxs:remainingDead,party:newParty,bench:newBench});
+                    } else {
+                      setSubstituteMenu(null);
+                      substituteResolveRef.current?.(newParty);
+                    }
+                  }} style={{...bs(bc),margin:0,padding:'7px 4px',fontSize:'.82rem',display:'flex',flexDirection:'column',alignItems:'center',gap:'1px'}}>
+                    <span style={{fontSize:'1.15rem'}}>{latest.isMonster?latest.base:CHAR_VIS[latest.classId]?.face||'🧝'}</span>
+                    <span style={{fontWeight:900}}>{mn(latest)}</span>
+                    <span style={{fontSize:'.65rem',opacity:.8}}>Lv{latest.level} HP{latest.hp}</span>
+                  </button>);
+                })}
+              </div>
+            }
+            {bench.length===0&&<button onClick={()=>{
+              setSubstituteMenu(null);
+              substituteResolveRef.current?.(substituteMenu.party);
+            }} style={{...bs('#374151'),margin:'4px 0 0 0',width:'100%',padding:'6px',fontSize:'.82rem'}}>このまま続ける</button>}
+          </div>);
+        })}
       </div>
     </div>)}
 
@@ -1321,7 +1434,7 @@ function App(){
             ].map(b=>(<button key={b.l} disabled={b.dis} onClick={b.fn} style={{...bs(b.c,b.dis),margin:0,display:'flex',flexDirection:'column',alignItems:'center',gap:'0px',padding:'5px 2px',minWidth:0}}><span style={{fontSize:'1.1rem'}}>{b.l}</span><span style={{fontSize:'.58rem',opacity:.8,fontWeight:900}}>{b.s}</span></button>))}
           </div>
           {(()=>{
-            const benchAll=[...humanRoster,...monsterRoster].filter(r=>!party.find(p=>p.isMonster?p.id===r.id:(p.name===r.name&&p.classId===r.classId)));
+            const benchAll=[...humanRoster,...monsterRoster].filter(r=>!party.find(p=>p.isMonster?p.id===r.id:(p.name===r.name)));
             if(benchAll.length===0)return null;
             return(<div style={{display:'flex',gap:'3px',flexWrap:'wrap'}}>
               <span style={{fontSize:'.65rem',color:'#94a3b8',alignSelf:'center',flexShrink:0}}>交代▶</span>
@@ -1331,11 +1444,16 @@ function App(){
                 // 簡易交代: 最初の控えと自動交代
                 const bm=bench[0];
                 const latestBm=bm.isMonster?(monsterRoster.find(r=>r.id===bm.id)||bm):
-                  (humanRoster.find(r=>r.name===bm.name&&r.classId===bm.classId)||bm);
+                  (humanRoster.find(r=>r.name===bm.name)||bm);
                 const np=party.map((p,i)=>i===pIdx?{...latestBm,hp:Math.min(latestBm.hp,latestBm.maxHp)}:p);
                 setParty(np);
                 if(bm.isMonster)setMonsterRoster(r=>r.map(r2=>r2.id===bm.id?{...bm}:r2));
-                else setHumanRoster(r=>r.map(r2=>r2.name===bm.name&&r2.classId===bm.classId?{...pm}:r2));
+                else setHumanRoster(r=>{
+                  // pmをrosterに保存（未登録なら追加、登録済みなら更新）
+                  const exists=r.some(h=>h.name===pm.name);
+                  if(exists) return r.map(h=>h.name===pm.name?{...pm}:h);
+                  return [...r,{...pm}];
+                });
                 addLog('🔄 '+mn(pm)+'→'+mn(latestBm)+'に交代！');SFX.cursor();
               }} style={{...bs(mc,busy||autoMode||phase==='enemy'),margin:0,padding:'3px 5px',fontSize:'.65rem'}}>{mn(pm).slice(0,3)}</button>);})}
             </div>);
@@ -1450,9 +1568,9 @@ function App(){
       <div style={{fontSize:'1.8rem',fontWeight:900,color:'#4ade80',textShadow:'0 0 30px #4ade80,0 0 60px #22c55e',animation:'popIn .5s ease',marginBottom:'8px',letterSpacing:'.1em'}}>神 龍 降 臨 ！！</div>
       <div style={{fontSize:'1.1rem',color:'#86efac',fontWeight:700,marginBottom:'24px',animation:'fadeIn .8s .3s ease both'}}>シェンロンがなかまになった！</div>
       <div style={{display:'flex',gap:'12px',marginBottom:'20px'}}>
-        {[...Array(3)].map((_,i)=>(<div key={i} style={{fontSize:'2rem',filter:'drop-shadow(0 0 12px #fb923c)',animation:`popIn .4s ${i*.15}s ease both`}}>🔮</div>))}
+        {[...Array(3)].map((_,i)=>(<div key={i} style={{fontSize:'2rem',filter:'drop-shadow(0 0 12px #fb923c)',animation:`popIn .4s ${i*.15}s ease both`}}>🥚</div>))}
       </div>
-      <div style={{fontSize:'.88rem',color:'#4ade80',opacity:.7}}>ドラゴンボール3個消費</div>
+      <div style={{fontSize:'.88rem',color:'#4ade80',opacity:.7}}>神の卵3個消費</div>
       <div style={{fontSize:'.75rem',color:'#4ade80',opacity:.4,marginTop:'20px'}}>タップで閉じる</div>
     </div>)}
     {/* ザシアン召喚演出 */}
@@ -1462,9 +1580,9 @@ function App(){
       <div style={{fontSize:'1.1rem',color:'#7dd3fc',fontWeight:700,marginBottom:'8px',animation:'fadeIn .8s .3s ease both'}}>ザシアンがなかまになった！</div>
       <div style={{fontSize:'.88rem',color:'#38bdf8',fontWeight:600,marginBottom:'20px',animation:'fadeIn .8s .5s ease both'}}>⚔️ きょじゅうざん で敵を一撃！</div>
       <div style={{display:'flex',gap:'12px',marginBottom:'20px'}}>
-        {[...Array(3)].map((_,i)=>(<div key={i} style={{fontSize:'2rem',filter:'drop-shadow(0 0 12px #38bdf8)',animation:`popIn .4s ${i*.15}s ease both`}}>🔮</div>))}
+        {[...Array(3)].map((_,i)=>(<div key={i} style={{fontSize:'2rem',filter:'drop-shadow(0 0 12px #38bdf8)',animation:`popIn .4s ${i*.15}s ease both`}}>🥚</div>))}
       </div>
-      <div style={{fontSize:'.88rem',color:'#38bdf8',opacity:.7}}>ドラゴンボール3個消費</div>
+      <div style={{fontSize:'.88rem',color:'#38bdf8',opacity:.7}}>神の卵3個消費</div>
       <div style={{fontSize:'.75rem',color:'#38bdf8',opacity:.4,marginTop:'20px'}}>タップで閉じる</div>
     </div>)}
     {/* グローバルアイテムモーダル */}
