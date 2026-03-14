@@ -432,7 +432,7 @@ const scaleEnemy=(tpl,avgLv,partySize,chIdx=0)=>{
   const lv=Math.max(chBaseLv,Math.min(blended,chCeiling,avgLv+6));
   const bm=tpl.boss?1.2:1.0;
   const s=(1+(lv-1)*0.15)*ps*bm;
-  const gs=tpl.rare?1.0:Math.max(1.0,Math.min(0.6+lv*0.14,3.5)); // レアはgs=1固定、通常Lv1=1.0→Lv20=3.4→上限3.5
+  const gs=tpl.rare?1.0:tpl.boss?Math.max(1.0,Math.min(0.6+lv*0.14,2.0)):Math.max(1.0,Math.min(0.6+lv*0.14,3.5)); // レアgs=1固定、ボスgs上限2.0、通常上限3.5
   const defScale=1+(lv-1)*0.10;
   const rawHp=Math.round(tpl.maxHp*s);
   // HPキャップを適用
@@ -1061,7 +1061,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.9 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.11 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -1473,13 +1473,7 @@ function App(){
         {dmgs.map(d=>(<div key={d.id} style={{position:'absolute',fontWeight:900,fontSize:'1.8rem',pointerEvents:'none',zIndex:100,animation:'dmgUp .95s ease forwards',textShadow:'0 2px 8px rgba(0,0,0,.95)',color:d.type==='e'?'#ff5555':d.type==='h'?'#4ade80':'#ffd700',left:d.x,top:d.y}}>{d.type==='h'?'+'+d.v:'-'+d.v}</div>))}
         {sparks.map(s=>Array.from({length:7},(_,si)=>{const a=(si/7)*Math.PI*2,dist=25+Math.random()*20;return <div key={s.id+'_'+si} style={{position:'absolute',width:'6px',height:'6px',borderRadius:'50%',left:s.x,top:s.y,background:`hsl(${14+si*14},100%,62%)`,pointerEvents:'none',zIndex:60,animation:'sparkFly .62s ease forwards','--tx':Math.cos(a)*dist+'px','--ty':Math.sin(a)*dist+'px'}}/>;}))}
       </div>
-      {/* バトルログ: フィールド直下に独立表示 */}
-      <div style={{width:'100%',maxWidth:'460px',minHeight:'64px',padding:'8px 14px',marginBottom:'6px',background:'linear-gradient(135deg,rgba(10,10,30,.88),rgba(20,10,40,.82))',borderRadius:'12px',border:'1px solid rgba(180,130,255,.18)',display:'flex',flexDirection:'column',justifyContent:'center'}}>
-        {log.length>0
-          ? log.slice(0,3).map((e,i)=>(<div key={i} style={{fontSize:i===0?'1.05rem':'.82rem',lineHeight:1.65,opacity:i===0?1:i===1?.5:.25,color:i===0?'#f8fafc':'#94a3b8',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontWeight:i===0?800:400,letterSpacing:i===0?'.01em':0}}>{e}</div>))
-          : <div style={{color:'#374151',fontSize:'.85rem'}}>…</div>
-        }
-      </div>
+
       <div className="card" style={{borderColor:'rgba(220,38,38,.18)',padding:'8px 10px'}}>
         <div style={{display:'grid',gridTemplateColumns:enemies.length>1?'1fr 1fr':'1fr',gap:'2px 8px',marginBottom:'4px'}}>
           {enemies.map((en,i)=>{const pct=Math.max(0,(en.hp/en.maxHp)*100),col=pct>50?'#ef4444':pct>25?'#f97316':'#dc2626';return(<div key={i} style={{marginBottom:'2px'}}>
