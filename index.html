@@ -438,7 +438,7 @@ const scaleEnemy=(tpl,avgLv,partySize,chIdx=0)=>{
   // HPキャップを適用
   const hpCap=tpl.boss?BOSS_HP_CAPS[Math.min(chIdx,19)]:MOB_HP_CAPS[Math.min(chIdx,19)];
   const finalHp=Math.min(rawHp,hpCap);
-  const base={...tpl,hp:finalHp,maxHp:finalHp,atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*defScale),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*3.5)};
+  const base={...tpl,hp:finalHp,maxHp:finalHp,atk:Math.round(tpl.atk*s),def:Math.round(tpl.def*defScale),mat:Math.round((tpl.mat||0)*s),exp:Math.round(tpl.exp*gs),gold:Math.round(tpl.gold*gs)};
   if(tpl.boss)base.magicResist=tpl.magicResist!==undefined?tpl.magicResist:0.25;
   return base;
 };
@@ -1061,7 +1061,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.12 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.13 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
