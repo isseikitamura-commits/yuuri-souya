@@ -228,26 +228,6 @@ const RARE_ENCOUNTERS=[
   // 神獣ルギア: 最強の呪文使い
   [{id:'lugia',name:'神獣ルギア',base:'🦅',ov:'✨',flt:'hue-rotate(200deg) saturate(3.5) brightness(1.3) contrast(1.2)',gc:'#c4b5fd',hp:1800,maxHp:1800,atk:55,def:80,mat:280,exp:1500,gold:2000,si:'burn',rare:true,boss:true,big:true,spellImmune:false,magicResist:0,divineSpellCaster:true,
     phases:[{hp:.65,msg:'ルギアが神秘の翼を広げた！魔法力が爆発！',atkBonus:0},{hp:.3,msg:'ルギアが真の神力を解放！！',atkBonus:30,aoe:true}]}],
-  // Ch10（idx=10）: 天空編 第11章 雷霆将軍テンペスト
-  [{id:'tempest',name:'雷霆将軍テンペスト',base:'⚡',ov:'👑',flt:'hue-rotate(50deg) saturate(4) brightness(1.3) contrast(1.4)',gc:'#fbbf24',hp:2000,maxHp:2000,atk:180,def:90,mat:160,exp:3000,gold:2500,si:'stun',big:true,boss:true,phases:[{hp:.6,msg:'テンペストが雷の衣をまとった！',atkBonus:60},{hp:.3,msg:'テンペスト最終形態！雷神解放！',atkBonus:100,aoe:true}]}],
-  // Ch11（idx=11）: 天空城 中ボス
-  [{id:'sky_knight',name:'天空騎士団長',base:'⚔️',ov:'☁️',flt:'hue-rotate(200deg) saturate(3) brightness(1.2)',gc:'#93c5fd',hp:2500,maxHp:2500,atk:210,def:120,mat:140,exp:3500,gold:3000,si:'stun',big:true,boss:true,phases:[{hp:.5,msg:'天空騎士団長が聖剣を解放！',atkBonus:80,aoe:true}]}],
-  // Ch12（idx=12）: 雲海迷宮 ボス
-  [{id:'illusion',name:'幻影の魔術師',base:'🌀',ov:'💫',flt:'hue-rotate(270deg) saturate(5) brightness(.8)',gc:'#c4b5fd',hp:3000,maxHp:3000,atk:160,def:80,mat:280,exp:4000,gold:3500,si:'stun',big:true,boss:true,divineSpellCaster:true,phases:[{hp:.55,msg:'幻影が現実を侵食！全体幻術攻撃！',atkBonus:70,aoe:true},{hp:.25,msg:'幻影の最終奥義！虚無空間！',atkBonus:120,aoe:true,tripleAttack:true}]}],
-  // Ch13（idx=13）: 雷霆神殿 ボス
-  [{id:'thunder_god',name:'雷霆神ベルゼクス',base:'🌩️',ov:'⚡',flt:'hue-rotate(40deg) saturate(6) brightness(1.4)',gc:'#fde68a',hp:3800,maxHp:3800,atk:250,def:110,mat:220,exp:5000,gold:4500,si:'stun',big:true,boss:true,phases:[{hp:.65,msg:'ベルゼクスが天雷を解放！',atkBonus:90},{hp:.35,msg:'「天地崩雷」！全力解放！',atkBonus:150,aoe:true}]}],
-  // Ch14（idx=14）: 天空城 中枢 ボス  
-  [{id:'void_mage',name:'呪術師ヴォイド',base:'🌑',ov:'💀',flt:'brightness(.2) contrast(4) hue-rotate(280deg)',gc:'#7c3aed',hp:4500,maxHp:4500,atk:200,def:100,mat:350,exp:6000,gold:5000,si:'stun',big:true,boss:true,spellImmune:false,divineSpellCaster:true,phases:[{hp:.7,msg:'ヴォイドが次元を歪めた！',atkBonus:80,aoe:true},{hp:.4,msg:'「次元崩壊」発動！存在が揺らぐ…',atkBonus:140,aoe:true},{hp:.15,msg:'ヴォイド最終奥義「無限虚無」！！',atkBonus:200,aoe:true,tripleAttack:true}]}],
-  // Ch15（idx=15）: 四天王 炎王
-  [{id:'flame_king',name:'炎の四天王 イグニス',base:'🔥',ov:'👑',flt:'hue-rotate(15deg) saturate(5) brightness(.9)',gc:'#ef4444',hp:5500,maxHp:5500,atk:300,def:130,mat:280,exp:7500,gold:6000,si:'burn',big:true,boss:true,phases:[{hp:.6,msg:'イグニスが炎の王冠を解放！',atkBonus:110,aoe:true},{hp:.3,msg:'「天焔崩滅」！世界が燃える！',atkBonus:180,aoe:true}]}],
-  // Ch16（idx=16）: 四天王 氷王
-  [{id:'ice_king',name:'氷の四天王 グラシア',base:'❄️',ov:'👑',flt:'hue-rotate(200deg) saturate(4) brightness(1.3)',gc:'#7dd3fc',hp:6000,maxHp:6000,atk:280,def:160,mat:300,exp:8000,gold:6500,si:'stun',big:true,boss:true,divineSpellCaster:true,phases:[{hp:.6,msg:'グラシアが絶対零度を解放！',atkBonus:100,aoe:true},{hp:.3,msg:'「凍天消滅」！時が止まる！',atkBonus:160,aoe:true,tripleAttack:true}]}],
-  // Ch17（idx=17）: 魔王ゼロス第一形態
-  [{id:'zeros',name:'魔王ゼロス',base:'🔱',ov:'👑',flt:'brightness(.25) contrast(5) hue-rotate(300deg) saturate(3)',gc:'#a855f7',hp:8000,maxHp:8000,atk:380,def:180,mat:420,exp:12000,gold:9000,si:'stun',big:true,boss:true,divineSpellCaster:true,phases:[{hp:.7,msg:'ゼロスが魔力の封印を解いた！',atkBonus:120,aoe:true},{hp:.45,msg:'ゼロス第二段階！宇宙の力が覚醒！',atkBonus:200,aoe:true},{hp:.2,msg:'「魔王解放」！ゼロスが真の力を！！',atkBonus:300,aoe:true,tripleAttack:true}]}],
-  // Ch18（idx=18）: ゼロス真の姿
-  [{id:'zeros_true',name:'真魔王ゼロス',base:'🌑',ov:'⭐',flt:'brightness(.15) contrast(6) hue-rotate(260deg) saturate(5) drop-shadow(0 0 20px #7c3aed)',gc:'#c084fc',hp:12000,maxHp:12000,atk:500,def:220,mat:580,exp:18000,gold:14000,si:'stun',big:true,boss:true,divineSpellCaster:true,phases:[{hp:.75,msg:'ゼロスの真の姿が解放！時空が歪む！！',atkBonus:150,aoe:true},{hp:.5,msg:'「宇宙滅亡波」！全員に大ダメージ！',atkBonus:250,aoe:true},{hp:.25,msg:'ゼロス完全体への移行！無限の力！！',atkBonus:380,aoe:true,tripleAttack:true}]}],
-  // Ch19（idx=19）: 最終決戦 ゼロス完全体
-  [{id:'zeros_final',name:'完全体魔王ゼロス',base:'⭐',ov:'💥',flt:'brightness(.1) contrast(8) hue-rotate(240deg) saturate(8) drop-shadow(0 0 30px #c084fc) drop-shadow(0 0 60px #7c3aed)',gc:'#e879f9',hp:20000,maxHp:20000,atk:680,def:280,mat:750,exp:30000,gold:20000,si:'stun',big:true,boss:true,final:true,divineSpellCaster:true,phases:[{hp:.8,msg:'ゼロス完全体！宇宙の終焉が始まる！',atkBonus:200,aoe:true},{hp:.55,msg:'「時空崩壊」！現実が消えていく！！',atkBonus:350,aoe:true},{hp:.3,msg:'「宇宙消滅の叫び」！！最終奥義！！',atkBonus:500,aoe:true,tripleAttack:true},{hp:.1,msg:'「GAME OVER」！！ゼロスが限界突破！！！',atkBonus:700,aoe:true,tripleAttack:true}]}],
 ];
 
 const ENC=[
@@ -1061,7 +1041,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.13 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.14 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
