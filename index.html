@@ -1061,7 +1061,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.11 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.12 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -1455,10 +1455,7 @@ function App(){
 
     {/* BATTLE */}
     {scr==='battle'&&party.length>0&&enemies.length>0&&(<>
-      {/* バトルログ: 最上部に表示 */}
-      {log.length>0&&(<div style={{width:'100%',maxWidth:'460px',padding:'8px 14px',marginBottom:'7px',background:'rgba(0,0,0,.7)',borderRadius:'10px',border:'1px solid rgba(255,255,255,.12)',minHeight:'52px'}}>
-        {log.slice(0,3).map((e,i)=>(<div key={i} style={{fontSize:i===0?'1.05rem':'.84rem',lineHeight:1.75,opacity:i===0?1:i===1?.55:.28,color:i===0?'#f8fafc':'#94a3b8',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontWeight:i===0?700:400}}>{e}</div>))}
-      </div>)}
+
       <div style={{position:'relative',width:'100%',maxWidth:'460px',height:'238px',borderRadius:'14px',overflow:'hidden',marginBottom:'9px',border:`2px solid ${enemies.some(e=>e.boss)?'rgba(220,38,38,.5)':'rgba(255,100,30,.15)'}`}}>
         <div style={{position:'absolute',inset:0,background:stage.sky}}/>
         <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,.65) 1px,transparent 1px)',backgroundSize:'20px 20px',animation:'starPulse 4s ease-in-out infinite'}}/>
@@ -1503,6 +1500,10 @@ function App(){
         </div>
       </div>
 
+      {/* バトルログ: ステータスとコマンドの間に表示 */}
+      {log.length>0&&(<div style={{width:'100%',maxWidth:'460px',padding:'8px 14px',marginBottom:'7px',background:'rgba(0,0,0,.7)',borderRadius:'10px',border:'1px solid rgba(255,255,255,.12)',minHeight:'52px'}}>
+        {log.slice(0,3).map((e,i)=>(<div key={i} style={{fontSize:i===0?'1.05rem':'.84rem',lineHeight:1.75,opacity:i===0?1:i===1?.55:.28,color:i===0?'#f8fafc':'#94a3b8',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',fontWeight:i===0?700:400}}>{e}</div>))}
+      </div>)}
       <div className="card" style={{borderColor:'rgba(212,160,23,.1)',padding:'6px 8px'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'4px'}}>
           <div style={{fontSize:'.92rem',fontWeight:900,color:activeM?(activeM.isMonster?'#4ade80':CLASSES[activeM.classId]?.color||'#fff'):'#374151'}}>{phase==='enemy'?'💢 敵のターン…':activeM?mn(activeM)+'のターン！':''}</div>
