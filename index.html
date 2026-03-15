@@ -410,8 +410,8 @@ const BOSS_HP_CAPS=[700,1100,1800,2400,3200,4200,5500,7000,8500,12000,20000,2500
 // 章ごとの通常敵HP上限
 const MOB_HP_CAPS=[200,350,500,700,900,1200,1600,2000,2500,3000,5000,6000,8000,10000,12000,14000,16000,18000,20000,25000];
 const scaleEnemy=(tpl,avgLv,partySize,chIdx=0)=>{
-  // パーティ人数倍率を緩和（4人=1.8x, 3人=1.4x, 2人=1.2x）
-  const ps=partySize>=4?1.8:partySize===3?1.4:partySize===2?1.2:1.0;
+  // パーティ人数倍率を緩和（10人=3.0x, 8人=2.6x, 6人=2.2x, 4人=1.8x, 3人=1.4x, 2人=1.2x）
+  const ps=partySize>=10?3.0:partySize>=8?2.6:partySize>=6?2.2:partySize>=4?1.8:partySize===3?1.4:partySize===2?1.2:1.0;
   const chBaseLv=CHAPTER_BASE_LV[Math.min(chIdx,19)];
   // 動的難易度: パーティLvが高くても追従（章基準+20まで）
   const chCeiling=chBaseLv+20;
@@ -527,6 +527,17 @@ function MonPartySprite({mon,anim}){
 
 // ======= INIT =======
 const initHuman=(classId,name)=>{const c=CLASSES[classId];return{isMonster:false,classId,name,hp:c.hp,maxHp:c.hp,mp:c.mp,maxMp:c.mp,atk:c.atk,def:c.def,mat:c.mat,exp:0,level:1,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0,learnedSpells:[]};};
+// 怪物仲間のスキルDB（JSON保存でpow関数が消えるのを防ぐため常にここから参照）
+const MONSTER_ALLY_SKILL_DB={
+  'sw1':{id:'bonecr',name:'骨砕き',e:'💀',mp:4,type:'atk_one',pow:c=>Math.floor(c.atk*4.5+(c.level||1)*8),desc:'強撃(Lv連動)',color:'#6b7280'},
+  'rkn':{id:'darkswd',name:'暗黒剣',e:'🗡️',mp:6,type:'atk_one',pow:c=>Math.floor(c.atk*4.8+(c.level||1)*10),desc:'暗黒の一撃(Lv連動)',color:'#84cc16'},
+  'hel':{id:'firebreath',name:'炎の咆哮',e:'🔥',mp:8,type:'atk_all',pow:c=>Math.floor(c.atk*3.5+(c.level||1)*10),desc:'炎全体(Lv連動)',color:'#ef4444'},
+  'thh':{id:'thunder',name:'雷撃',e:'⚡',mp:10,type:'atk_all',pow:c=>Math.floor(c.mat*5.0+c.atk*1.5+(c.level||1)*12),desc:'雷全体(Lv連動)',color:'#fbbf24'},
+  'super_gengar':{id:'sgengar_burst',name:'シャドーバースト',e:'💜',mp:45,type:'atk_all',pow:c=>Math.floor(c.mat*11.0+c.atk*3.0),desc:'全敵に紫の爆撃！超強力！',color:'#a855f7'},
+  'trickster':{id:'trickster_all',name:'いたずら大爆発',e:'🎲',mp:30,type:'atk_all',pow:c=>Math.floor((c.atk+c.mat)*6.0+Math.random()*500),desc:'全敵にランダム超ダメージ！',color:'#f59e0b'},
+  'zacian':{id:'zacian_slash',name:'きょじゅうざん',e:'⚔️',mp:35,type:'atk_one',pow:c=>Math.floor(c.atk*12.0+c.mat*2.0),desc:'単体に超強力な一撃！',color:'#38bdf8'},
+  'shenlong':{id:'dragon_fire',name:'龍炎神撃',e:'🐉',mp:40,type:'atk_all',pow:c=>Math.floor(c.mat*9.0+c.atk*5.0),desc:'全敵に超強力な龍炎神撃！',color:'#4ade80'},
+};
 const initMonsterAlly=tpl=>({isMonster:true,id:tpl.id,name:tpl.name,base:tpl.base,ov:tpl.ov||'',flt:tpl.flt||'none',gc:tpl.gc||'#888',hp:Math.floor(tpl.maxHp*.65),maxHp:Math.floor(tpl.maxHp*.65),mp:30,maxMp:30,atk:Math.floor(tpl.atk*.88),def:Math.floor(tpl.def*.85),mat:Math.floor((tpl.mat||10)*.8),exp:0,level:1,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0,allySkill:tpl.allySkill});
 const initEnemy=tpl=>({...tpl,hp:tpl.maxHp,status:null,statusTurns:0,currentPhase:0,atkBonus:0,rageAoe:false,tripleAtk:false});
 const checkLearn=(member,lv)=>{
@@ -557,7 +568,7 @@ function App(){
   const [log,setLog]=useState([]);
   const [busy,setBusy]=useState(false);
   const [phase,setPhase]=useState('p0');
-  const [pAnims,setPAnims]=useState(['idle','idle','idle','idle']);
+  const [pAnims,setPAnims]=useState(['idle','idle','idle','idle','idle','idle','idle','idle','idle','idle']);
   const [mAnims,setMAnims]=useState(['idle','idle']);
   const [showSkill,setShowSkill]=useState(null);
   const [dmgs,setDmgs]=useState([]);
@@ -609,14 +620,14 @@ function App(){
   const setPAnim=useCallback((i,a)=>setPAnims(p=>{const n=[...p];n[i]=a;return n;}),[]);
   const setMAnim=useCallback((i,a)=>setMAnims(p=>{const n=[...p];n[i]=a;return n;}),[]);
 
-  const activePIdx=phase==='p0'?0:phase==='p1'?1:phase==='p2'?2:phase==='p3'?3:-1;
+  const activePIdx=phase==='p0'?0:phase==='p1'?1:phase==='p2'?2:phase==='p3'?3:phase==='p4'?4:phase==='p5'?5:phase==='p6'?6:phase==='p7'?7:phase==='p8'?8:phase==='p9'?9:-1;
   const activeM=activePIdx>=0&&party[activePIdx]?party[activePIdx]:null;
   const chDef=CHAPTERS[chIdx]||CHAPTERS[19];
   const stage=STAGES[CH_STAGE[chIdx]||0];
 
   const getMemberSpells=useCallback(m=>{
   if(!m)return[];
-  if(m.isMonster)return m.allySkill?[m.allySkill]:[];
+  if(m.isMonster){const sk=MONSTER_ALLY_SKILL_DB[m.id]||(m.allySkill?{...m.allySkill}:null);return sk?[sk]:[];}
   const cls=CLASSES[m.classId];
   const spells=[cls.baseSkill];
   // 現在の職業の呪文
@@ -625,7 +636,7 @@ function App(){
   (m.oldClassSpells||[]).filter(sp=>(m.learnedSpells||[]).includes(sp.id)&&!spells.find(s=>s.id===sp.id)).forEach(sp=>spells.push(sp));
   return spells;
 },[]);
-  const nextPhase=useCallback((cur,p)=>{const order=['p0','p1','p2','p3'];const si=order.indexOf(cur);for(let i=si+1;i<order.length;i++){if(p[i]&&p[i].hp>0)return order[i];}return 'enemy';},[]);
+  const nextPhase=useCallback((cur,p)=>{const order=['p0','p1','p2','p3','p4','p5','p6','p7','p8','p9'];const si=order.indexOf(cur);for(let i=si+1;i<order.length;i++){if(p[i]&&p[i].hp>0)return order[i];}return 'enemy';},[]);
 
   const executeSpell=useCallback(async(spell,pIdx,curP,curE,isField,targetIdx=null)=>{
     let nP=[...curP],nE=curE?[...curE]:[];
@@ -725,7 +736,7 @@ function App(){
     if(chosenTpl){
       SFX.recruit();const ally=initMonsterAlly(chosenTpl);
       const newRoster=[...monsterRoster,ally];setMonsterRoster(newRoster);
-      if(party.length<4){setParty(p=>[...p,ally]);}
+      if(party.length<10){setParty(p=>[...p,ally]);}
       addLog('🤝 '+chosenTpl.name+'がなかまになった！（ロスター:'+newRoster.length+'/5）');
     }
     setBattleResult(null);
@@ -778,8 +789,8 @@ function App(){
         const castSpell=eSpells.length>0&&(ee[enIdx].divineSpellCaster?Math.random()<0.85:Math.random()<0.42);
         if(castSpell){
           const esp=eSpells[Math.floor(Math.random()*eSpells.length)];
-          if(esp.type==='e_atk_all'){const bd=Math.floor(ee[enIdx].mat*(esp.pow||1.5)+8+(ee[enIdx].atkBonus||0)*.4);for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1)*.3);let dmg=Math.max(1,bd-effDef+Math.floor(Math.random()*8)-4);if(ep[pi].defending)dmg=Math.max(1,Math.floor(dmg*0.70));ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,'hurt');SFX.magic();addDmg(dmg,'p',(pi*22+5)+'%','48%');if(esp.inflict&&!ep[pi].status&&Math.random()<.35)ep[pi]={...ep[pi],status:esp.inflict,statusTurns:3};}addLog(esp.e+' '+ee[enIdx].name+'の「'+esp.name+'」！全員に魔法ダメージ！');await sleep(420);}
-          else if(esp.type==='e_atk_one'){const alive3=ep.filter(m=>m.hp>0);if(alive3.length>0){const tgt3=alive3.reduce((a,b)=>a.hp<b.hp?a:b);const ti3=ep.indexOf(tgt3);const bd3=Math.floor(ee[enIdx].mat*(esp.pow||2.0)+5+(ee[enIdx].atkBonus||0)*.3);const effDef3=Math.floor(tgt3.def*(tgt3.defBuffMult||1)*.25);let dmg3=Math.max(1,bd3-effDef3+Math.floor(Math.random()*12)-6);if(tgt3.defending)dmg3=Math.max(1,Math.floor(dmg3*0.70));ep[ti3]={...ep[ti3],hp:Math.max(0,tgt3.hp-dmg3)};setPAnim(ti3,'hurt');SFX.magic();addDmg(dmg3,'p',(ti3*22+5)+'%','44%');addLog(esp.e+' '+ee[enIdx].name+'の「'+esp.name+'」！'+mn(tgt3)+'に'+dmg3+'ダメージ！');if(esp.inflict&&!tgt3.status&&Math.random()<.42)ep[ti3]={...ep[ti3],status:esp.inflict,statusTurns:3};await sleep(380);}}
+          if(esp.type==='e_atk_all'){const bd=Math.floor(ee[enIdx].mat*(esp.pow||1.5)+8+(ee[enIdx].atkBonus||0)*.4);for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1)*.3);let dmg=Math.max(1,bd-effDef+Math.floor(Math.random()*8)-4);if(ep[pi].defending)dmg=Math.max(1,Math.floor(dmg*0.70));ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,'hurt');SFX.magic();addDmg(dmg,'p',(1+pi*(ep.length<=4?11:ep.length<=6?8:6)+2)+'%','48%');if(esp.inflict&&!ep[pi].status&&Math.random()<.35)ep[pi]={...ep[pi],status:esp.inflict,statusTurns:3};}addLog(esp.e+' '+ee[enIdx].name+'の「'+esp.name+'」！全員に魔法ダメージ！');await sleep(420);}
+          else if(esp.type==='e_atk_one'){const alive3=ep.filter(m=>m.hp>0);if(alive3.length>0){const tgt3=alive3.reduce((a,b)=>a.hp<b.hp?a:b);const ti3=ep.indexOf(tgt3);const bd3=Math.floor(ee[enIdx].mat*(esp.pow||2.0)+5+(ee[enIdx].atkBonus||0)*.3);const effDef3=Math.floor(tgt3.def*(tgt3.defBuffMult||1)*.25);let dmg3=Math.max(1,bd3-effDef3+Math.floor(Math.random()*12)-6);if(tgt3.defending)dmg3=Math.max(1,Math.floor(dmg3*0.70));ep[ti3]={...ep[ti3],hp:Math.max(0,tgt3.hp-dmg3)};setPAnim(ti3,'hurt');SFX.magic();addDmg(dmg3,'p',(1+ti3*(ep.length<=4?11:ep.length<=6?8:6)+2)+'%','44%');addLog(esp.e+' '+ee[enIdx].name+'の「'+esp.name+'」！'+mn(tgt3)+'に'+dmg3+'ダメージ！');if(esp.inflict&&!tgt3.status&&Math.random()<.42)ep[ti3]={...ep[ti3],status:esp.inflict,statusTurns:3};await sleep(380);}}
           else if(esp.type==='e_heal'){const ha=Math.floor(ee[enIdx].maxHp*(esp.pow||.2));ee[enIdx]={...ee[enIdx],hp:Math.min(ee[enIdx].maxHp,ee[enIdx].hp+ha)};addLog(esp.e+' '+ee[enIdx].name+'がHP回復！+'+ha);SFX.heal();await sleep(320);}
           const enDotS=processDot(ee[enIdx]);if(enDotS.hp<ee[enIdx].hp){addDmg(ee[enIdx].hp-enDotS.hp,'e',(60+enIdx*(-12))+'%','16%');SFX.poison();}ee[enIdx]=enDotS;
         } else {
@@ -787,27 +798,27 @@ function App(){
             // ゲンガー会心：5%で10000ダメージ
             if(ee[enIdx].gengarCrit&&Math.random()<0.05){
               const gti=ep.findIndex(m=>m.hp>0);
-              if(gti>=0){ep[gti]={...ep[gti],hp:Math.max(0,ep[gti].hp-10000)};setPAnim(gti,'hurt');SFX.magic();addDmg(10000,'p',(gti*22+5)+'%','40%');addLog('💀💜 ゲンガーの呪い！！'+mn(ep[gti])+'に10000ダメージ！！');}
+              if(gti>=0){ep[gti]={...ep[gti],hp:Math.max(0,ep[gti].hp-10000)};setPAnim(gti,'hurt');SFX.magic();addDmg(10000,'p',(1+gti*(ep.length<=4?11:ep.length<=6?8:6)+2)+'%','40%');addLog('💀💜 ゲンガーの呪い！！'+mn(ep[gti])+'に10000ダメージ！！');}
               await sleep(500);
             } else
             if(ee[enIdx].rageAoe){const aoeBase=Math.floor(ee[enIdx].atk*(.5+ai*.1))+(ee[enIdx].atkBonus||0);
-              for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1));let dmg=Math.max(1,aoeBase-effDef+Math.floor(Math.random()*6)-3);if(ep[pi].defending)dmg=Math.max(1,Math.floor(dmg*0.45));ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,'hurt');SFX.phit();addDmg(dmg,'p',(pi*22+5)+'%','48%');}
+              for(let pi=0;pi<ep.length;pi++){if(ep[pi].hp<=0)continue;const effDef=Math.floor(ep[pi].def*(ep[pi].defBuffMult||1));let dmg=Math.max(1,aoeBase-effDef+Math.floor(Math.random()*6)-3);if(ep[pi].defending)dmg=Math.max(1,Math.floor(dmg*0.45));ep[pi]={...ep[pi],hp:Math.max(0,ep[pi].hp-dmg)};setPAnim(pi,'hurt');SFX.phit();addDmg(dmg,'p',(1+pi*(ep.length<=4?11:ep.length<=6?8:6)+2)+'%','48%');}
               addLog('💥 '+ee[enIdx].name+'の全体攻撃！全員にダメージ！');await sleep(400);}
             else{const alive=ep.filter(m=>m.hp>0);if(alive.length===0)break;const tgt=alive.reduce((a,b)=>a.hp<b.hp?a:b);const ti=ep.indexOf(tgt);const effDef=Math.floor(tgt.def*(tgt.defBuffMult||1));const eatk=(ee[enIdx].atk||30)+(ee[enIdx].atkBonus||0);let dmg=calcDamage(eatk,effDef);
               if(tgt.reflecting){addLog('💠 魔法が反射！'+ee[enIdx].name+'にダメージ！');ee[enIdx]={...ee[enIdx],hp:Math.max(0,ee[enIdx].hp-dmg)};ep[ti]={...tgt,reflecting:false};continue;}
               if(tgt.defending){dmg=Math.max(1,Math.floor(dmg*0.45));addLog('🛡️ '+mn(tgt)+'は防御中！ダメージ55%カット！');}
-              setPAnim(ti,'hurt');setMAnim(enIdx,'atk');SFX.phit();addSpark((ti*22+5)+'%','50%');addDmg(dmg,'p',(ti*22+5)+'%','44%');addLog('💢 '+ee[enIdx].name+'が'+mn(tgt)+'に'+dmg+'ダメージ！');ep[ti]={...tgt,hp:Math.max(0,tgt.hp-dmg)};
+              setPAnim(ti,'hurt');setMAnim(enIdx,'atk');SFX.phit();addSpark((1+ti*(ep.length<=4?11:ep.length<=6?8:6)+2)+'%','50%');addDmg(dmg,'p',(1+ti*(ep.length<=4?11:ep.length<=6?8:6)+2)+'%','44%');addLog('💢 '+ee[enIdx].name+'が'+mn(tgt)+'に'+dmg+'ダメージ！');ep[ti]={...tgt,hp:Math.max(0,tgt.hp-dmg)};
               if(ee[enIdx].si&&!tgt.status&&Math.random()<.22){ep[ti]={...ep[ti],status:ee[enIdx].si,statusTurns:3};addLog(ee[enIdx].si==='poison'?'☠️毒！':ee[enIdx].si==='burn'?'🔥燃焼！':'💫スタン！');}
               await sleep(330);setPAnim(ti,'idle');setMAnim(enIdx,'idle');await sleep(80);}}
         const enDot=processDot(ee[enIdx]);if(enDot.hp<ee[enIdx].hp){addDmg(ee[enIdx].hp-enDot.hp,'e',(60+enIdx*(-12))+'%','16%');SFX.poison();}ee[enIdx]=enDot;}}
-      ep=ep.map((m,i)=>{if(m.hp<=0||!m.status)return m;const pm=processDot(m);if(pm.hp<m.hp)addDmg(m.hp-pm.hp,'p',(i*22+5)+'%','46%');return pm;});
+      ep=ep.map((m,i)=>{if(m.hp<=0||!m.status)return m;const pm=processDot(m);if(pm.hp<m.hp)addDmg(m.hp-pm.hp,'p',(1+i*(ep.length<=4?11:ep.length<=6?8:6)+2)+'%','46%');return pm;});
       ep=ep.map(m=>decBuffs(m));
       // 敵ターン後: 死者が出たら控えから選択
       if(ep.some(m=>m.hp<=0)&&ep.some(m=>m.hp>0)){ep=await waitForSubstitute(ep,ee);}
       setParty(ep);setEnemies(ee);
       if(ep.every(m=>m.hp<=0)){stopBgm();SFX.dead();setScr('gameover');setBusy(false);return;}
       if(ee.every(e=>e.hp<=0)){await handleVictory(ep,ee);return;}
-      const fi=ep.findIndex(m=>m.hp>0);setPhase(fi>=0?['p0','p1','p2','p3'][fi]:'p0');}
+      const fi=ep.findIndex(m=>m.hp>0);setPhase(fi>=0?['p0','p1','p2','p3','p4','p5','p6','p7','p8','p9'][fi]:'p0');}
     else setPhase(np);
     setBusy(false);
   },[busy,activePIdx,activeM,party,enemies,inv,phase,nextPhase,getMemberSpells,executeSpell,handleVictory,addLog,addDmg,addSpark,setPAnim,setMAnim]);
@@ -925,7 +936,7 @@ function App(){
       SFX.dragon();
       const ally={...initMonsterAlly(SUPER_GENGAR_TPL),hp:SUPER_GENGAR_TPL.maxHp,maxHp:SUPER_GENGAR_TPL.maxHp,mp:90,maxMp:90,atk:SUPER_GENGAR_TPL.atk,def:SUPER_GENGAR_TPL.def,mat:SUPER_GENGAR_TPL.mat};
       const nr=[...monsterRoster,ally];setMonsterRoster(nr);
-      if(party.length<4)setParty(p=>[...p,ally]);
+      if(party.length<10)setParty(p=>[...p,ally]);
       setDragonBalls(b=>b-3);setSuperGengarSummoned(true);
       setShowSuperGengarSummon(true);setTimeout(()=>setShowSuperGengarSummon(false),4500);
       addLog('💜 スーパーゲンガーがなかまになった！神の卵3個消費！');
@@ -936,12 +947,12 @@ function App(){
       SFX.dragon();
       const ally={...initMonsterAlly(TRICKSTER_TPL),hp:TRICKSTER_TPL.maxHp,maxHp:TRICKSTER_TPL.maxHp,mp:60,maxMp:60,atk:TRICKSTER_TPL.atk,def:TRICKSTER_TPL.def,mat:TRICKSTER_TPL.mat};
       const nr=[...monsterRoster,ally];setMonsterRoster(nr);
-      if(party.length<4)setParty(p=>[...p,ally]);
+      if(party.length<10)setParty(p=>[...p,ally]);
       setDragonBalls(b=>b-3);setTricksterSummoned(true);
       setShowTricksterSummon(true);setTimeout(()=>setShowTricksterSummon(false),4500);
       addLog('🎲 遊び人ルーカスがなかまになった！神の卵3個消費！');
     };
-    const summonZacian=()=>{const alreadyZacian=monsterRoster.some(m=>m.id==='zacian');const shenlongExists=monsterRoster.some(m=>m.id==='shenlong')||dragonSummoned;if(dragonBalls<3||zacianSummoned||alreadyZacian||!shenlongExists)return;SFX.dragon();const ally={...initMonsterAlly(ZACIAN_TPL),hp:ZACIAN_TPL.maxHp,maxHp:ZACIAN_TPL.maxHp,mp:70,maxMp:70,atk:ZACIAN_TPL.atk,def:ZACIAN_TPL.def,mat:ZACIAN_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setZacianSummoned(true);setShowZacianSummon(true);setTimeout(()=>setShowZacianSummon(false),4500);addLog('⚔️ 覇剣獣ザシアンがなかまになった！神の卵3個消費！');};
+    const summonZacian=()=>{const alreadyZacian=monsterRoster.some(m=>m.id==='zacian');const shenlongExists=monsterRoster.some(m=>m.id==='shenlong')||dragonSummoned;if(dragonBalls<3||zacianSummoned||alreadyZacian||!shenlongExists)return;SFX.dragon();const ally={...initMonsterAlly(ZACIAN_TPL),hp:ZACIAN_TPL.maxHp,maxHp:ZACIAN_TPL.maxHp,mp:70,maxMp:70,atk:ZACIAN_TPL.atk,def:ZACIAN_TPL.def,mat:ZACIAN_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<10){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setZacianSummoned(true);setShowZacianSummon(true);setTimeout(()=>setShowZacianSummon(false),4500);addLog('⚔️ 覇剣獣ザシアンがなかまになった！神の卵3個消費！');};
   // 戦闘中死者が出たとき控えを選ばせる（Promiseで待機）
   const waitForSubstitute=React.useCallback((currentParty,currentEnemies)=>{
     const bench=[...humanRoster,...monsterRoster].filter(r=>{
@@ -961,7 +972,7 @@ function App(){
     });
   },[humanRoster,monsterRoster]);
 
-  const summonDragon=()=>{const alreadyShenlong=monsterRoster.some(m=>m.id==='shenlong');if(dragonBalls<3||dragonSummoned||alreadyShenlong)return;SFX.dragon();const ally={...initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<4){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setDragonSummoned(true);setShowDragonSummon(true);setTimeout(()=>setShowDragonSummon(false),4500);addLog('🐉 神龍シェンロンがなかまになった！神の卵3個消費！');};
+  const summonDragon=()=>{const alreadyShenlong=monsterRoster.some(m=>m.id==='shenlong');if(dragonBalls<3||dragonSummoned||alreadyShenlong)return;SFX.dragon();const ally={...initMonsterAlly(SHENLONG_TPL),hp:SHENLONG_TPL.maxHp,maxHp:SHENLONG_TPL.maxHp,mp:80,maxMp:80,atk:SHENLONG_TPL.atk,def:SHENLONG_TPL.def,mat:SHENLONG_TPL.mat};const nr=[...monsterRoster,ally];setMonsterRoster(nr);if(party.length<10){setParty(p=>[...p,ally]);}setDragonBalls(b=>b-3);setDragonSummoned(true);setShowDragonSummon(true);setTimeout(()=>setShowDragonSummon(false),4500);addLog('🐉 神龍シェンロンがなかまになった！神の卵3個消費！');};
   const useItemOn=(item,tgtIdx)=>{
     const m=party[tgtIdx];if(!m)return;
     const ni=[...inv];const ii=ni.findIndex(x=>x.id===item.id);if(ii<0)return;
@@ -1200,7 +1211,7 @@ function App(){
           const ens=encData.map(t=>initEnemy(scaleEnemy(t,avgLv,partySize,chIdx)));
           setEnemies(ens);setMAnims(new Array(ens.length).fill('idle'));
           const fi=party.findIndex(m=>m.hp>0);
-          setPhase(fi>=0?['p0','p1','p2','p3'][fi]:'p0');
+          setPhase(fi>=0?['p0','p1','p2','p3','p4','p5','p6','p7','p8','p9'][fi]:'p0');
           setSpellMenu(false);setBusy(false);
           const battleLabel=isBossBattle?'🚨 第10戦・BOSS！':'第'+chBattleNum+'戦！';
           addLog('⚠️ '+battleLabel+' '+ens.map(e=>e.name).join(' & ')+'が現れた！');
@@ -1276,7 +1287,7 @@ function App(){
       const benchH=humanRoster.filter(h=>!party.find(p=>!p.isMonster&&p.name===h.name)); // nameだけで判定
       const benchM=monsterRoster.filter(r=>!party.find(p=>p.id===r.id));
       const bench=[...benchH,...benchM];
-      const addM=m=>{if(party.length>=4)return;SFX.cursor();
+      const addM=m=>{if(party.length>=10)return;SFX.cursor();
         // 控えから最新データ取得してパーティ追加（人間もモンスターも最新版を使う）
         const latest=m.isMonster
           ?(monsterRoster.find(r=>r.id===m.id)||m)
@@ -1305,9 +1316,9 @@ function App(){
       };
       return(<div style={{width:'100%',maxWidth:'460px',animation:'fadeIn .3s ease'}}>
         <div style={{color:'#60a5fa',fontWeight:900,textAlign:'center',marginBottom:'3px',fontSize:'1.05rem'}}>👥 パーティ編成</div>
-        <div style={{fontSize:'.63rem',color:'#94a3b8',textAlign:'center',marginBottom:'8px'}}>人間も怪物も自由に！全員怪物もOK 最大4人・最低1人</div>
+        <div style={{fontSize:'.63rem',color:'#94a3b8',textAlign:'center',marginBottom:'8px'}}>人間も怪物も自由に！全員怪物もOK 最大10人・最低1人</div>
         <div style={{marginBottom:'8px'}}>
-          <div style={{fontSize:'.84rem',color:'#60a5fa',fontWeight:900,marginBottom:'4px'}}>⚔️ 出撃中 ({party.length}/4)</div>
+          <div style={{fontSize:'.84rem',color:'#60a5fa',fontWeight:900,marginBottom:'4px'}}>⚔️ 出撃中 ({party.length}/10)</div>
           {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';return(<div key={i} style={{display:'flex',alignItems:'center',gap:'6px',background:'rgba(255,255,255,.05)',border:`2px solid ${mc}55`,borderRadius:'10px',padding:'7px 10px',marginBottom:'5px'}}>
             <span style={{fontSize:'1.5rem'}}>{m.isMonster?m.base:(CHAR_VIS[m.classId]?.face||'🧑')}</span>
             <div style={{flex:1}}><div style={{fontSize:'1.0rem',color:mc,fontWeight:900}}>{mn(m)} Lv.{m.level}</div><div style={{fontSize:'.84rem',color:'#374151'}}>HP:{m.hp}/{m.maxHp} MP:{m.mp}/{m.maxMp}</div></div>
@@ -1316,7 +1327,7 @@ function App(){
         </div>
         {bench.length>0&&(<div style={{marginBottom:'8px'}}>
           <div style={{fontSize:'.84rem',color:'#94a3b8',fontWeight:900,marginBottom:'4px'}}>🏕️ 控え ({bench.length}人)</div>
-          {bench.map((m,j)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const canAdd=party.length<4;return(<div key={j} style={{display:'flex',alignItems:'center',gap:'6px',background:m.isMonster?'rgba(74,222,128,.04)':'rgba(255,255,255,.02)',border:`1px solid ${mc}33`,borderRadius:'10px',padding:'7px 10px',marginBottom:'5px',opacity:canAdd?1:.5}}>
+          {bench.map((m,j)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const canAdd=party.length<10;return(<div key={j} style={{display:'flex',alignItems:'center',gap:'6px',background:m.isMonster?'rgba(74,222,128,.04)':'rgba(255,255,255,.02)',border:`1px solid ${mc}33`,borderRadius:'10px',padding:'7px 10px',marginBottom:'5px',opacity:canAdd?1:.5}}>
             <span style={{fontSize:'1.5rem'}}>{m.isMonster?m.base:(CHAR_VIS[m.classId]?.face||'🧑')}</span>
             <div style={{flex:1}}><div style={{fontSize:'1.0rem',color:mc,fontWeight:900}}>{mn(m)} Lv.{m.level}</div><div style={{fontSize:'.84rem',color:'#374151'}}>HP:{m.maxHp} ATK:{m.atk} DEF:{m.def} MAT:{m.mat}</div></div>
             <button disabled={!canAdd} onClick={()=>addM(m)} style={{...bs(mc,!canAdd),margin:0,padding:'4px 10px',fontSize:'.77rem'}}>参加!</button>
@@ -1454,7 +1465,7 @@ function App(){
         <div style={{position:'absolute',inset:0,backgroundImage:'radial-gradient(circle,rgba(255,255,255,.65) 1px,transparent 1px)',backgroundSize:'20px 20px',animation:'starPulse 4s ease-in-out infinite'}}/>
         {enemies.some(e=>e.final)&&<div style={{position:'absolute',inset:0,animation:'rageFlash 3s ease-in-out infinite',background:'rgba(220,38,38,.04)'}}/>}
         <div style={{position:'absolute',bottom:0,left:0,right:0,height:'60px',background:`linear-gradient(transparent,${stage.gnd})`,borderTop:`1px solid ${stage.gb}`}}/>
-        {party.map((m,i)=>(<div key={i} style={{position:'absolute',bottom:'28px',left:(1+i*11)+'%',transformOrigin:'bottom center'}}>{m.isMonster?<MonPartySprite mon={m} anim={pAnims[i]}/>:<CharSprite member={m} anim={pAnims[i]}/>}</div>))}
+        {party.map((m,i)=>(<div key={i} style={{position:'absolute',bottom:'28px',left:(1+i*(party.length<=4?11:party.length<=6?8:6))+'%',transformOrigin:'bottom center'}}>{m.isMonster?<MonPartySprite mon={m} anim={pAnims[i]}/>:<CharSprite member={m} anim={pAnims[i]}/>}</div>))}
         {enemies.map((en,i)=>(<div key={i} style={{position:'absolute',bottom:'24px',right:(enemies.length===1?8:1+i*18)+'%',transformOrigin:'bottom center'}}><MonSprite mon={en} anim={mAnims[i]} size={en.big?4.8:enemies.length===1?4.8:enemies.length===2?4.2:3.8}/></div>))}
         <div style={{position:'absolute',top:'8px',left:'50%',transform:'translateX(-50%)',fontSize:'.66rem',color:'rgba(255,255,255,.28)',whiteSpace:'nowrap'}}>{chDef.n}</div>
         {enemies.some(e=>e.boss)&&<div style={{position:'absolute',top:'8px',left:'8px',fontSize:'.68rem',color:'#ef4444',fontWeight:900,animation:'blink 1s ease-in-out infinite'}}>⚠️BOSS</div>}
@@ -1477,7 +1488,7 @@ function App(){
           </div>);})}
         </div>
         <div style={{borderTop:'1px solid rgba(255,255,255,.06)',margin:'4px 0'}}/>
-        <div style={{display:'grid',gridTemplateColumns:party.length>2?'1fr 1fr':'1fr',gap:'2px 8px'}}>
+        <div style={{display:'grid',gridTemplateColumns:party.length>4?'1fr 1fr 1fr':party.length>2?'1fr 1fr':'1fr',gap:'2px 8px'}}>
           {party.map((m,i)=>{const mc=m.isMonster?'#4ade80':CLASSES[m.classId]?.color||'#fff';const hpPct=Math.max(0,(m.hp/m.maxHp)*100),hpCol=hpPct>70?'#22c55e':hpPct>40?'#4ade80':hpPct>25?'#facc15':'#ef4444';const mpPct=Math.max(0,(m.mp/m.maxMp)*100);const bStr=[];if(m.atkBuffMult>1)bStr.push('↑');if(m.reflecting)bStr.push('反');return(<div key={i} style={{marginBottom:'2px'}}>
             <div style={{display:'flex',justifyContent:'space-between',fontSize:'.84rem',marginBottom:'1px'}}>
               <span style={{color:m.hp<=0?'#6b7280':mc,fontWeight:900}}>{m.hp<=0?'💀':''}{mn(m)} Lv{m.level}{m.status?'🤢':''}{bStr.length?'✨':''}</span>
