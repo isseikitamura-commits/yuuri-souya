@@ -327,6 +327,14 @@ const ITEMS=[
   {id:'holy_staff',name:'せいなるつえ',emoji:'✨',cost:6500,type:'equip',tier:3,eff:{mat:70,mpb:80},desc:'全員MAT+70,MP+80'},
   {id:'diamond_armor',name:'ダイアモンドの鎧',emoji:'💎',cost:10000,type:'equip',tier:4,eff:{def:70,hpb:300,mpb:80},desc:'🏆最強！全員DEF+70,HP+300,MP+80'},
   {id:'divine_sword',name:'天聖剣エクスカリバー',emoji:'🌟',cost:12000,type:'equip',tier:4,eff:{atk:100,hpb:150,mpb:50},desc:'🏆最強！全員ATK+100,HP+150,MP+50'},
+  // tier5（天空編・11章以降）
+  {id:'sky_blade',name:'天空の聖剣',emoji:'⚔️',cost:25000,type:'equip',tier:5,eff:{atk:180,hpb:200,mpb:60},desc:'天空ATK+180,HP+200,MP+60'},
+  {id:'sky_armor',name:'天空の鎧',emoji:'🛡️',cost:28000,type:'equip',tier:5,eff:{def:140,hpb:500,mpb:80},desc:'天空DEF+140,HP+500,MP+80'},
+  {id:'sky_staff',name:'天神の杖',emoji:'🔮',cost:30000,type:'equip',tier:5,eff:{mat:200,mpb:200,hpb:100},desc:'天空MAT+200,MP+200,HP+100'},
+  // あめアイテム（フィールド・戦闘両方で使用可）
+  {id:'fushigi_ame',name:'ふしぎなあめ',emoji:'🍬',cost:800,type:'con',eff:{ame:'atk',val:15},desc:'1人のATK+15（永続）'},
+  {id:'special_ame',name:'スペシャルなあめ',emoji:'🍭',cost:1500,type:'con',eff:{ame:'all',val:20},desc:'1人のATK・DEF・MAT+20（永続）'},
+  {id:'mezurashii_ame',name:'めずらしいあめ',emoji:'🌈',cost:3000,type:'con',eff:{ame:'level'},desc:'1人がLvUP！（永続）'},
   // Ch10-19（天空編）
   [[{id:'sky_s1',name:'天空騎士',base:'⚔️',ov:'☁️',flt:'hue-rotate(200deg) saturate(3) brightness(1.1)',gc:'#93c5fd',hp:500,maxHp:500,atk:160,def:80,mat:60,exp:180,gold:160,si:'stun'},{id:'cloud_f',name:'雲の精霊',base:'☁️',ov:'💨',flt:'hue-rotate(190deg) saturate(2) brightness(1.5)',gc:'#bfdbfe',hp:380,maxHp:380,atk:120,def:50,mat:90,exp:150,gold:130,si:'stun'}],[{id:'sky_drag',name:'天空翼竜',base:'🐉',ov:'☁️',flt:'hue-rotate(195deg) saturate(3.5) brightness(1.2)',gc:'#7dd3fc',hp:550,maxHp:550,atk:180,def:70,mat:100,exp:200,gold:175,si:'stun'},{id:'sky_s1',name:'天空騎士',base:'⚔️',ov:'☁️',flt:'hue-rotate(200deg) saturate(3) brightness(1.1)',gc:'#93c5fd',hp:500,maxHp:500,atk:160,def:80,mat:60,exp:180,gold:160,si:'stun'}],[{id:'sky_s1',name:'天空騎士',base:'⚔️',ov:'☁️',flt:'hue-rotate(200deg) saturate(3) brightness(1.1)',gc:'#93c5fd',hp:500,maxHp:500,atk:160,def:80,mat:60,exp:180,gold:160,si:'stun'},{id:'sky_s1b',name:'天空騎士β',base:'⚔️',ov:'⭐',flt:'hue-rotate(210deg) saturate(2.5) brightness(1.0)',gc:'#60a5fa',hp:460,maxHp:460,atk:150,def:75,mat:55,exp:165,gold:145,si:'stun'},{id:'cloud_f',name:'雲の精霊',base:'☁️',ov:'💨',flt:'hue-rotate(190deg) saturate(2) brightness(1.5)',gc:'#bfdbfe',hp:380,maxHp:380,atk:120,def:50,mat:90,exp:150,gold:130,si:'stun'}]],
   [[{id:'phantom',name:'幻影兵士',base:'👻',ov:'🌀',flt:'hue-rotate(260deg) saturate(4) brightness(.7)',gc:'#a78bfa',hp:580,maxHp:580,atk:175,def:85,mat:120,exp:210,gold:185,si:'stun'},{id:'phantom2',name:'幻影魔術師',base:'🧙',ov:'💫',flt:'hue-rotate(270deg) saturate(5) brightness(.65)',gc:'#c4b5fd',hp:420,maxHp:420,atk:100,def:60,mat:200,exp:195,gold:170,si:'stun'}],[{id:'cloud_g',name:'雲海ゴーレム',base:'🗿',ov:'☁️',flt:'hue-rotate(205deg) saturate(2) brightness(.9)',gc:'#94a3b8',hp:700,maxHp:700,atk:200,def:120,mat:40,exp:230,gold:200,si:'stun'},{id:'phantom',name:'幻影兵士',base:'👻',ov:'🌀',flt:'hue-rotate(260deg) saturate(4) brightness(.7)',gc:'#a78bfa',hp:580,maxHp:580,atk:175,def:85,mat:120,exp:210,gold:185,si:'stun'}],[{id:'phantom2',name:'幻影魔術師',base:'🧙',ov:'💫',flt:'hue-rotate(270deg) saturate(5) brightness(.65)',gc:'#c4b5fd',hp:420,maxHp:420,atk:100,def:60,mat:200,exp:195,gold:170,si:'stun'},{id:'cloud_g',name:'雲海ゴーレム',base:'🗿',ov:'☁️',flt:'hue-rotate(205deg) saturate(2) brightness(.9)',gc:'#94a3b8',hp:700,maxHp:700,atk:200,def:120,mat:40,exp:230,gold:200,si:'stun'}]],
@@ -633,7 +641,7 @@ function App(){
     if(spell.type==='atk_one'){
       const ti=nE.findIndex(e=>e.hp>0);if(ti<0)return{party:nP,enemies:nE};
       const en=nE[ti];
-      let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(en.magicResist||0))));
+      let dmg=Math.max(en.spellImmune?0:5,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(en.magicResist||0))));
       if(en.spellImmune){dmg=0;addLog('🔰 '+en.name+'は呪文が完全に効かない！物理攻撃で攻めよう！');}
       setMAnim(ti,'hurt');SFX.hit();addSpark('65%','30%');addDmg(Math.round(dmg),'e','65%','18%');
       addLog(spell.e+' '+spell.name+'！'+Math.round(dmg)+'ダメージ！');
@@ -642,7 +650,7 @@ function App(){
     }else if(spell.type==='atk_all'||spell.type==='atk_double'){
       const live=nE.map((_,i)=>i).filter(i=>nE[i].hp>0);const hits=spell.type==='atk_double'?2:1;
       for(let h=0;h<hits;h++)for(const ti of live){if(nE[ti].hp<=0)continue;
-        let dmg=Math.max(1,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(nE[ti].magicResist||0))));if(spell.type==='atk_double'&&h===0)dmg=Math.floor(dmg*.85);
+        let dmg=Math.max(nE[ti].spellImmune?0:5,Math.floor((spell.pow||((c)=>0))(nP[pIdx])*(1-(nE[ti].magicResist||0))));if(spell.type==='atk_double'&&h===0)dmg=Math.floor(dmg*.85);
         if(nE[ti].spellImmune){dmg=0;addLog('🔰 '+nE[ti].name+'は呪文が完全に効かない！');}
         const xp=60+ti*(-12);setMAnim(ti,'hurt');SFX.hit();addSpark(xp+'%','28%');addDmg(Math.round(dmg),'e',xp+'%','16%');
         let nen={...nE[ti],hp:Math.max(0,nE[ti].hp-dmg)};if(spell.inflict)nen=tryInflict(nen,spell.inflict,.38);nE[ti]=nen;await sleep(160);setMAnim(ti,'idle');}
@@ -964,9 +972,14 @@ function App(){
     else if(item.eff.hp){const add=Math.min(item.eff.hp,tgt.maxHp-tgt.hp);np[tgtIdx]={...tgt,hp:Math.min(tgt.maxHp,tgt.hp+item.eff.hp)};setParty(np);addLog(item.emoji+item.name+'！'+tgt.name+' HP+'+add+'！');}
     else if(item.eff.mp){const add=Math.min(item.eff.mp,tgt.maxMp-tgt.mp);np[tgtIdx]={...tgt,mp:Math.min(tgt.maxMp,tgt.mp+item.eff.mp)};setParty(np);addLog(item.emoji+item.name+'！'+tgt.name+' MP+'+add+'！');}
     else if(item.eff.revive&&tgt.hp<=0){np[tgtIdx]={...tgt,hp:Math.floor(tgt.maxHp*.5),status:null,statusTurns:0};setParty(np);addLog(item.emoji+item.name+'！'+tgt.name+'が復活！');}
+    else if(item.eff.ame){
+      if(item.eff.ame==='atk'){np[tgtIdx]={...tgt,atk:tgt.atk+item.eff.val};setParty(np);if(!tgt.isMonster)setHumanRoster(r=>r.map(h=>h.name===tgt.name?{...h,atk:tgt.atk+item.eff.val}:h));addLog(item.emoji+item.name+'！'+tgt.name+'のATK+'+item.eff.val+'！');}
+      else if(item.eff.ame==='all'){const v=item.eff.val;np[tgtIdx]={...tgt,atk:tgt.atk+v,def:tgt.def+v,mat:tgt.mat+v};setParty(np);if(!tgt.isMonster)setHumanRoster(r=>r.map(h=>h.name===tgt.name?{...h,atk:tgt.atk+v,def:tgt.def+v,mat:tgt.mat+v}:h));addLog(item.emoji+item.name+'！'+tgt.name+'のATK・DEF・MAT+'+v+'！');}
+      else if(item.eff.ame==='level'){const nm=doLevelUp(tgt,calcNext(tgt.level),m2=>addLog(m2));np[tgtIdx]=nm;setParty(np);if(!nm.isMonster)setHumanRoster(r=>r.map(h=>h.name===nm.name?{...nm}:h));addLog(item.emoji+item.name+'！'+nm.name+'がLvUP！');}
+    }
     setItemMenu(false);
   };
-  const startGame=useOld=>{let p;if(useOld&&savedParty){p=savedParty.map(m=>({...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0}));}else{if(selCls.length<2)return;p=[initHuman(selCls[0],'ゆうり'),initHuman(selCls[1],'そうや')];selExtra.forEach((cls,i)=>{if(cls)p.push(initHuman(cls,selNames[i]||EXTRA_NAME_OPTS[0][i]));});}setParty(p);setHumanRoster([]);setChIdx(0);setChBattleNum(1);setInv([]);setGold(280);setDragonBalls(0);setDragonSummoned(false);setZacianSummoned(false);setSuperGengarSummoned(false);setTricksterSummoned(false);setMonsterRoster([]);setBattleResult(null);setLog(['🌟 ゆうりとそうやの大冒険、開幕！']);setStoryScreen(CHAPTERS[0]);setScr('map');bgm('field');};
+  const startGame=useOld=>{let p;if(useOld&&savedParty){p=savedParty.map(m=>({...m,hp:m.maxHp,mp:m.maxMp,status:null,statusTurns:0,defending:false,reflecting:false,atkBuffMult:1,atkBuffTurns:0,defBuffMult:1,defBuffTurns:0}));}else{if(selCls.length<2)return;p=[initHuman(selCls[0],'ゆうり'),initHuman(selCls[1],'そうや')];selExtra.forEach((cls,i)=>{if(cls)p.push(initHuman(cls,selNames[i]||EXTRA_NAME_OPTS[0][i]));});}setParty(p);setHumanRoster(p.filter(m=>!m.isMonster));setChIdx(0);setChBattleNum(1);setInv([]);setGold(280);setDragonBalls(0);setDragonSummoned(false);setZacianSummoned(false);setSuperGengarSummoned(false);setTricksterSummoned(false);setMonsterRoster([]);setBattleResult(null);setLog(['🌟 ゆうりとそうやの大冒険、開幕！']);setStoryScreen(CHAPTERS[0]);setScr('map');bgm('field');};
 
   const bs=(col,dis)=>({background:dis?'rgba(50,50,60,.25)':`linear-gradient(135deg,${col}bb,${col}44)`,border:`1px solid ${dis?'#1e1e3a':col}`,color:dis?'#2a2a3a':'#fff',padding:'10px 14px',borderRadius:'10px',fontFamily:'inherit',fontWeight:900,fontSize:'.86rem',cursor:dis?'not-allowed':'pointer',boxShadow:dis?'none':`0 0 10px ${col}33`,transition:'all .14s',margin:'4px'});
   const activeMemberSpells=activeM?getMemberSpells(activeM):[];
@@ -1041,7 +1054,7 @@ function App(){
     {/* HEADER */}
     <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',width:'100%',maxWidth:'460px',marginBottom:'4px'}}>
       <div style={{fontSize:'clamp(.8rem,3.6vw,1.05rem)',fontWeight:900,background:'linear-gradient(90deg,#d4a017,#ff6b35,#d4a017)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent',filter:'drop-shadow(0 0 10px rgba(212,160,23,.4))'}}>✨ ゆうりとそうやの大冒険 ✨</div>
-      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.14 — 2026-03-11</div>
+      <div style={{fontSize:'.82rem',color:'#94a3b8',marginTop:'4px',letterSpacing:'.1em',fontWeight:600}}>v2.21.15 — 2026-03-11</div>
       <button onClick={()=>{const m=toggleMute();setIsMuted(m);if(!m)bgm('field');}} style={{background:'transparent',border:'1px solid #1e1e3a',borderRadius:'8px',color:'#475569',padding:'4px 8px',fontSize:'1.0rem',cursor:'pointer'}}>{isMuted?'🔇':'🔊'}</button>
     </div>
     {saveMsg&&<div style={{background:'rgba(60,140,60,.18)',border:'1px solid #22c55e44',borderRadius:'8px',padding:'5px 14px',fontSize:'.92rem',marginBottom:'7px',color:'#4ade80',animation:'fadeIn .3s ease'}}>{saveMsg}</div>}
@@ -1590,10 +1603,10 @@ function App(){
   const equipTiers=ITEMS.filter(i=>i.type==='equip').map(i=>i.tier);
   const maxTier=Math.max(...equipTiers);
   // 現在解禁されているtier: 全tier1が買われたらtier2、全tier2が買われたらtier3...
-  let unlockedTier=1;
+  let unlockedTier=chIdx>=10?Math.max(2,1):1; // 11章以降はtier2以上から開始
   for(let t=1;t<maxTier;t++){
     const tierItems=ITEMS.filter(i=>i.type==='equip'&&i.tier===t);
-    if(tierItems.every(i=>boughtEquips.includes(i.id)))unlockedTier=t+1;
+    if(tierItems.every(i=>boughtEquips.includes(i.id))&&(chIdx>=10||t<3))unlockedTier=t+1;
     else break;
   }
   const shopList=ITEMS.filter(i=>i.type==='con'||(i.type==='equip'&&i.tier===unlockedTier&&!boughtEquips.includes(i.id)));
